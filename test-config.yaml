@@ -1,0 +1,58 @@
+
+anella:
+    admin:
+        email: oscar.rambla@i2cat.net
+        sendmail: false
+
+    database:
+        host: 127.0.0.1
+        port: 27017
+        database: anella-test
+        collections:
+            config: config
+            log: log
+
+    auth: # Authentication service
+        host: 127.0.0.1
+        port: 5672
+
+    orch: # Orchestrator service manager
+        host: 127.0.0.1
+        port: 5672
+
+#     mq_broker: # i.e. where requests need to go
+#         host: 127.0.0.1
+#         port: 5672
+#         exchange: Adaptation
+#         username: guest
+#         password: guest
+#         routing_key:
+#             inbound: adaptationengine
+#             outbound: controller.adaptationengine
+#     event:
+#         host: 127.0.0.1
+#         port: 5672
+#         exchange: openstack
+#         username: guest
+#         password: guest
+#         key: notifications.info
+#     app_feedback: # i.e. where the controller is
+#         host: 127.0.0.1
+#         port: 5672
+#         exchange: Adaptation
+#         username: guest
+#         password: guest
+#         key: controller.adaptationengine
+#     openstack_polling:
+#         auth_url: "http://127.0.0.1:35357/v2.0"
+#         username: admin
+#         password: guest
+#         tenant: admin
+#     heat_resource:
+#         host: 127.0.0.1
+#         port: 5672
+#         exchange: Adaptation
+#         username: guest
+#         password: guest
+#         key: aemessenger.{resource_id} # {resource_id} is replaced programmatically
+# 
