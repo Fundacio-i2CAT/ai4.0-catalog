@@ -1,17 +1,4 @@
 """
-Partially obtained from 
-https://github.com/IntelLabsEurope/AdaptationEngineFramework/blob/master/src/adaptationengine_framework/database.py
-
-Copyright 2016 INTEL RESEARCH AND INNOVATION IRELAND LIMITED
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-    http://www.apache.org/licenses/LICENSE-2.0
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 """
 
 import datetime
@@ -20,7 +7,6 @@ import logging
 import pymongo
 
 import configuration as cfg
-
 
 LOGGER = logging.getLogger('syslog')
 
@@ -336,16 +322,21 @@ class Database:
 
     @staticmethod
     def drop_database():
-        """drop anella database"""
+        """drop anella database. Sembla que amb el MongoClient no fa cas."""
         try:
-            mongo_client = pymongo.MongoClient(
-                cfg.database__host,
-                int(cfg.database__port),
-                serverSelectionTimeoutMS=5000
-            )
-            # mongo_db = mongo_client[cfg.database__database_name]
-            mongo_client.drop_database(cfg.database__database_name)
-            mongo_client.close()
+            from mongoengine import connect, connection
+            db = connect(db=cfg.database__database_name, 
+                         host=cfg.database__host, port=cfg.database__port)
+            db.drop_database(cfg.database__database_name)
+
+#             mongo_client = pymongo.MongoClient(
+#                 cfg.database__host,
+#                 int(cfg.database__port),
+#                 serverSelectionTimeoutMS=5000
+#             )
+#             # mongo_db = mongo_client[cfg.database__database_name]
+#             mongo_client.drop_database(cfg.database__database_name)
+#             mongo_client.close()
         except Exception, err:
             LOGGER.error(
                 "Deleting database [{}] failed: [{}]".format(

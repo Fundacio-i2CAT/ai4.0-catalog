@@ -2,15 +2,15 @@ import datetime
 import unittest
 import uuid
 
-from mongoengine import NotUniqueError
-from tests import AnellaTestCase, cfg
+from mongoengine import NotUniqueError, Document
 
-from anella.model.user import User
-from anella.model.common import Base
+from utils import AnellaTestCase
+import anella.configuration as cfg
+from anella.model.base import Base
 
 __all__ = ('BaseTest', )
 
-class TBase(Base):
+class TBase(Document, Base):
     pass
 
 class BaseTest(AnellaTestCase):

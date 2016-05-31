@@ -8,17 +8,12 @@ from mongoengine import signals
 from anella.common import get_user
 from user import User
 
-class Base(Document):
+class Base(object):
     created_at = DateTimeField(required=True)
     created_by = StringField()
     updated_at = DateTimeField()
     updated_by = StringField()
 
-    meta = {'allow_inheritance': True}
-
-#     def save(self, *args, **kwargs):
-#         pre_save(self.__class__, self)
-#         return super(Base, self).save(self, *args, **kwargs)
 
 class PreSave(object):
 
@@ -41,4 +36,10 @@ class PreSave(object):
 
 
 signals.pre_save = PreSave()
+
+class WithLogo(object):
+    """
+    A document with a logo attached.
+    """
+    logo = FileField()
 

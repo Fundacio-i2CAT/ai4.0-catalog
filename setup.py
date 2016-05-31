@@ -28,8 +28,6 @@ setup(name='anella',
         "pymongo >= 2.0",
         "PyYAML >= 3.09",
         "python-dateutil >= 1.4.1",
-        "jsmin == 2.0.3",
-        "cssmin",
         "requests",
         "jsonschema",
         "mongoengine"
@@ -41,6 +39,11 @@ setup(name='anella',
     tests_require=[
         'pytidylib',
         'nose'
+        'mock',
+        'coverage',
+        'pep8',
+        'pylint'
+ 
     ],
     package_data={
         'anella': [

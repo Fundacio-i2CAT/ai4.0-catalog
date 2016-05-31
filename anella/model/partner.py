@@ -2,7 +2,7 @@
 
 from mongoengine import *
 
-from common import Base
+from base import Base
 from user import User
 
 ANELLA_SECTORS = [
@@ -13,7 +13,7 @@ ANELLA_SECTORS = [
 class Contact(EmbeddedDocument):
     email=EmailField()
 
-class Partner(Base):
+class Partner(Document, Base):
     """
     """
     meta = {'allow_inheritance': True, 'collection': 'partners'}

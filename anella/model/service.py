@@ -2,11 +2,11 @@
 
 from mongoengine import *
 
-from common import Base
+from base import Base
 from partner import Partner, Provider, Client, ANELLA_SECTORS
 
 
-class ServiceDescription(Base):
+class ServiceDescription(Document, Base):
     """
     """
     meta = {'allow_inheritance': True, 'collection': 'services'}
@@ -20,6 +20,14 @@ class ServiceDescription(Base):
     images = EmbeddedDocumentListField(EmbeddedDocument)
     bootstrap_script = StringField()
 
+    def to_json(self):
+        return dict(name=self.name, summary=self.summary, provider=self.provider.id, )
+
+    @classmethod
+    def from_json(cls, data):
+        service = cls(name=data['name'], summary=data['summary'])
+        service.provider = Partner.objects.get(id=data['provider'])
+
 
 class GenericService(ServiceDescription):
     type_name = 'Generic'  # A type name to use in UI
@@ -30,7 +38,7 @@ class CloudService(ServiceDescription):
     scheme = 'cloud-service-scheme.json'
 
 
-class Credential(Base):
+class Credential(Document, Base):
     """
     """
     meta = {'allow_inheritance': True, 'collection': 'credentials'}

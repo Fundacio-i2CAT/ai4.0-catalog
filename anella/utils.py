@@ -1,17 +1,4 @@
 """
-Copyright 2015 INTEL RESEARCH AND INNOVATION IRELAND LIMITED
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 """
 import logging
 import logging.config
@@ -96,6 +83,8 @@ def load_config(configfile, clear_db_config):
 
         cfg.admin__email = yaml_config['anella']['admin']['email']
         cfg.admin__sendmail = yaml_config['anella']['admin']['sendmail']
+        cfg.app__host = yaml_config['anella']['app']['host']
+        cfg.app__port = yaml_config['anella']['app']['port']
 
         cfg.database__host = yaml_config['anella']['database']['host']
         cfg.database__port = yaml_config['anella']['database']['port']

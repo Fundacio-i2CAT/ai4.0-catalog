@@ -6,31 +6,21 @@ import unittest
 import uuid
 
 from mongoengine import NotUniqueError
-from tests import AnellaTestCase, cfg
 
-from anella.model.user import User
-from anella.model.partner import Partner, Provider, Client, User, Contact, ANELLA_SECTORS
+from utils import AnellaTestCase
+
+import anella.configuration as cfg
 
 __all__ = ('PartnerTest', )
 
 
 class PartnerTest(AnellaTestCase):
 
-    def test_partner_save(self):
-        user = User(email='prov1@company1.com')
-        user.save()
-        provider = Provider(name='prov1', 
-                            contact = Contact(email='prov1@company1.com'),
-                            users=[user,],
-                            sectors=[ sector[0] for sector in ANELLA_SECTORS],
-                           )
-        provider.save()
+    def test_prov_save(self):
+        self.create_provider()
 
-#         try:
-#             cloud = CloudService(name='cloud_service1')
-#             cloud.save()
-#         except NotUniqueError:
-#             pass
+    def test_client_save(self):
+        self.create_client()
 
 if __name__ == '__main__':
     unittest.main()
