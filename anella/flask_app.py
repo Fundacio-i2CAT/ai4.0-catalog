@@ -88,8 +88,8 @@ def main(cfg_file=None, testing=False, debug=False):
     app.add_url_rule('/', 'root', lambda: app.send_static_file('index.html'))
     # app.add_url_rule('/', None, web.root, methods=['GET',])
     
-    app.add_url_rule('/api/services', None, api_service.services, methods=['GET', 'POST'])
-    app.add_url_rule('/api/services/<service_id>', None, api_service.service, methods=['GET', 'POST', 'DEL'])
+    app.add_url_rule('/api/services', None, api_service.services, methods=['GET', 'PUT'])
+    app.add_url_rule('/api/services/<service_id>', None, api_service.service, methods=['GET', 'POST', 'DELETE'])
 
 #     app.add_url_rule('/api/projects', None, api.project.projects, methods=['GET', 'POST'])
 #     app.add_url_rule('/api/projects/<project_id>', None, api.project.project, methods=['GET', 'POST', 'DEL'])

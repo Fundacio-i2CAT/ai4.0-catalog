@@ -5,6 +5,23 @@ from mongoengine import *
 from base import Base
 from partner import Partner, Provider, Client, ANELLA_SECTORS
 
+SERVICE_TYPES = (
+    ('generic', u'Generic Service' ),
+    ('cloud', u'Cloud Service' ),
+)
+
+_service_types = {}
+
+def register_service_type(name,cls):
+    _service_types[name]=cls
+
+def get_service_type(cls):
+    for n,t in _service_types.items():
+        if cls==t:
+            return n
+
+def get_service_cls(name):
+    return _service_types[name]
 
 class ServiceDescription(Document, Base):
     """
@@ -15,18 +32,25 @@ class ServiceDescription(Document, Base):
     name = StringField(max_length=40, required=True, unique=True)
     summary = StringField(max_length=120)
     description = StringField()
+    service_type = StringField(choices=SERVICE_TYPES, default='generic')
 
     provider = ReferenceField(Partner)
-    images = EmbeddedDocumentListField(EmbeddedDocument)
-    bootstrap_script = StringField()
+    keywords = ListField(StringField(max_length=40))
+    sectors = ListField(StringField(choices=ANELLA_SECTORS))
 
-    def to_json(self):
-        return dict(name=self.name, summary=self.summary, provider=self.provider.id, )
+    link = URLField()
+    logo = FileField()
 
-    @classmethod
-    def from_json(cls, data):
-        service = cls(name=data['name'], summary=data['summary'])
-        service.provider = Partner.objects.get(id=data['provider'])
+#     images = EmbeddedDocumentListField(EmbeddedDocument)
+#     bootstrap_script = StringField()
+
+#     def to_json(self):
+#         return dict(name=self.name, summary=self.summary, provider=self.provider.id, )
+
+#     @classmethod
+#     def from_json(cls, data):
+#         service = cls(name=data['name'], summary=data['summary'])
+#         service.provider = Partner.objects.get(id=data['provider'])
 
 
 class GenericService(ServiceDescription):
@@ -36,6 +60,11 @@ class GenericService(ServiceDescription):
 class CloudService(ServiceDescription):
     type_name = 'Cloud'  # A type name to use in UI
     scheme = 'cloud-service-scheme.json'
+
+    service_type = StringField(choices=SERVICE_TYPES, default='cloud')
+
+register_service_type('generic',GenericService)
+register_service_type('cloud',CloudService)
 
 
 class Credential(Document, Base):

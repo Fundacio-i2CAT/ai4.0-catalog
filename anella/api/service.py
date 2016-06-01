@@ -4,29 +4,27 @@ import os
 import time
 
 from anella.common import *
-from anella.model.service import ServiceDescription
+from anella.model.service import get_service_type, get_service_type, ServiceDescription, SERVICE_TYPES
+
+def service_from_json(data):
+    result = json.loads(data)
+    service_cls = get_service_cls( result['service_type'] )
+    return service_cls.from_json(data)
 
 def services():
-#     import pdb;pdb.set_trace()
-#     get_connection()
-
-#     with open('services.json', 'r') as f:
-#         services = json.loads(f.read())
-
     if get_method() == 'POST':
-        attrs = get_fields()
-        new_service = ServiceDesciption(**attrs)
-        # new_service['id'] = int(time.time() * 1000)
         try:
+            data = get_data()
+            new_service = service_from_json(data)
             new_service.save()
         except Exception,e:
             return error_api( msg=str(e) )
 
     try:
-        services = [service for service in ServiceDescription.objects()]
+        services = [service.to_json() for service in ServiceDescription.objects()]
         response = dict( count=len(services), status='ok', 
-                         msg='services list' if services 
-                                             else 'no services available',
+                         msg='Services list' if services 
+                                             else 'No services available',
                          result=services )
         return respond_json( json.dumps(response))
 
@@ -34,7 +32,6 @@ def services():
         return error_api( str(e) )
 
 def service(service_id):
-#     import pdb;pdb.set_trace()
 #     get_connection()
 
 #     with open('services.json', 'r') as f:
@@ -45,20 +42,39 @@ def service(service_id):
         service = ServiceDescription.objects(pk=service_id)
         if service is None:
             response = dict( count=0, status='fail', 
-                             msg='service not found',
+                             msg='Service not found',
                              result=[] )
        
             return respond_json( json.dumps(response), status=404)
 
-        if request.method == 'DEL':
-            service.delete()
-            response = dict( count=0, status='ok', 
-                             msg='service deleted',
-                             result=[] )
+        service = service[0]
+        if get_method() == 'DELETE':
+            try:
+                service.delete()
+                response = dict( count=0, status='ok', 
+                                 msg='Service deleted',
+                                 result=[] )
+                return respond_json( json.dumps(response))
+            except Exception,e:
+                return error_api( msg=str(e) )
        
+        if get_method() == 'POST':
+            try:
+                data = get_data()
+                service = service_from_json(data)
+                service.save()
+                data = service.to_json()
+                response = dict( count=0, status='ok', 
+                             msg='Service updated',
+                             result=[data,] )
+                return respond_json( json.dumps(response))
+            except Exception,e:
+                return error_api( msg=str(e) )
+
+        data = service.to_json()
         response = dict( count=1, status='ok', 
-                         msg='service desciption',
-                         result=[service,] )
+                         msg='Service description',
+                         result=[data,] )
         return respond_json( json.dumps(response))
 
     except Exception, e:

@@ -50,7 +50,7 @@ def project(project_id):
        
             return respond_json( json.dumps(response), status=404)
 
-        if request.method == 'DEL':
+        if get_method() == 'DEL':
             project.delete()
             response = dict( count=0, status='ok', 
                              msg='project deleted',

@@ -16,7 +16,8 @@ from anella import common
 from anella.model.user import User
 from anella.model.partner import Partner, Provider, Client, User, Contact, ANELLA_SECTORS
 from anella.model.project import ServiceContext, Project
-from anella.model.service import GenericService, CloudService, VMImage, DockerImage
+from anella.model.service import GenericService, CloudService
+# from anella.model.service import VMImage, DockerImage
 
 class DocLoader(object):
 
@@ -46,18 +47,18 @@ class DocLoader(object):
         self.client.save()
 
     def create_generic(self):
-        image = DockerImage(name='orambla/anella')
+#         image = DockerImage(name='orambla/anella')
         self.generic = GenericService(name='service1',
                                  provider = self.provider,
-                                 images = [image,],
+#                                  images = [image,],
                                 )
         self.generic.save()
 
     def create_cloud(self):
-        image = DockerImage(name='orambla/anella')
+#         image = DockerImage(name='orambla/anella')
         self.cloud = CloudService(name='cloud_service2',
                                  provider = self.provider,
-                                 images = [image,],
+#                                  images = [image,],
                                 )
         self.cloud.save()
 
