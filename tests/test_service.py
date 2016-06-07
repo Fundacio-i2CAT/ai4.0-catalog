@@ -15,6 +15,7 @@ __all__ = ('ServiceTest', )
 class ServiceTest(AnellaTestCase):
 
     def test_service_save(self):
+        self.create_admin()
         self.create_provider()
         self.create_generic()
         self.create_cloud()

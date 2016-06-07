@@ -8,7 +8,7 @@ import uuid
 from mongoengine import NotUniqueError
 from utils import AnellaTestCase
 
-import anella.configuration as cfg
+from anella.common import *
 from anella.model.user import User
 
 __all__ = ('UserTest', )
@@ -17,12 +17,12 @@ __all__ = ('UserTest', )
 class UserTest(AnellaTestCase):
 
     def test_user_save(self):
-        with self.assertRaises(NotUniqueError):
-            user = User(email=cfg.admin__email)
-            user.save()
+        user = User(email='pepe@i2cat.net')
+        user.save()
+        self.assertIsNotNone(user.pk)
 
         with self.assertRaises(NotUniqueError):
-            user = User(user_name=cfg.admin__user)
+            user = User(email='pepe@i2cat.net')
             user.save()
 
 if __name__ == '__main__':

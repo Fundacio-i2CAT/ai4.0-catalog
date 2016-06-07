@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 import sys
 import os
@@ -6,17 +7,29 @@ import json
 import optparse
 
 from flask import Flask, Response, request
+from flask.ext.pymongo import PyMongo
+from flask.ext.mongoengine import MongoEngine
+from flask_restful import reqparse, abort, Api, Resource
 
-sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '../')))
+from mongoengine import connect
 
+from utils import load_config
 from common import *
-import configuration as cfg
-from anella.api import service as api_service
-import utils
 import output
 
+def add_resources(api):
+    from anella.api.service import ServicesRes, ServiceRes
 
-def main(cfg_file=None, testing=False, debug=False):
+    api.add_resource(ServicesRes, '/api/services')
+    api.add_resource(ServiceRes, '/api/services/<id>')
+
+def add_rules(app):
+    """
+    """
+    app.add_url_rule('/', 'root', lambda: app.send_static_file('index.html'))
+
+
+def create_app(cfg_file='prod-config.yaml', testing=False, debug=False):
     usage = "usage: %prog"
     description = "Anella app"
     version = "%anella 0.1"
@@ -69,7 +82,7 @@ def main(cfg_file=None, testing=False, debug=False):
 
     (options, args) = opt_parser.parse_args()
 
-    utils.load_config(
+    load_config(
         configfile=options.cfg_file,
         clear_db_config=options.clear_cfg
     )
@@ -77,54 +90,63 @@ def main(cfg_file=None, testing=False, debug=False):
     if options.clear_log:
         database.Database.delete_db_log()
 
-    app = Flask(__name__, static_url_path='', static_folder='public')
-    init_app(app)
-    
+    app = Flask('anella', static_url_path='', static_folder='public')
+    app.config['HOST'] = get_cfg('app__host')
+    app.config['PORT'] = get_cfg('app__port')
+
+    app.config['MONGODB_SETTINGS'] = {
+          'db': get_cfg('database__database_name'),
+          'host': get_cfg('database__host'),
+          'port': get_cfg('database__port'),
+    }
+    # PyMongo
+    app.config['MONGO_DBNAME'] = get_cfg('database__database_name')
+    app.config['MONGO_HOST'] = get_cfg('database__host')
+    app.config['MONGO_PORT'] = get_cfg('database__port')
+
+    # MongoEngine
+    app.config['MONGODB_DATABASE'] = get_cfg('database__database_name')
+    app.config['MONGODB_HOST'] = get_cfg('database__host')
+    app.config['MONGODB_PORT'] = get_cfg('database__port')
+
+    app.config['TESTING'] = True
+    app.config['SECRET_KEY'] = 'flask+mongoengine=<3'
+
     if options.debug:
         from flask_debugtoolbar import DebugToolbarExtension
         DebugToolbarExtension(app)
         app.debug = True
     
-    app.add_url_rule('/', 'root', lambda: app.send_static_file('index.html'))
-    # app.add_url_rule('/', None, web.root, methods=['GET',])
-    
-    app.add_url_rule('/api/services', None, api_service.services, methods=['GET', 'PUT'])
-    app.add_url_rule('/api/services/<service_id>', None, api_service.service, methods=['GET', 'POST', 'DELETE'])
+        app.config['DEBUG_TB_PANELS'] = (
+        'flask.ext.debugtoolbar.panels.versions.VersionDebugPanel',
+        'flask.ext.debugtoolbar.panels.timer.TimerDebugPanel',
+        'flask.ext.debugtoolbar.panels.headers.HeaderDebugPanel',
+        'flask.ext.debugtoolbar.panels.request_vars.RequestVarsDebugPanel',
+        'flask.ext.debugtoolbar.panels.template.TemplateDebugPanel',
+        'flask.ext.debugtoolbar.panels.logger.LoggingPanel',
+        'flask.ext.mongoengine.panels.MongoDebugPanel'
+        )
 
-#     app.add_url_rule('/api/projects', None, api.project.projects, methods=['GET', 'POST'])
-#     app.add_url_rule('/api/projects/<project_id>', None, api.project.project, methods=['GET', 'POST', 'DEL'])
-#     app.add_url_rule('/api/projects/<project_id>/instancies', None, api.project.instancies, methods=['GET', 'POST'])
+        app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
+
+#     app.config['RESTFUL_JSON']=dict(cls=MongoengineEncoder)
+
+    mongo = PyMongo(app)
+
+    db = MongoEngine(app)
+    # Is this necessary?
+    connect( get_cfg('database__database_name'), 
+             host=get_cfg('database__database_name'), 
+             port=get_cfg('database__database_name') 
+           )
+
+    api = Api(app)
+    add_resources(api)
+
+#     db = MongoEngine(app)
+#     set_db(db)
 
     if testing:
         app.config['TESTING'] = True
-        return app
-
-    app.run(host=cfg.app__host, port=int(cfg.app__port))
-
-#     daemon = AdaptationEngine()
-# 
-#     def time_to_die(signal, frame):
-#         """Kill the adaptation engine processes"""
-#         LOGGER.info("Passing along SIGTERM")
-#         daemon.stop()
-#         sys.exit(0)
-#         output.OUTPUT.info("Done.")
-# 
-#     signal.signal(signal.SIGTERM, time_to_die)
-# 
-#     output.OUTPUT.info("Adaptation Engine started (ctrl+c to quit)...")
-# 
-#     try:
-#         if options.healthcheck:
-#             daemon.healthcheck()
-#         else:
-#             daemon.run()
-#             while True:
-#                 time.sleep(1)
-#     except KeyboardInterrupt:
-#         daemon.stop()
-#         sys.exit(0)
-
-if __name__ == "__main__":
-    main(cfg_file='prod-config.yaml', testing=False, debug=True )
+    return app
 

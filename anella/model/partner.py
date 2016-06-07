@@ -6,7 +6,7 @@ from base import Base
 from user import User
 
 ANELLA_SECTORS = [
-    (u'industrial', u'Automoció'),
+    (u'industry', u'Automoció'),
     (u'health', u'Health'),
     (u'cities', u'Smart Cities'),
 ]

@@ -18,3 +18,12 @@ class User(Document):
 
         super(User, self).save(self, *args, **kwargs)
 
+    def is_provider(self):
+        return True
+
+    def is_client(self):
+        return True
+
+    def is_admin(self):
+        return self.admin
+

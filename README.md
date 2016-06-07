@@ -11,9 +11,9 @@ $ python setup.py install
 Create a configuration for prod or use prod-config.yaml
 
 ```
-$ python anella/flask_app.py --help
+$ python wsgi.py --help
 Initialising...
-Usage: flask_app.py
+Usage: wsgi.py
 
 Anella app
 

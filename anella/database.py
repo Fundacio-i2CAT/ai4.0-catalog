@@ -344,3 +344,30 @@ class Database:
                 )
             )
 
+    @staticmethod
+    def find_one(self, col_name, *objs, **kwargs):
+        """post a json entry to the database"""
+        try:
+            mongo_client = pymongo.MongoClient(
+                cfg.database__host,
+                int(cfg.database__port),
+                serverSelectionTimeoutMS=5000
+            )
+            mongo_db = mongo_client[cfg.database__database_name]
+            mongo_collection = mongo_db[cfg.database__collection_log]
+            mongo_collection.insert_one(entry)
+            mongo_client.close()
+        except Exception, err:
+            LOGGER.error("Posting to database failed: [{}]".format(err))
+
+        col = getattr(self._db, col_name)
+        for n in range(3):
+            try:
+                return col.find_one(*objs, **kwargs)
+            except AutoReconnect as ex:
+                warning("Connection lost with mongo, trying autoreconnect.")
+                sleep(1)
+                continue
+        error("Error: Connection lost on find couldn't autoreconnect. '%s'" % ex)
+
+

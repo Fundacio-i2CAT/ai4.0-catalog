@@ -49,7 +49,12 @@ class DocLoader(object):
     def create_generic(self):
 #         image = DockerImage(name='orambla/anella')
         self.generic = GenericService(name='service1',
+                                 summary = "summary 1",
+                                 description = "description 1",
+                                 link = "http://link1.com",
                                  provider = self.provider,
+                                 keywords= [ "storage" ],
+                                 sectors= [ "industry" ],
 #                                  images = [image,],
                                 )
         self.generic.save()
@@ -57,7 +62,12 @@ class DocLoader(object):
     def create_cloud(self):
 #         image = DockerImage(name='orambla/anella')
         self.cloud = CloudService(name='cloud_service2',
+                                 summary = "summary 2",
+                                 description = "description 2",
+                                 link = "http://link2.com",
                                  provider = self.provider,
+                                 keywords= [ "analysis" ],
+                                 sectors= [ "cities" ],
 #                                  images = [image,],
                                 )
         self.cloud.save()
@@ -80,12 +90,7 @@ class AnellaTestCase(unittest.TestCase, DocLoader):
 
     def setUp(self):
         utils.load_config('test-config.yaml', True)
-        common.init_database()
         utils.reset_database()
-
-        self.user = User(email=cfg.admin__email, user_name=cfg.admin__user,
-                         admin=True, staff=True)
-        self.user.save()
 
     def tearDown(self):
         connection._connection_settings = {}

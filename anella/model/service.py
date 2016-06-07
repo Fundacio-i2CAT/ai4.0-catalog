@@ -5,6 +5,8 @@ from mongoengine import *
 from base import Base
 from partner import Partner, Provider, Client, ANELLA_SECTORS
 
+# TODO: Service types should be dynamic and use as options to validate field
+
 SERVICE_TYPES = (
     ('generic', u'Generic Service' ),
     ('cloud', u'Cloud Service' ),
@@ -26,7 +28,8 @@ def get_service_cls(name):
 class ServiceDescription(Document, Base):
     """
     """
-    meta = {'allow_inheritance': True, 'collection': 'services'}
+    meta = {'allow_inheritance': True, 'collection': 'services',
+            'indexes': ['name', ] }
 
     # Collection fields
     name = StringField(max_length=40, required=True, unique=True)
@@ -39,18 +42,10 @@ class ServiceDescription(Document, Base):
     sectors = ListField(StringField(choices=ANELLA_SECTORS))
 
     link = URLField()
-    logo = FileField()
+    logo = ImageField()
 
 #     images = EmbeddedDocumentListField(EmbeddedDocument)
 #     bootstrap_script = StringField()
-
-#     def to_json(self):
-#         return dict(name=self.name, summary=self.summary, provider=self.provider.id, )
-
-#     @classmethod
-#     def from_json(cls, data):
-#         service = cls(name=data['name'], summary=data['summary'])
-#         service.provider = Partner.objects.get(id=data['provider'])
 
 
 class GenericService(ServiceDescription):
@@ -66,13 +61,6 @@ class CloudService(ServiceDescription):
 register_service_type('generic',GenericService)
 register_service_type('cloud',CloudService)
 
-
-class Credential(Document, Base):
-    """
-    """
-    meta = {'allow_inheritance': True, 'collection': 'credentials'}
-
-    # Collection fields
 
 class Image(EmbeddedDocument):
     """

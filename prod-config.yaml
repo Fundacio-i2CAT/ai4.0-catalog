@@ -12,7 +12,7 @@ anella:
     database:
         host: 127.0.0.1
         port: 27017
-        database: anella
+        database_name: anella
         collections:
             config: config
             log: log

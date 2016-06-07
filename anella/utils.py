@@ -61,7 +61,7 @@ def std_logging():
     return generic_logging('stdout', handler, '%(message)s', logging.INFO)
 
 
-def load_config(configfile, clear_db_config):
+def load_config(configfile, clear_db_config=False):
     """
     Load a YAML config file and parse it into the
     configuration module for global access
@@ -88,7 +88,7 @@ def load_config(configfile, clear_db_config):
 
         cfg.database__host = yaml_config['anella']['database']['host']
         cfg.database__port = yaml_config['anella']['database']['port']
-        cfg.database__database_name = yaml_config['anella']['database']['database']
+        cfg.database__database_name = yaml_config['anella']['database']['database_name']
         cfg.database__collection_config = yaml_config['anella']['database']['collections']['config']
         cfg.database__collection_log = yaml_config['anella']['database']['collections']['log']
 
