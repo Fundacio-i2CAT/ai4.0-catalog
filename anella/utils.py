@@ -1,5 +1,6 @@
 """
 """
+import os
 import logging
 import logging.config
 import sys
@@ -9,6 +10,8 @@ from pkg_resources import resource_string
 
 import configuration as cfg
 import database
+
+from template import get_parameters, is_template, Template
 
 
 def generic_logging(logger, handler, format_string, level):
@@ -79,6 +82,7 @@ def load_config(configfile, clear_db_config=False):
             except OSError, err:
                 raise OSError("Could not open config file")
 
+        cfg_string = resolve_parameters(cfg_string, os.environ)
         yaml_config = yaml.load(cfg_string)
 
         cfg.admin__email = yaml_config['anella']['admin']['email']
@@ -150,6 +154,50 @@ def load_config(configfile, clear_db_config=False):
         database.Database.delete_db_cfg()
 
     database.Database.load_config()
+
+def resolve_parameters(cfg, env, resolver=None):
+    """
+    try to resolve parameters in an object or dict using a domain.
+    Domain initially is an environment but can evolve into a more elaborated resolver.
+    """
+
+    def _resolve(temp):
+        parameters = get_parameters(temp)
+        domain={}
+        for parameter in parameters:
+            if parameter in env:
+                domain[parameter] = env[parameter]
+            elif resolver:
+                domain[parameter] = resolver(parameter)
+
+        new_temp = Template(temp).safe_substitute(**domain)
+        return new_temp
+            
+    if isinstance(cfg, basestring):
+        if is_template(cfg):
+            return _resolve(cfg)
+        else:
+            return cfg
+    else:
+        if isinstance(cfg, (dict,)):
+            values = cfg
+        elif isinstance(cfg, (object,)):
+            values = vars(cfg)
+        else:
+            raise NotImplementedError
+
+        new_values = {}
+        for name,value in values.items():
+            if is_template(value):
+                new_values[name] = _resolve(value)
+
+        if isinstance(cfg, (dict,)):
+            cfg.update(new_values)
+        elif isinstance(cfg, (object,)):
+            for name,value in new_values.items():
+                setattr(cfg, name, value)
+
+        return cfg
 
 def reset_database():
     database.Database.drop_database()

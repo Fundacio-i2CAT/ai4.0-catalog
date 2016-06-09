@@ -7,7 +7,7 @@ from datetime import datetime
 
 from mongoengine import *
 from mongoengine import ValidationError, NotUniqueError
-from bson import ObjectId
+from bson import ObjectId, DBRef
 
 from flask import json, jsonify, make_response
 from flask_restful  import Resource
@@ -78,7 +78,6 @@ class AnellaRes(Resource):
         return items
 
     def _find_item(self, id):
-        # ME services = ServiceDescription.objects(pk=service_id)
         item = get_db()[self.collection].find_one({'_id':ObjectId(id)})
         if item:
             return self._item_to_json(item)
@@ -88,13 +87,24 @@ class AnellaRes(Resource):
         if obj is None:
             obj = self._cls(**item)
         else:
-            for n,v in item.items():
-                setattr(obj, n, v)
+            for name,value in item.items():
+                field = self._cls._fields.get(name)
+                if isinstance(field, (ReferenceField, GenericReferenceField)):
+                    obj[name] = DBRef(self._cls._get_collection_name(), value)
+
+                elif isinstance(field, (ListField, )) and \
+                     isinstance(field.field, (ReferenceField, GenericReferenceField)):
+                    obj[name] = [DBRef(self._cls._get_collection_name(), val) for val in value]
+                else:
+                    setattr(obj, name, value)
+
         return obj
 
     def _find_obj(self, id):
         try:
-            return self._cls.objects.get(pk=id)
+            obj = self._cls.objects.get(id=ObjectId(id))
+            return obj
+            # return self._cls.objects.get(pk=id)
         except DoesNotExist,e:
             pass
 
@@ -192,26 +202,23 @@ class IdRes(AnellaRes):
     def put(self, id):
         try:
             data = get_json()
-            item = self._item_from_json(data)
-            result = get_db()[self.collection].update_one({'_id':ObjectId(id)}, 
-                                                          {'$set' :item } )
-            # v2 get_db()[self.collection].update({'_id':ObjectId(id)}, {'$set': item } )
-            if not result.matched_count:
-                response = dict( status='fail', msg='%s not updated' % self.name,)
-                return respond_json( response, status=400)
-
-            # Validation
-            # import pdb;pdb.set_trace()
-            # obj = self._find_obj(id)
-            # item = self._find_item(id)
-            # item.update(self._item_from_json(data))
-            # obj = self._obj_from_json(item) #(data, obj)
-            # valid_error = self._validate(obj)
-            # if valid_error:
-            #     response = dict( status='fail', msg='%s: %s' % (self.name,valid_error))
+            # item = self._item_from_json(data)
+            # result = get_db()[self.collection].update_one({'_id':ObjectId(id)}, 
+            #                                               {'$set' :item } )
+            # # v2 get_db()[self.collection].update({'_id':ObjectId(id)}, {'$set': item } )
+            # if not result.matched_count:
+            #     response = dict( status='fail', msg='%s not updated' % self.name,)
             #     return respond_json( response, status=400)
 
-            # obj.save()
+            # Validation
+            obj = self._find_obj(id)
+            obj = self._obj_from_json(data, obj)
+            valid_error = self._validate(obj)
+            if valid_error:
+                response = dict( status='fail', msg='%s: %s' % (self.name,valid_error))
+                return respond_json( response, status=400)
+
+            obj.save()
 
             response = dict( status='ok', msg='%s updated' % self.name )
             return respond_json( response, status=200)

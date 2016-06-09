@@ -5,23 +5,31 @@ import os
 import time
 import json
 import optparse
+import logging
 
 from flask import Flask, Response, request
 from flask.ext.pymongo import PyMongo
-from flask.ext.mongoengine import MongoEngine
+# from flask.ext.mongoengine import MongoEngine
 from flask_restful import reqparse, abort, Api, Resource
 
 from mongoengine import connect
 
-from utils import load_config
+from utils import load_config, std_logging
 from common import *
 import output
 
+LOGGER = std_logging()
+
 def add_resources(api):
     from anella.api.service import ServicesRes, ServiceRes
+    from anella.api.project import ProjectsRes, ProjectRes, ProjectServiceRes
 
     api.add_resource(ServicesRes, '/api/services')
     api.add_resource(ServiceRes, '/api/services/<id>')
+
+    api.add_resource(ProjectsRes, '/api/projects')
+    api.add_resource(ProjectRes, '/api/projects/<id>')
+    api.add_resource(ProjectServiceRes, '/api/projects/<id>/services')
 
 def add_rules(app):
     """
@@ -133,11 +141,11 @@ def create_app(cfg_file='prod-config.yaml', testing=False, debug=False):
 
     mongo = PyMongo(app)
 
-    db = MongoEngine(app)
+    # db = MongoEngine(app)
     # Is this necessary?
     connect( get_cfg('database__database_name'), 
-             host=get_cfg('database__database_name'), 
-             port=get_cfg('database__database_name') 
+             host=get_cfg('database__host'), 
+             port=get_cfg('database__port') 
            )
 
     api = Api(app)
