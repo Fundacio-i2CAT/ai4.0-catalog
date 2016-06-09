@@ -150,10 +150,10 @@ def load_config(configfile, clear_db_config=False):
         )
         sys.exit(1)
 
-    if clear_db_config:
-        database.Database.delete_db_cfg()
+    # if clear_db_config:
+    #     database.Database.delete_db_cfg()
 
-    database.Database.load_config()
+    # database.Database.load_config()
 
 def resolve_parameters(cfg, env, resolver=None):
     """
@@ -201,5 +201,5 @@ def resolve_parameters(cfg, env, resolver=None):
 
 def reset_database():
     database.Database.drop_database()
-    database.Database.load_config()
+    # database.Database.load_config()
 
