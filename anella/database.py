@@ -8,7 +8,7 @@ import pymongo
 
 import configuration as cfg
 
-LOGGER = logging.getLogger('syslog')
+LOGGER = logging.getLogger('stdout')
 
 
 class Database:

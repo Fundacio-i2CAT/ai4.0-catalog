@@ -6,11 +6,11 @@ anella:
         sendmail: false
 
     app: # Anella app
-        host: 127.0.0.1
+        host: 0.0.0.0
         port: 3000
 
     database:
-        host: 127.0.0.1
+        host: 0.0.0.0
         port: 27017
         database_name: anella
         collections:
