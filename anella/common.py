@@ -2,9 +2,7 @@ import json
 
 from pymongo import MongoClient
 from mongoengine import connect, connection
-from flask import request
-
-from anella.model.user import User
+from flask import request, session, Response
 
 import utils
 import configuration as _cfg
@@ -15,10 +13,11 @@ _mongo = None # Pymongo
 _connection = None
 _user = None
 
-__all__ = ( 'get_cfg', 'get_connection', 'get_db', 'get_user', 'get_mongo',
-            'respond', 'respond_json', 'redirect', 'not_found', 'error_api',
+__all__ = ( 'get_cfg', 'get_connection', 'get_db', 'get_mongo',
+            'respond', 'redirect', 'not_found', 'get_user', 'get_session',
             'get_request', 'get_response', 'get_method', 'get_path',
             'get_data', 'get_json', 'get_args', 'get_arg', 'get_referer',
+            'respond_json', 'error_json'
           )
 
 def get_cfg(name):
@@ -127,11 +126,12 @@ def respond(bodies, mimetype='text/html', status=200, **kwargs):
 
     if is_flask():
         from flask import Response
-        return Response(page(), mimetype=mimetype, **kwargs)
+        return Response(page(), mimetype=mimetype, status=str(status), **kwargs)
 
 
 def respond_json(data, mimetype='application/json', status=200, **kwargs):
-
+    """ Retorna Response.No depen de la flask-restful
+    """
     headers={
             'Cache-Control': 'no-cache',
             'Access-Control-Allow-Origin': '*'
@@ -141,34 +141,33 @@ def respond_json(data, mimetype='application/json', status=200, **kwargs):
             headers[k]=v
         del kwargs['headers']
 
-    if is_flask():
-        from flask import Response
-        return Response(data, mimetype=mimetype, headers=headers, **kwargs)
+    if not isinstance(data, basestring):
+        data = json.dumps(data)
+    return Response(data, mimetype=mimetype, headers=headers, status=str(status), **kwargs)
 
 def not_found():
     if is_flask():
         from flask import abort
         abort(405)
 
-def error_api(msg):
+def error_json(msg):
     response = dict( count=0, status='fail', msg=msg, result=[])
-    return respond_json( json.dumps(response), status=500,)
+    return respond_json( json.dumps(response), status=400,)
 
 # Session & user commons
 
-# def get_session():
+def get_session():
+    return session
 
 def get_user():
-    global _user
+    if not get_session():
+        return None
+    from anella.model.user import User
 
-    if _user is None:
+    user_id = get_session().get('user')
+    if user_id:
         get_db()
-        users = User.objects(email=_cfg.admin__email)
-        if not users:
-            _user = User(user_name=_cfg.admin__user, email=_cfg.admin__email)
-            _user.save()
-        else:
-            _user = users[0]
-
-    return _user
+        user = User.objects.get(id=user_id)
+        if user:
+            return user
 

@@ -26,10 +26,8 @@ class AnellaRes(Resource):
         js_item = {}
         for field in self.fields:
            data = item.get(field)
-           if isinstance(data, Document):
-               js_data = { 'oid' : unicode(data.pk), '_cls': data.__class__.__name__ }
  
-           elif isinstance(data, ObjectId):
+           if isinstance(data, ObjectId):
                js_data = unicode(data)
 
            elif isinstance(data, datetime):
@@ -49,27 +47,8 @@ class AnellaRes(Resource):
         js_items= [ self._item_to_json(item) for item in items]
         return js_items
 
-    def _item_from_json(self, data):
-        item ={}
-        for name in self.fields:
-            field = self._cls._fields.get(name)
-            if name not in data:
-                continue
-            value = data.get(name)
-            if isinstance(field, (ReferenceField, GenericReferenceField)):
-                item[name] = ObjectId(value)
-
-            elif isinstance(field, (ListField, )) and \
-                 isinstance(field.field, (ReferenceField, GenericReferenceField)):
-                item[name] = [ObjectId(val) for val in value]
-
-            elif isinstance(field, (DateTimeField, )):
-                item[name] = field.to_mongo(value)
-
-            else:
-                item[name] = value
-
-        return item
+    def _item_from_json(self, data, fields=None, cls=None):
+        return item_from_json(data, self._cls, fields=self.fields)
 
     def _items_from_json(self, data):
         if not data:
@@ -78,27 +57,10 @@ class AnellaRes(Resource):
         return items
 
     def _find_item(self, id):
-        item = get_db()[self.collection].find_one({'_id':ObjectId(id)})
-        if item:
-            return self._item_to_json(item)
+        return get_db()[self.collection].find_one({'_id':ObjectId(id)})
 
     def _obj_from_json(self, data, obj=None):
-        item = self._item_from_json(data)
-        if obj is None:
-            obj = self._cls(**item)
-        else:
-            for name,value in item.items():
-                field = self._cls._fields.get(name)
-                if isinstance(field, (ReferenceField, GenericReferenceField)):
-                    obj[name] = DBRef(self._cls._get_collection_name(), value)
-
-                elif isinstance(field, (ListField, )) and \
-                     isinstance(field.field, (ReferenceField, GenericReferenceField)):
-                    obj[name] = [DBRef(self._cls._get_collection_name(), val) for val in value]
-                else:
-                    setattr(obj, name, value)
-
-        return obj
+        return obj_from_json(data, cls=self._cls, obj=obj)
 
     def _find_obj(self, id):
         try:
@@ -120,11 +82,11 @@ class ColRes(AnellaRes):
 
     def _filter_from_inputs(self, values):
         filter ={}
-        for name in self.filter_fields:
+        for name,value in values.items():
+            if name not in self.filter_fields:
+                raise KeyError("Parameter '%s' not in filters." % name)
+
             field = self._cls._fields.get(name)
-            if name not in values:
-                continue
-            value = values.get(name)
             if isinstance(field, (ReferenceField, GenericReferenceField)):
                 filter[name] = ObjectId(value)
 
@@ -140,24 +102,16 @@ class ColRes(AnellaRes):
     def post(self):
         try:
             data = get_json()
-            # item = self._item_from_json(data)
-            # result = get_db()[self.collection].insert_one( item )
-            # # v2. result = get_db()[self.collection].save( item )
-            # id = result.inserted_id
-
             # Using ME validation
-            # import pdb;pdb.set_trace()
             obj = self._obj_from_json(data)
             valid_error = self._validate(obj)
             if valid_error:
-                response = dict( status='fail', msg='%s: %s' % (self.name,valid_error))
-                return respond_json( response, status=400)
+                return error_api(msg='%s: %s' % (self.name,valid_error))
+
             obj.save()
             id = obj.pk
-
             if not id:
-                response = dict( status='fail', msg='%s insert error' % self.name,)
-                return respond_json( response, status=400)
+                return error_api( msg='%s insert error' % self.name,)
 
             response = dict( status='ok', id=unicode(id))
             return respond_json( response, status=201)
@@ -166,10 +120,10 @@ class ColRes(AnellaRes):
 
     def get(self):
         try:
-            values = get_args()
+            values = get_args().copy() # args are inmutable
+            skip = int(values and values.pop('skip', 0) or 0)
+            limit = int(values and values.pop('limit', 0) or self.LIMIT-skip)
             filter = self._filter_from_inputs(values)
-            skip = values and values.get('skip') or 0
-            limit = values and values.get('limit') or self.LIMIT-skip
             cursor = get_db()[self.collection].find( filter, skip=skip, limit=limit )
             items = [item for item in cursor ]
 
@@ -181,9 +135,9 @@ class ColRes(AnellaRes):
             # return response
     
         except Exception, e:
-            return error_api( str(e) )
+            return error_api( unicode(e) )
 
-class IdRes(AnellaRes):
+class ItemRes(AnellaRes):
   
     def delete(self, id):
         try:
@@ -193,11 +147,10 @@ class IdRes(AnellaRes):
                 response = dict( status='ok', msg='%s deleted' % self.name )
                 return respond_json( response, status=200)
            
-            response = dict( status='fail', msg='%s not deleted' % self.name,)
-            return respond_json( response, status=404)
+            return error_api(msg='%s not deleted' % self.name, status=404)
 
         except Exception,e:
-            return error_api( msg=str(e) )
+            return error_api( msg=str(e), status=404 )
            
     def put(self, id):
         try:
@@ -210,13 +163,12 @@ class IdRes(AnellaRes):
             #     response = dict( status='fail', msg='%s not updated' % self.name,)
             #     return respond_json( response, status=400)
 
-            # Validation
+            # ME Validation
             obj = self._find_obj(id)
             obj = self._obj_from_json(data, obj)
             valid_error = self._validate(obj)
             if valid_error:
-                response = dict( status='fail', msg='%s: %s' % (self.name,valid_error))
-                return respond_json( response, status=400)
+                return error_api( msg='%s: %s' % (self.name,valid_error))
 
             obj.save()
 
@@ -229,32 +181,67 @@ class IdRes(AnellaRes):
     def get(self, id):
         item = self._find_item(id)
         if not item:
-            response = dict( status='fail', msg='%s not found' % self.name,)
-            return respond_json( response, status=404)
+            return error_api( msg='%s not found' % self.name, status=404)
 
         data = self._item_to_json(item)
         return data
 
-class ImageRes(Resource):
-    _cls=None
-    collection=''
-    field=''
-    name=''
+def item_from_json(data, cls, fields=None):
+    cls = cls
+    fields = fields or cls._fields.keys()
+    item ={}
+    for name in fields:
+        field = cls._fields.get(name)
+        if name not in data:
+            continue
+        value = data.get(name)
+        if isinstance(field, (ReferenceField, GenericReferenceField)):
+            item[name] = ObjectId(value)
 
-    def post(self, id):
-        item = self._find_item(id)
-        if not item:
-            response = dict( status='fail', msg='%s not found' % self.name,)
-            return respond_json( response, status=404)
+        elif isinstance(field, (ListField, )) and \
+             isinstance(field.field, (ReferenceField, GenericReferenceField)):
+            item[name] = [ObjectId(val) for val in value]
 
-        data = self._item_to_json(item)
-        return data
+        elif isinstance(field, (DateTimeField, )):
+            item[name] = field.to_mongo(value)
+
+        else:
+            item[name] = value
+
+    return item
+
+def obj_from_json(data, cls, obj=None):
+    item = item_from_json(data, cls )
+    if obj is None:
+        # obj = cls(**item)
+        obj = cls()
+
+    for name,value in item.items():
+        field = cls._fields.get(name)
+        if isinstance(field, (ReferenceField, GenericReferenceField)):
+            obj[name] = DBRef(cls._get_collection_name(), value)
+
+        elif isinstance(field, EmbeddedDocumentField):
+            if obj[name]:
+                obj[name] = obj_from_json(value, cls=field.document_type, 
+                                          obj=obj[name])
+            else:
+                obj[name] = obj_from_json(value, cls=field.document_type )
+
+        elif isinstance(field, (ListField, )) and \
+             isinstance(field.field, (ReferenceField, GenericReferenceField)):
+            obj[name] = [DBRef(cls._get_collection_name(), val) for val in value]
+        else:
+            setattr(obj, name, value)
+
+    return obj
 
 def respond_json(data, status=200, **kwargs):
 
     headers={
             'Cache-Control': 'no-cache',
-            'Access-Control-Allow-Origin': '*'
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json'
             }
     if 'headers' in kwargs:
         for k,v in kwargs['headers']:
@@ -273,8 +260,8 @@ def not_found_api():
     from flask import abort
     abort(405)
 
-def error_api(msg):
-    response = dict( count=0, status='fail', msg=msg, result=[])
-    return respond_json( json.dumps(response), status=500,)
+def error_api(msg, status=400):
+    response = dict( status='fail', msg=msg)
+    return respond_json( response, status=status)
 
 

@@ -7,7 +7,7 @@ import time
 from anella.common import *
 from anella.model.service import get_service_type, get_service_cls, GenericService, SERVICE_TYPES
 
-from anella.api.utils import ColRes, IdRes
+from anella.api.utils import ColRes, ItemRes, Resource
 
 class ServicesRes(ColRes):
     collection= 'services'
@@ -25,10 +25,15 @@ class ServicesRes(ColRes):
         # obj = service_cls.from_json(item)
         return item
 
-class ServiceRes(IdRes):
+class ServiceRes(ItemRes):
     collection= 'services'
     _cls = GenericService
     name= 'Service'
     fields = '_id,name,summary,description,service_type,provider,sectors,keywords,link,created_at,created_by,updated_at,updated_by'.split(',')
 
+
+class ServiceTypesRes(Resource):
+
+    def get(self):
+        return [ dict(name=st[0], description=st[1]) for st in SERVICE_TYPES]
 

@@ -15,33 +15,40 @@ from anella import common
 
 from anella.model.user import User
 from anella.model.partner import Partner, Provider, Client, User, Contact, ANELLA_SECTORS
-from anella.model.project import ServiceContext, Project
+from anella.model.project import SProject, Project
 from anella.model.service import GenericService, CloudService
+from anella.model.scontext import SContext
 # from anella.model.service import VMImage, DockerImage
 
 class DocLoader(object):
 
     def create_admin(self):
-        self.user = User(email=cfg.admin__email, user_name=cfg.admin__user,
+        self.admin = User(email=cfg.admin__email, user_name=cfg.admin__user,
                          admin=True, staff=True)
+        self.admin.save()
+
+    def create_user(self):
+        self.user = User(email='user.prov@prov1.com')
         self.user.save()
 
     def create_provider(self):
-        user = User(email='prov1@prov1.com')
-        user.save()
+        # user = User(email='prov1@prov1.com')
+        # user.save()
+        contact = Contact( email='prov1@prov1.com' )
         self.provider = Provider(name='prov1', 
-                            contact = Contact(email='prov1@prov1.com'),
-                            users=[user,],
+                            contact = contact,
+                            # users=[user,],
                             sectors=[ sector[0] for sector in ANELLA_SECTORS],
                            )
         self.provider.save()
 
     def create_client(self):
-        user = User(email='client1@client1.com')
-        user.save()
+        # user = User(email='client1@client1.com')
+        # user.save()
+        contact = Contact(email='client1@client1.com')
         self.client = Client(name='client1', 
-                            contact = Contact(email='client1@client1.com'),
-                            users=[user,],
+                            contact = contact,
+                            # users=[user,],
                             sectors=[ sector[0] for sector in ANELLA_SECTORS],
                            )
         self.client.save()
@@ -72,19 +79,51 @@ class DocLoader(object):
                                 )
         self.cloud.save()
 
+    def create_ssh(self):
+#         image = DockerImage(name='orambla/anella')
+        self.ssh = GenericService(name='ssh',
+                                 summary = "summary ssh",
+                                 description = "description ssh",
+                                 link = "http://linkssh.com",
+                                 provider = self.provider,
+                                 keywords= [ "ssh" ],
+                                 sectors= [ "industry" ],
+#                                  images = [image,],
+                                )
+        self.ssh.save()
+
+
+    def create_scontext(self):
+#         self.sc1 = SContext(name='scontext1', schema_file_name='schemas/schema-test.json' )
+        properties={
+            'host': 'localhost',
+            'port': 22,
+            'user_name': 'oscar.rambla',
+            'password': 'oscar.rambla',
+            'service_name': 'apachectl',
+        }
+     
+        self.scontext = SContext(name='context_ssh',
+                                 context_type='ssh',
+                                 properties=properties,
+                                )
+        self.scontext.save()
+
+#     def create_sc2(self):
+# #         self.sc2 = SContext(name='scontext2', schema_file_name='schemas/schema-test.json' )
+#         self.sc2 = SContext(name='scontext2' )
+#         self.sc2.save()
+
     def create_project(self):
-        c_generic= ServiceContext(service=self.generic)
-        c_generic.save()
-        c_cloud =  ServiceContext(service=self.cloud)
-        c_cloud.save()
-        self.project = Project(name='project1', client=self.client, 
-                          services=[ c_generic, c_cloud ]
+        self.project = Project(name='project1', client=self.client,) 
+#                           services=[ c_generic, c_cloud ]
 #                           services = {
-#                               service.name : ServiceContext(service=service),
-#                               cloud.name : ServiceContext(service=cloud),
+#                               service.name : SContext(service=service),
+#                               cloud.name : SContext(service=cloud),
 #                            }
-                          )
         self.project.save()
+        self.sproject= SProject(project=self.project, service=self.ssh, context=self.scontext)
+        self.sproject.save()
 
 class AnellaTestCase(unittest.TestCase, DocLoader):
 

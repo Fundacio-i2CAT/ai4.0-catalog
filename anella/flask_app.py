@@ -18,17 +18,44 @@ from mongoengine import connect
 from utils import load_config, std_logging
 LOGGER = std_logging()
 
+from session import MongoSessionInterface
+
 from common import *
 import output
 
 
 def add_resources(api):
-    from anella.api.service import ServicesRes, ServiceRes
-#     from anella.api.project import ProjectsRes, ProjectRes, ProjectServiceRes
+    from anella.api.user import UsersRes, UserRes
+    from anella.api.session import SessionRes
+    from anella.api.service import ServicesRes, ServiceRes, ServiceTypesRes
+    from anella.api.provider import ProvidersRes, ProviderRes, ProviderServicesRes
+    from anella.api.provider import  ProviderSectorsRes, ProviderTypesRes
+    from anella.api.client import ClientsRes, ClientRes # , ClientServicesRes
 
     api.add_resource(ServicesRes, '/api/services')
+    api.add_resource(ServiceTypesRes, '/api/services/types', methods=['GET'])
     api.add_resource(ServiceRes, '/api/services/<id>')
 
+    api.add_resource(ProvidersRes, '/api/providers')
+    api.add_resource(ProviderSectorsRes, '/api/providers/sectors', methods=['GET'])
+    api.add_resource(ProviderTypesRes, '/api/providers/types', methods=['GET'])
+    api.add_resource(ProviderRes, '/api/providers/<id>')
+    api.add_resource(ProviderServicesRes, '/api/providers/<id>/services', 
+                     methods=['GET'] )
+
+    api.add_resource(ClientsRes, '/api/clients')
+    api.add_resource(ClientRes, '/api/clients/<id>')
+
+    api.add_resource(UsersRes, '/api/users', methods=['GET', 'POST'])
+    api.add_resource(UserRes, '/api/users/<id>', methods=['GET', 'PUT'])
+
+    api.add_resource(SessionRes, '/api/session', methods=['GET', 'POST', 'DELETE'])
+
+#     from anella.api.sproject import SProjectRes, SProjectsRes
+#     api.add_resource(SProjectsRes, '/api/sprojects')
+#     api.add_resource(SProjectRes, '/api/sprojects/<id>')
+
+#     from anella.api.project import ProjectsRes, ProjectRes, ProjectServiceRes
 #     api.add_resource(ProjectsRes, '/api/projects')
 #     api.add_resource(ProjectRes, '/api/projects/<id>')
 #     api.add_resource(ProjectServiceRes, '/api/projects/<id>/services')
@@ -121,6 +148,7 @@ def create_app(cfg_file='prod-config.yaml', testing=False, debug=False):
 
     app.config['TESTING'] = True
     app.config['SECRET_KEY'] = 'flask+mongoengine=<3'
+    app.config['SESSION_COOKIE_NAME'] = 'anella'
 
     if options.debug:
         from flask_debugtoolbar import DebugToolbarExtension
@@ -154,8 +182,15 @@ def create_app(cfg_file='prod-config.yaml', testing=False, debug=False):
 
     LOGGER.info(pformat(conn))
 
+    add_rules(app)
+
     api = Api(app)
     add_resources(api)
+
+    app.session_interface = MongoSessionInterface(db=app.config['MONGO_DBNAME'],
+                                                  host=app.config['MONGO_HOST'],
+                                                  port=app.config['MONGO_PORT']
+                                                 )
 
 #     db = MongoEngine(app)
 #     set_db(db)

@@ -19,12 +19,16 @@ PARTNER_TYPES = [
 ]
 
 CONTACT_POSITIONS = [
+    (u'admin', u'Administrador'),
     (u'developer', u'Desenvolupador'),
     (u'manager', u'Desenvolupador'),
 # ...
 ]
 
 class Contact(EmbeddedDocument):
+    """
+    Contact becomes Partner admin user.
+    """
     first_name = StringField()
     last_name = StringField()
     last_name2 = StringField()
@@ -45,7 +49,27 @@ class Partner(Document, Base):
     logo = FileField()
 
     contact = EmbeddedDocumentField(Contact)
+    admin = ReferenceField(User)
     users = ListField(ReferenceField(User))
+
+    def save(self):
+        assert self.contact and self.contact.email, "Contact email is required."
+        super(Partner, self).save()
+        try:
+            user = User.objects.get(email=self.contact.email)
+        except DoesNotExist,e:
+            user = User(email=self.contact.email, 
+                        first_name=self.contact.first_name,
+                        last_name=self.contact.last_name,
+                        partner_id = self.pk
+                       )
+            user.save()
+        finally:
+            if self.admin is None:
+                self.admin = user
+                super(Partner, self).save()
+ 
+
 
 class Provider(Partner):
     services = ListField(GenericReferenceField())

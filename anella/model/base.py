@@ -6,7 +6,6 @@ from mongoengine import *
 from mongoengine import signals
 
 from anella.common import get_user
-from user import User
 
 class Base(object):
     created_at = DateTimeField()
