@@ -9,7 +9,6 @@ import yaml
 from pkg_resources import resource_string
 
 import configuration as cfg
-import database
 
 from template import get_parameters, is_template, Template
 
@@ -41,20 +40,6 @@ def syslog_logging(name='anella', level=logging.DEBUG):
         name + "(%(levelname)s) [%(process)d/%(thread)d]: "
         "(%(module)s.%(funcName)s) %(message)s",
         level
-    )
-
-
-def health_logging():
-    """
-    Set up logging to stdout in the healthcheck format
-    and return a logger object
-    """
-    handler = logging.StreamHandler(sys.stdout)
-    return generic_logging(
-        'stdout',
-        handler,
-        ('%(asctime)s %(message)s', '%Y/%m/%d %H:%M:%S'),
-        logging.INFO
     )
 
 
@@ -149,11 +134,6 @@ def load_config(configfile, clear_db_config=False):
             err
         )
         sys.exit(1)
-
-    # if clear_db_config:
-    #     database.Database.delete_db_cfg()
-
-    # database.Database.load_config()
 
 def resolve_parameters(cfg, env, resolver=None):
     """
