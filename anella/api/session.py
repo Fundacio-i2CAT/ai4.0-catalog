@@ -2,7 +2,6 @@ from anella.common import *
 from anella.model.user import User
 
 from anella.api.user import UserRes
-from anella.api.project import ProjectRes
 
 class SessionRes(UserRes):
 

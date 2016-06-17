@@ -15,9 +15,6 @@ from anella import common
 
 from anella.model.user import User
 from anella.model.partner import Partner, Provider, Client, User, Contact, ANELLA_SECTORS
-from anella.model.project import SProject, Project
-from anella.model.service import GenericService, CloudService
-from anella.model.scontext import SContext
 # from anella.model.service import VMImage, DockerImage
 
 def reset_database():
@@ -57,6 +54,8 @@ class DocLoader(object):
         self.client.save()
 
     def create_generic(self):
+        from anella.model.service import GenericService, CloudService
+
 #         image = DockerImage(name='orambla/anella')
         self.generic = GenericService(name='service1',
                                  summary = "summary 1",
@@ -70,6 +69,7 @@ class DocLoader(object):
         self.generic.save()
 
     def create_cloud(self):
+        from anella.model.service import GenericService, CloudService
 #         image = DockerImage(name='orambla/anella')
         self.cloud = CloudService(name='cloud_service2',
                                  summary = "summary 2",
@@ -83,6 +83,7 @@ class DocLoader(object):
         self.cloud.save()
 
     def create_ssh(self):
+        from anella.model.service import GenericService, CloudService
 #         image = DockerImage(name='orambla/anella')
         self.ssh = GenericService(name='ssh',
                                  summary = "summary ssh",
@@ -97,6 +98,8 @@ class DocLoader(object):
 
 
     def create_scontext(self):
+        from anella.model.scontext import SContext
+
 #         self.sc1 = SContext(name='scontext1', schema_file_name='schemas/schema-test.json' )
         properties={
             'host': 'localhost',
@@ -118,6 +121,8 @@ class DocLoader(object):
 #         self.sc2.save()
 
     def create_project(self):
+        from anella.model.project import SProject, Project
+
         self.project = Project(name='project1', client=self.client,) 
 #                           services=[ c_generic, c_cloud ]
 #                           services = {
