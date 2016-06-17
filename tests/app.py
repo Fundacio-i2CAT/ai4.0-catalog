@@ -9,7 +9,7 @@ from time import sleep
 from mongoengine import NotUniqueError
 from flask import json, jsonify
 
-from utils import AnellaTestCase
+from utils import AnellaTestCase, reset_database
 
 from anella import utils
 from anella import common
@@ -24,7 +24,7 @@ app = flask_app.create_app(cfg_file='test-config.yaml', testing=True, debug=True
 class AppTestCase(AnellaTestCase):
 
     def setUp(self):
-        utils.reset_database()
+        reset_database()
         self.app = app.test_client()
 
 if __name__ == '__main__':

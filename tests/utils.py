@@ -20,6 +20,9 @@ from anella.model.service import GenericService, CloudService
 from anella.model.scontext import SContext
 # from anella.model.service import VMImage, DockerImage
 
+def reset_database():
+    common.reset_db()
+
 class DocLoader(object):
 
     def create_admin(self):
@@ -129,7 +132,7 @@ class AnellaTestCase(unittest.TestCase, DocLoader):
 
     def setUp(self):
         utils.load_config('test-config.yaml', True)
-        utils.reset_database()
+        reset_database()
 
     def tearDown(self):
         connection._connection_settings = {}

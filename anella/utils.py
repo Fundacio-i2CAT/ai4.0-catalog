@@ -198,8 +198,3 @@ def resolve_parameters(cfg, env, resolver=None):
                 setattr(cfg, name, value)
 
         return cfg
-
-def reset_database():
-    database.Database.drop_database()
-    # database.Database.load_config()
-

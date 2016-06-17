@@ -10,10 +10,10 @@ import configuration as _cfg
 # _db = None # Mongoengine
 
 _mongo = None # Pymongo
-_connection = None
+_connection = None # mongoengine
 _user = None
 
-__all__ = ( 'get_cfg', 'get_connection', 'get_db', 'get_mongo',
+__all__ = ( 'get_cfg', 'get_connection', 'get_mongo', 'get_db', 'reset_db',
             'respond', 'redirect', 'not_found', 'get_user', 'get_session',
             'get_request', 'get_response', 'get_method', 'get_path',
             'get_data', 'get_json', 'get_args', 'get_arg', 'get_referer',
@@ -35,6 +35,19 @@ def get_mongo():
 def get_db():
     mongo = get_mongo()
     return mongo[_cfg.database__database_name]
+
+def reset_db():
+    """
+    drops database and reset pymongo and mongoengine connections.
+    """
+    global _mongo, _connection
+    if _mongo is None:
+        _mongo = MongoClient(_cfg.database__host, _cfg.database__port )
+
+    _mongo.drop_database(_cfg.database__database_name)
+    _mongo = _connection = None
+    get_mongo()
+
 
 def get_connection():
     global _connection

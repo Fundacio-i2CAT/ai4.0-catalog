@@ -18,9 +18,8 @@ class ProjectTest(AnellaTestCase):
     def test_project_save(self):
         self.create_provider()
         self.create_client()
-        self.create_generic()
-        self.create_cloud()
-
+        self.create_ssh()
+        self.create_scontext()
         self.create_project()
 
 

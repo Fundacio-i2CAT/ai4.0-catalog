@@ -89,27 +89,6 @@ def create_app(cfg_file='prod-config.yaml', testing=False, debug=False):
         default=cfg_file
     )
     opt_parser.add_option(
-        "--healthcheck",
-        action="store_true",
-        help="Perform a healthcheck",
-        dest="healthcheck",
-        default=False
-    )
-    opt_parser.add_option(
-        "--clear-db-log",
-        action="store_true",
-        help="Delete log entries in the database",
-        dest="clear_log",
-        default=False
-    )
-    opt_parser.add_option(
-        "--clear-db-config",
-        action="store_true",
-        help="Delete config stored in database",
-        dest="clear_cfg",
-        default=False
-    )
-    opt_parser.add_option(
         "--debug",
         action="store_true",
         help="Debug mode",
@@ -121,11 +100,7 @@ def create_app(cfg_file='prod-config.yaml', testing=False, debug=False):
 
     load_config(
         configfile=options.cfg_file,
-        clear_db_config=options.clear_cfg
     )
-
-    if options.clear_log:
-        database.Database.delete_db_log()
 
     app = Flask('anella', static_url_path='', static_folder='public')
     app.config['HOST'] = get_cfg('app__host')

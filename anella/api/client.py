@@ -30,16 +30,3 @@ class ClientRes(ItemRes):
     name= 'Client'
     fields = '_id,name,summary,description,link,contact,sectors,created_at,created_by,updated_at,updated_by'.split(',')
 
-class ClientProjectsRes(ServicesRes):
-    collection= 'services'
-    document_cls = GenericService
-    name= 'Services'
-    fields = '_id,name,summary,service_type,provider,sectors,link'.split(',')
-    query_fields = 'name,keywords,sectors,link'.split(',')
-
-    def item_from_json(self, item):
-        return service_from_json(item)
-
-    def get(self, provider_id):
-        pass
-

@@ -5,14 +5,19 @@ from mongoengine import *
 from base import Base
 from partner import Partner, Provider, Client
 from service import ServiceDescription, GenericService, CloudService
+from scontext import SContext
 
-SERVICE_COMFIRMED=1
+SERVICE_SAVED=0
+SERVICE_PENDING=1
+SERVICE_COMFIRMED=2
+
 SERVICE_STATUS = (
-    ( 								0, u'Pendent confirmar' ),
-    ( SERVICE_COMFIRMED, u'Confirmat' ),
-    ( 								2, u'Instanciat' ),
-    ( 								3, u'Aturat' ),
-    ( 								4, u'Finalitzat' ),
+    ( SERVICE_SAVED,			u'Guardat' ),
+    (	SERVICE_PENDING,	 	u'Pendent confirmar' ),
+    ( SERVICE_COMFIRMED, 	u'Confirmat' ),
+    ( 								2, 	u'Instanciat' ),
+    ( 								3, 	u'Aturat' ),
+    ( 								4, 	u'Finalitzat' ),
 )
 
 PROJECT_ROLES = (
@@ -32,35 +37,70 @@ PROJECT_STATUS = (
     ( 								6, u'Finalitzat' ),
 )
 
-class ServiceContext(Document):
+class SProject(Document, Base):
     """
     A Service when included in a Project whih its associated status and deployment info.
     """
+    meta = {'allow_inheritance': True, 'collection': 'sprojects'}
+
     service = ReferenceField(ServiceDescription)
-    project = GenericReferenceField()
+    project = ReferenceField('Project')
+    context = ReferenceField(SContext)
     status = IntField(choices=SERVICE_STATUS)
     
-    def __init__(self, service):
-        super(ServiceContext, self).__init__(self)
+    def __init__(self, project, service, context=None):
+        super(SProject, self).__init__()
+        self.project=project
         self.service=service
+        self.context=context
         self.status=0
 
+    def ask_confirm(self):
+        assert self.status==SERVICE_SAVED
+        self.status=SERVICE_PENDING
+
     def confirm(self):
+        """
+        - sendmail provider
+        """
         assert self.status==0
         self.status=1
 
-    def create_instance(self, project):
-        assert self.status==SERVICE_COMFIRMED
-        s_instance = ServiceInstance(service=self.service, project=project)
-        s_instance.save()
-        return s_instance
+#     def create_instance(self, project):
+#         assert self.status==SERVICE_COMFIRMED
+#         s_instance = Instance(service=self.service, project=self.project)
+#         s_instance.save()
+#         return s_instance
+# 
+class Instance(Document, Base):
+    """
+    A Service when included in a Project whih its associated status and deployment info.
+    """
+    meta = {'allow_inheritance': True, 'collection': 'instances'}
 
+    service = ReferenceField(SProject)
+    project = ReferenceField('Project')
+    start_at = DateTimeField()
+    end_at = DateTimeField()
+    status = IntField(choices=SERVICE_STATUS)
+    exit_status = IntField()
+    exit_error = StringField()
+    
+    def __init__(self, project, service, context=None):
+        super(Instance, self).__init__()
+        self.project=project
+        self.service=service
+        self.context=context or {}
+        self.status=0
+
+    def ask_confirm(self):
+        assert self.status==SERVICE_SAVED
+        self.status=SERVICE_PENDING
 
 class Project(Document, Base):
     """
     """
     meta = {'allow_inheritance': True, 'collection': 'projects'}
-
 
     # Collection fields
     name = StringField(max_length=40, required=True, unique=True)
@@ -69,7 +109,7 @@ class Project(Document, Base):
 
     client = ReferenceField(Client)
     user_roles = DictField()
-    services = ListField(ReferenceField(ServiceContext))
+    services = ListField(ReferenceField(SProject))
     status = IntField(choices=PROJECT_STATUS)
 
     def create_instances(self):
