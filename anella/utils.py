@@ -87,47 +87,6 @@ def load_config(configfile, clear_db_config=False):
         cfg.orch__host = yaml_config['anella']['orch']['host']
         cfg.orch__port = yaml_config['anella']['orch']['port']
 
-#         cfg.mq__host = yaml_config['anella']['mq_broker']['host']
-#         cfg.mq__port = yaml_config['anella']['mq_broker']['port']
-#         cfg.mq__exchange = yaml_config['anella']['mq_broker']['exchange']
-#         cfg.mq__inbound = yaml_config['anella']['mq_broker']['routing_key']['inbound']
-#         cfg.mq__outbound = yaml_config['anella']['mq_broker']['routing_key']['outbound']
-#         cfg.mq__username = yaml_config['anella']['mq_broker']['username']
-#         cfg.mq__password = yaml_config['anella']['mq_broker']['password']
-
-#         cfg.plugin_java = yaml_config['anella']['plugins']['java']
-#         cfg.plugin_python = yaml_config['anella']['plugins']['python']
-#         cfg.plugin_cpp = yaml_config['anella']['plugins']['cpp']
-#         cfg.plugin__grouping = yaml_config['anella']['plugins'].get('grouping', [])
-#         cfg.plugin__default_weighting = yaml_config['anella']['plugins'].get('default_weighting', 1)
-#         cfg.plugin__weightings = yaml_config['anella']['plugins'].get('weightings', [])
-
-#         cfg.heat_resource_mq__host = yaml_config['anella']['heat_resource']['host']
-#         cfg.heat_resource_mq__port = yaml_config['anella']['heat_resource']['port']
-#         cfg.heat_resource_mq__username = yaml_config['anella']['heat_resource']['username']
-#         cfg.heat_resource_mq__password = yaml_config['anella']['heat_resource']['password']
-#         cfg.heat_resource_mq__exchange = yaml_config['anella']['heat_resource']['exchange']
-#         cfg.heat_resource_mq__key = yaml_config['anella']['heat_resource']['key']
-
-#         cfg.openstack__auth_url = yaml_config['anella']['openstack_polling']['auth_url']
-#         cfg.openstack__username = yaml_config['anella']['openstack_polling']['username']
-#         cfg.openstack__password = yaml_config['anella']['openstack_polling']['password']
-#         cfg.openstack__tenant = yaml_config['anella']['openstack_polling']['tenant']
-
-#         cfg.openstack_event__host = yaml_config['anella']['event']['host']
-#         cfg.openstack_event__port = yaml_config['anella']['event']['port']
-#         cfg.openstack_event__username = yaml_config['anella']['event']['username']
-#         cfg.openstack_event__password = yaml_config['anella']['event']['password']
-#         cfg.openstack_event__exchange = yaml_config['anella']['event']['exchange']
-#         cfg.openstack_event__key = yaml_config['anella']['event']['key']
-# 
-#         cfg.app_feedback__host = yaml_config['anella']['app_feedback']['host']
-#         cfg.app_feedback__port = yaml_config['anella']['app_feedback']['port']
-#         cfg.app_feedback__username = yaml_config['anella']['app_feedback']['username']
-#         cfg.app_feedback__password = yaml_config['anella']['app_feedback']['password']
-#         cfg.app_feedback__exchange = yaml_config['anella']['app_feedback']['exchange']
-#         cfg.app_feedback__key = yaml_config['anella']['app_feedback']['key']
-
     except Exception, err:
         print "Exception loading config file [{0}]: ({1})".format(
             configfile,

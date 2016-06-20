@@ -17,7 +17,7 @@ class ProvidersRes(ColRes):
     _cls = Provider
     name= 'Providers'
     fields = '_id,name,summary,link,contact,sectors,created_at,updated_at'.split(',')
-    filter_fields = 'name'.split(',')
+    filter_fields = 'name,sectors'.split(',')
 
     def _filter_from_inputs(self, values):
         filter = super(ProvidersRes, self)._filter_from_inputs(values)
@@ -43,11 +43,11 @@ class ProviderServicesRes(ServicesRes):
     def get(self, provider_id):
         pass
 
-class ProviderSectorsRes(Resource):
+class PartnerSectorsRes(Resource):
     def get(self):
         return [ dict(name=st[0], description=st[1]) for st in ANELLA_SECTORS]
 
-class ProviderTypesRes(Resource):
+class PartnerTypesRes(Resource):
     def get(self):
         return [ dict(name=st[0], description=st[1]) for st in PARTNER_TYPES]
 

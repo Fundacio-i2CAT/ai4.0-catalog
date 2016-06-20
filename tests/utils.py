@@ -49,6 +49,7 @@ class DocLoader(object):
         self.client = Client(name='client1', 
                             contact = contact,
                             # users=[user,],
+                            partner_type='research',
                             sectors=[ sector[0] for sector in ANELLA_SECTORS],
                            )
         self.client.save()

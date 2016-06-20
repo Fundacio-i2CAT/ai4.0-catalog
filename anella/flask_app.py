@@ -29,7 +29,7 @@ def add_resources(api):
     from anella.api.session import SessionRes
     from anella.api.service import ServicesRes, ServiceRes, ServiceTypesRes
     from anella.api.provider import ProvidersRes, ProviderRes, ProviderServicesRes
-    from anella.api.provider import  ProviderSectorsRes, ProviderTypesRes
+    from anella.api.provider import  PartnerSectorsRes, PartnerTypesRes
     from anella.api.client import ClientsRes, ClientRes # , ClientServicesRes
 
     api.add_resource(ServicesRes, '/api/services')
@@ -37,13 +37,13 @@ def add_resources(api):
     api.add_resource(ServiceRes, '/api/services/<id>')
 
     api.add_resource(ProvidersRes, '/api/providers')
-    api.add_resource(ProviderSectorsRes, '/api/providers/sectors', methods=['GET'])
-    api.add_resource(ProviderTypesRes, '/api/providers/types', methods=['GET'])
+    api.add_resource(PartnerSectorsRes, '/api/providers/sectors', methods=['GET'])
     api.add_resource(ProviderRes, '/api/providers/<id>')
     api.add_resource(ProviderServicesRes, '/api/providers/<id>/services', 
                      methods=['GET'] )
 
     api.add_resource(ClientsRes, '/api/clients')
+    api.add_resource(PartnerTypesRes, '/api/clients/types', methods=['GET'])
     api.add_resource(ClientRes, '/api/clients/<id>')
 
     api.add_resource(UsersRes, '/api/users', methods=['GET', 'POST'])
