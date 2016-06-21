@@ -44,8 +44,10 @@ class ProviderApiTest(AppTestCase):
         data = json.loads(resp.data)
         self.assertEqual( data['count'], 1)
 
-        resp = self.app.get('/api/providers?pip=prov1')
+        resp = self.app.get('/api/providers?na=prov1')
         self.assertEqual( resp.status_code, 400)
+        data = json.loads(resp.data)
+        self.assertEqual( data['status'], 'fail')
 
         resp = self.app.get('/api/providers?sectors=health')
         self.assertEqual( resp.status_code, 200)
@@ -57,7 +59,7 @@ class ProviderApiTest(AppTestCase):
         self.create_admin()
         sleep(1)
 
-        data = '''{ "name" : "provider3", "sectors" : [ "industry" ], "contact": { "email": "prov3@prov3.com" } }''' 
+        data = '''{ "name" : "provider3", "sectors" : [ "industry" ], "contact": { "email": "user.prov3@prov3.com" } }''' 
         resp = self.app.post('/api/providers', data=data, content_type = 'application/json')
         self.assertEqual( resp.status_code, 201)
         data = json.loads(resp.data)
@@ -69,7 +71,7 @@ class ProviderApiTest(AppTestCase):
         resp = self.app.get(u'/api/providers/'+provider_id)
         self.assertEqual( resp.status_code, 200)
         data = json.loads(resp.data)
-        self.assertEqual( data['contact']['email'], 'prov3@prov3.com')
+        self.assertEqual( data['contact']['email'], 'user.prov3@prov3.com')
 
 
     def test_provider_get(self):
@@ -82,7 +84,7 @@ class ProviderApiTest(AppTestCase):
         resp = self.app.get(u'/api/providers/'+provider_id)
         self.assertEqual( resp.status_code, 200)
         data = json.loads(resp.data)
-        self.assertEqual( data['contact']['email'], 'prov1@prov1.com')
+        self.assertEqual( data['contact']['email'], 'user.prov1@prov1.com')
 
     def test_provider_delete(self):
         self.create_admin()
@@ -109,7 +111,7 @@ class ProviderApiTest(AppTestCase):
         provider_id = unicode(self.provider.pk)
 
         sleep(1)
-        data = '''{ "name" : "provider3", "sectors" : [ "industry" ], "contact": { "email": "prov3@prov3.com" } }''' 
+        data = '''{ "name" : "provider3", "sectors" : [ "industry" ], "contact": { "email": "user.prov3@prov3.com" } }''' 
         resp = self.app.put('/api/providers/'+provider_id, data=data, 
                             content_type='application/json')
 
@@ -120,7 +122,7 @@ class ProviderApiTest(AppTestCase):
         resp = self.app.get(u'/api/providers/'+provider_id)
         self.assertEqual( resp.status_code, 200)
         data = json.loads(resp.data)
-        self.assertEqual( data['contact']['email'], 'prov3@prov3.com')
+        self.assertEqual( data['contact']['email'], 'user.prov3@prov3.com')
 
 if __name__ == '__main__':
     unittest.main()

@@ -49,7 +49,7 @@ class ClientApiTest(AppTestCase):
         resp = self.app.get('/api/clients?na=client1')
         self.assertEqual( resp.status_code, 400)
         data = json.loads(resp.data)
-        self.assertEqual( data['count'], 0)
+        self.assertEqual( data['status'], 'fail')
 
         resp = self.app.get('/api/clients?sectors=health')
         self.assertEqual( resp.status_code, 200)
