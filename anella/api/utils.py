@@ -23,23 +23,7 @@ class AnellaRes(Resource):
     TIMEOUT = 1000
 
     def _item_to_json(self, item):
-        js_item = {}
-        for field in self.fields:
-           data = item.get(field)
- 
-           if isinstance(data, ObjectId):
-               js_data = unicode(data)
-
-           elif isinstance(data, datetime):
-               js_data = str(data)
- 
-           else:
-               js_data = data
-
-           js_item[field]= js_data
-
-        return js_item
-    
+        return item_to_json(item, self.fields)
 
     def _items_to_json(self, items):
         if not items:
@@ -185,6 +169,24 @@ class ItemRes(AnellaRes):
 
         data = self._item_to_json(item)
         return data
+
+def item_to_json(item, fields):
+    js_item = {}
+    for field in fields:
+       data = item.get(field)
+
+       if isinstance(data, ObjectId):
+           js_data = unicode(data)
+
+       elif isinstance(data, datetime):
+           js_data = str(data)
+
+       else:
+           js_data = data
+
+       js_item[field]= js_data
+
+    return js_item
 
 def item_from_json(data, cls, fields=None):
     cls = cls

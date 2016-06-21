@@ -34,7 +34,7 @@ class DocLoader(object):
     def create_provider(self):
         # user = User(email='prov1@prov1.com')
         # user.save()
-        contact = Contact( email='prov1@prov1.com' )
+        contact = Contact( email='user.prov1@prov1.com' )
         self.provider = Provider(name='prov1', 
                             contact = contact,
                             # users=[user,],
@@ -83,26 +83,12 @@ class DocLoader(object):
                                 )
         self.cloud.save()
 
-    def create_ssh(self):
-        from anella.model.service import GenericService, CloudService
-#         image = DockerImage(name='orambla/anella')
-        self.ssh = GenericService(name='ssh',
-                                 summary = "summary ssh",
-                                 description = "description ssh",
-                                 link = "http://linkssh.com",
-                                 provider = self.provider,
-                                 keywords= [ "ssh" ],
-                                 sectors= [ "industry" ],
-#                                  images = [image,],
-                                )
-        self.ssh.save()
-
 
     def create_scontext(self):
         from anella.model.scontext import SContext
 
 #         self.sc1 = SContext(name='scontext1', schema_file_name='schemas/schema-test.json' )
-        properties={
+        context={
             'host': 'localhost',
             'port': 22,
             'user_name': 'oscar.rambla',
@@ -110,9 +96,9 @@ class DocLoader(object):
             'service_name': 'apachectl',
         }
      
-        self.scontext = SContext(name='context_ssh',
-                                 context_type='ssh',
-                                 properties=properties,
+        self.scontext = SContext(name='context_apache',
+                                 context_type='apache',
+                                 properties=context,
                                 )
         self.scontext.save()
 
@@ -120,6 +106,54 @@ class DocLoader(object):
 # #         self.sc2 = SContext(name='scontext2', schema_file_name='schemas/schema-test.json' )
 #         self.sc2 = SContext(name='scontext2' )
 #         self.sc2.save()
+
+    def create_apache_service(self):
+        from anella.model.scontext import SContext
+        from anella.model.service import GenericService, CloudService
+
+#         self.sc1 = SContext(name='scontext1', schema_file_name='schemas/schema-test.json' )
+        context={
+            'parameters':{
+                'service_name': '${service_name}',
+                'host': 'localhost',
+                'port': 22,
+                'user_name': 'oscar.rambla',
+                'password': 'oscar.rambla'
+            },
+            'lifecycle_events': {
+                'start': {
+                    'cmd': 'start ${service_name}'
+                 },
+                'stop': {
+                    'cmd': 'stop ${service_name}'
+                 }
+            }
+        }
+     
+        self.scontext = SContext(name='linux_service',
+                                 context_type='system',
+                                 context=context,
+                                )
+        self.scontext.save()
+
+#         image = DockerImage(name='orambla/anella')
+        properties={
+            'service_name' : 'apache2'
+        }
+        self.apache = GenericService(name='apache',
+                                 summary = "summary apache",
+                                 description = "description apache",
+                                 link = "http://linkapache.com",
+                                 provider = self.provider,
+                                 keywords= [ "web", "server" ],
+                                 sectors= [ "industry" ],
+#                                  images = [image,],
+                                 properties=properties
+                                )
+        self.apache.save()
+
+#         import pdb;pdb.set_trace()
+
 
     def create_project(self):
         from anella.model.project import SProject, Project
@@ -131,8 +165,13 @@ class DocLoader(object):
 #                               cloud.name : SContext(service=cloud),
 #                            }
         self.project.save()
-        self.sproject= SProject(project=self.project, service=self.ssh, context=self.scontext)
+
+        context = self.scontext.resolve_parameters(self.apache.properties)
+        self.sproject= SProject(project=self.project, service=self.apache, 
+                                context_type=self.scontext.context_type, context=context )
         self.sproject.save()
+        self.project.services.append(self.sproject)
+        self.project.save()
 
 class AnellaTestCase(unittest.TestCase, DocLoader):
 

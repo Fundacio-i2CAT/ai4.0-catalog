@@ -26,15 +26,17 @@ import output
 
 def add_resources(api):
     from anella.api.user import UsersRes, UserRes
-    from anella.api.session import SessionRes
-    from anella.api.service import ServicesRes, ServiceRes, ServiceTypesRes
+    from anella.api.session import SessionRes, SessionUserRes
+
+    api.add_resource(UsersRes, '/api/users', methods=['GET', 'POST'])
+    api.add_resource(UserRes, '/api/users/<id>', methods=['GET', 'PUT'])
+
+    api.add_resource(SessionRes, '/api/session', methods=['POST', 'DELETE'])
+    api.add_resource(SessionUserRes, '/api/session/user', methods=['GET'])
+
     from anella.api.provider import ProvidersRes, ProviderRes, ProviderServicesRes
     from anella.api.provider import  PartnerSectorsRes, PartnerTypesRes
     from anella.api.client import ClientsRes, ClientRes # , ClientServicesRes
-
-    api.add_resource(ServicesRes, '/api/services')
-    api.add_resource(ServiceTypesRes, '/api/services/types', methods=['GET'])
-    api.add_resource(ServiceRes, '/api/services/<id>')
 
     api.add_resource(ProvidersRes, '/api/providers')
     api.add_resource(PartnerSectorsRes, '/api/providers/sectors', methods=['GET'])
@@ -46,19 +48,21 @@ def add_resources(api):
     api.add_resource(PartnerTypesRes, '/api/clients/types', methods=['GET'])
     api.add_resource(ClientRes, '/api/clients/<id>')
 
-    api.add_resource(UsersRes, '/api/users', methods=['GET', 'POST'])
-    api.add_resource(UserRes, '/api/users/<id>', methods=['GET', 'PUT'])
+    from anella.api.service import ServicesRes, ServiceRes, ServiceTypesRes
 
-    api.add_resource(SessionRes, '/api/session', methods=['GET', 'POST', 'DELETE'])
+    api.add_resource(ServicesRes, '/api/services')
+    api.add_resource(ServiceTypesRes, '/api/services/types', methods=['GET'])
+    api.add_resource(ServiceRes, '/api/services/<id>')
+
+
+#     from anella.api.project import ProjectsRes, ProjectRes, ProjectServicesRes
+#     api.add_resource(ProjectsRes, '/api/projects')
+#     api.add_resource(ProjectRes, '/api/projects/<id>')
+#     api.add_resource(ProjectServicesRes, '/api/projects/<id>/services')
 
 #     from anella.api.sproject import SProjectRes, SProjectsRes
 #     api.add_resource(SProjectsRes, '/api/sprojects')
 #     api.add_resource(SProjectRes, '/api/sprojects/<id>')
-
-#     from anella.api.project import ProjectsRes, ProjectRes, ProjectServiceRes
-#     api.add_resource(ProjectsRes, '/api/projects')
-#     api.add_resource(ProjectRes, '/api/projects/<id>')
-#     api.add_resource(ProjectServiceRes, '/api/projects/<id>/services')
 
 def add_rules(app):
     """

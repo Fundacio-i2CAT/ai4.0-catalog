@@ -34,14 +34,24 @@ class ProviderApiTest(AppTestCase):
         self.assertEqual( data['count'], 1)
         self.assertEqual( data['status'], 'ok')
 
+    def test_providers_query(self):
+        self.create_admin()
+        self.create_provider()
+        sleep(1)
+
         resp = self.app.get('/api/providers?name=prov1')
         self.assertEqual( resp.status_code, 200)
         data = json.loads(resp.data)
+        self.assertEqual( data['count'], 1)
 
         resp = self.app.get('/api/providers?pip=prov1')
         self.assertEqual( resp.status_code, 400)
 
+        resp = self.app.get('/api/providers?sectors=health')
+        self.assertEqual( resp.status_code, 200)
+        data = json.loads(resp.data)
         self.assertEqual( data['count'], 1)
+
 
     def test_providers_post(self):
         self.create_admin()

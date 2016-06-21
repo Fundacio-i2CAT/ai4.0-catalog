@@ -51,12 +51,3 @@ def invalid(template, mo):
         lineno = len(lines)
     raise ValueError('Invalid placeholder in string: line %d, col %d' % (lineno, colno))
 
-
-if __name__=='__main__':
-    print((is_template('PRODUCT__${country_id}_${ms_id}')))
-    print((Template('PRODUCT__${country_id}_${ms_id}').safe_substitute(country_id='ES',ms_id='5')))
-
-    assert  get_parameters("$AA + $BB") == ['AA','BB'], ""
-    assert  get_parameters("${AA} + ${BB}") == ['AA','BB'], ""
-#     assert  invalid("$AA + $BB") == ['AA','BB'], ""
-    

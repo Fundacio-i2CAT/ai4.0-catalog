@@ -44,6 +44,8 @@ class ServiceDescription(Document, Base):
     link = URLField()
     logo = ImageField()
 
+    properties = DictField()
+
 #     images = EmbeddedDocumentListField(EmbeddedDocument)
 #     bootstrap_script = StringField()
 

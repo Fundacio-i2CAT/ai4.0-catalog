@@ -24,7 +24,7 @@ class SessionApiTest(AppTestCase):
         resp = self.app.post('/api/session', data=json.dumps(data), content_type = 'application/json')
         self.assertEqual( resp.status_code, 200)
 
-        resp = self.app.get(u'/api/session')
+        resp = self.app.get(u'/api/session/user')
         self.assertEqual( resp.status_code, 200)
         data = json.loads(resp.data)
         self.assertEqual( data['email'], 'oscar.rambla@i2cat.net')

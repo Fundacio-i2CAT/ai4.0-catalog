@@ -36,11 +36,26 @@ class ClientApiTest(AppTestCase):
         self.assertEqual( data['count'], 1)
         self.assertEqual( data['status'], 'ok')
 
+    def test_clients_query(self):
+        self.create_admin()
+        self.create_client()
+        sleep(1)
+
         resp = self.app.get('/api/clients?name=client1')
         self.assertEqual( resp.status_code, 200)
         data = json.loads(resp.data)
-
         self.assertEqual( data['count'], 1)
+
+        resp = self.app.get('/api/clients?na=client1')
+        self.assertEqual( resp.status_code, 400)
+        data = json.loads(resp.data)
+        self.assertEqual( data['count'], 0)
+
+        resp = self.app.get('/api/clients?sectors=health')
+        self.assertEqual( resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertEqual( data['count'], 1)
+
 
     def test_clients_post(self):
         self.create_admin()

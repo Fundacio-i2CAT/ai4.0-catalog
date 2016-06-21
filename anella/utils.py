@@ -94,7 +94,7 @@ def load_config(configfile, clear_db_config=False):
         )
         sys.exit(1)
 
-def resolve_parameters(cfg, env, resolver=None):
+def resolve_parameters(source, domain, resolver=None):
     """
     try to resolve parameters in an object or dict using a domain.
     Domain initially is an environment but can evolve into a more elaborated resolver.
@@ -102,38 +102,41 @@ def resolve_parameters(cfg, env, resolver=None):
 
     def _resolve(temp):
         parameters = get_parameters(temp)
-        domain={}
+        values={}
         for parameter in parameters:
-            if parameter in env:
-                domain[parameter] = env[parameter]
+            if parameter in domain:
+                values[parameter] = domain[parameter]
             elif resolver:
-                domain[parameter] = resolver(parameter)
+                values[parameter] = resolver(parameter)
 
-        new_temp = Template(temp).safe_substitute(**domain)
+        new_temp = Template(temp).safe_substitute(**values)
         return new_temp
             
-    if isinstance(cfg, basestring):
-        if is_template(cfg):
-            return _resolve(cfg)
+#     import pdb;pdb.set_trace()
+    if isinstance(source, basestring):
+        if is_template(source):
+            return _resolve(source)
         else:
-            return cfg
+            return source
     else:
-        if isinstance(cfg, (dict,)):
-            values = cfg
-        elif isinstance(cfg, (object,)):
-            values = vars(cfg)
+        if isinstance(source, (dict,)):
+            new_values = {}
+            for name,value in source.items():
+                new_values[name] = resolve_parameters(value, domain, resolver)
+            return new_values
+        elif isinstance(source, (list,tuple)):
+            new_values = []
+            for value in source:
+                new_values.append( resolve_parameters(value, domain, resolver) )
+            return new_values
         else:
-            raise NotImplementedError
+            return source
 
-        new_values = {}
-        for name,value in values.items():
-            if is_template(value):
-                new_values[name] = _resolve(value)
 
-        if isinstance(cfg, (dict,)):
-            cfg.update(new_values)
-        elif isinstance(cfg, (object,)):
-            for name,value in new_values.items():
-                setattr(cfg, name, value)
-
-        return cfg
+#         if isinstance(source, (dict,)):
+#             source.update(new_values)
+#         elif isinstance(source, (object,)):
+#             for name,value in new_values.items():
+#                 setattr(source, name, value)
+# 
+#         return source
