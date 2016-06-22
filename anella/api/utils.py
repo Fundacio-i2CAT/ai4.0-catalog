@@ -242,7 +242,7 @@ def respond_json(data, status=200, **kwargs):
 
     headers={
             'Cache-Control': 'no-cache',
-            'Access-Control-Allow-Origin': '*',
+#             'Access-Control-Allow-Origin': '*',
             'Content-Type': 'application/json'
             }
     if 'headers' in kwargs:
