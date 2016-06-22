@@ -98,7 +98,7 @@ class DocLoader(object):
      
         self.scontext = SContext(name='context_apache',
                                  context_type='apache',
-                                 properties=context,
+                                 context=context,
                                 )
         self.scontext.save()
 
@@ -107,9 +107,8 @@ class DocLoader(object):
 #         self.sc2 = SContext(name='scontext2' )
 #         self.sc2.save()
 
-    def create_apache_service(self):
+    def create_scontext(self):
         from anella.model.scontext import SContext
-        from anella.model.service import GenericService, CloudService
 
 #         self.sc1 = SContext(name='scontext1', schema_file_name='schemas/schema-test.json' )
         context={
@@ -135,6 +134,9 @@ class DocLoader(object):
                                  context=context,
                                 )
         self.scontext.save()
+
+    def create_apache_service(self):
+        from anella.model.service import GenericService, CloudService
 
 #         image = DockerImage(name='orambla/anella')
         properties={
