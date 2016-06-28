@@ -55,10 +55,13 @@ def add_resources(api):
     api.add_resource(ServiceRes, '/api/services/<id>')
 
 
-#     from anella.api.project import ProjectsRes, ProjectRes, ProjectServicesRes
-#     api.add_resource(ProjectsRes, '/api/projects')
-#     api.add_resource(ProjectRes, '/api/projects/<id>')
-#     api.add_resource(ProjectServicesRes, '/api/projects/<id>/services')
+    from anella.api.project import ProjectsRes, ProjectRes, ProjectServicesRes
+    from anella.api.project import  ClientProjectsRes, ProviderSProjectsRes
+    api.add_resource(ProjectsRes, '/api/projects')
+    api.add_resource(ProjectRes, '/api/projects/<id>')
+    api.add_resource(ProjectServicesRes, '/api/projects/<id>/services')
+    api.add_resource(ClientProjectsRes, '/api/clients/<id>/projects')
+    api.add_resource(ProviderSProjectsRes, '/api/providers/<id>/projects')
 
 #     from anella.api.sproject import SProjectRes, SProjectsRes
 #     api.add_resource(SProjectsRes, '/api/sprojects')

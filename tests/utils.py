@@ -24,11 +24,11 @@ class DocLoader(object):
 
     def create_admin(self):
         self.admin = User(email=cfg.admin__email, user_name=cfg.admin__user,
-                         admin=True, staff=True)
+                         admin=True, staff=True, phone_number="555 55 55 55" )
         self.admin.save()
 
     def create_user(self):
-        self.user = User(email='user.prov@prov1.com')
+        self.user = User(email='user.last@i2cat.net', phone_number="555 55 55 55")
         self.user.save()
 
     def create_provider(self):
@@ -45,7 +45,7 @@ class DocLoader(object):
     def create_client(self):
         # user = User(email='client1@client1.com')
         # user.save()
-        contact = Contact(email='client1@client1.com')
+        contact = Contact(email='user.client1@client1.com')
         self.client = Client(name='client1', 
                             contact = contact,
                             # users=[user,],
@@ -174,6 +174,13 @@ class DocLoader(object):
         self.sproject.save()
         self.project.services.append(self.sproject)
         self.project.save()
+
+    def create_instance(self):
+        from anella.model.instance import Instance
+        self.instance= Instance(sproject=self.sproject, context_type=self.scontext.context_type, 
+                                context=self.sproject.context )
+        self.instance.save()
+
 
 class AnellaTestCase(unittest.TestCase, DocLoader):
 

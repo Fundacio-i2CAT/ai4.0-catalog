@@ -86,7 +86,7 @@ class ClientApiTest(AppTestCase):
         resp = self.app.get(u'/api/clients/'+client_id)
         self.assertEqual( resp.status_code, 200)
         data = json.loads(resp.data)
-        self.assertEqual( data['contact']['email'], 'client1@client1.com')
+        self.assertEqual( data['contact']['email'], self.client.contact.email)
         self.assertEqual( data['sectors'], [ sector[0] for sector in ANELLA_SECTORS] )
 
     def test_client_delete(self):

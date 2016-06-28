@@ -9,7 +9,7 @@ class UsersRes(ColRes):
     collection = 'users'
     _cls = User
     name = 'Users'
-    fields = '_id,email,user_name,first_name,last_name,'\
+    fields = '_id,email,user_name,first_name,last_name,phone_number,'\
              'idiom,admin,partner,created_at,updated_at'.split(',')
     filter_fields = 'email,user_name,partner_id'.split(',')
 
@@ -22,7 +22,7 @@ class UserRes(ItemRes):
     collection = 'users'
     _cls = User
     name = 'User'
-    fields = '_id,email,user_name,first_name,last_name,'\
+    fields = '_id,email,user_name,first_name,last_name,phone_number,'\
              'idiom,admin,partner,created_at,updated_at'.split(',')
 
     def _item_to_json(self, item):

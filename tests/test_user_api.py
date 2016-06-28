@@ -35,13 +35,13 @@ class UserApiTest(AppTestCase):
         self.assertEqual( data['count'], 2)
         self.assertEqual( data['status'], 'ok')
 
-        resp = self.app.get('/api/users?user_name=user.prov')
+        resp = self.app.get('/api/users?user_name='+self.user.user_name)
         self.assertEqual( resp.status_code, 200)
         data = json.loads(resp.data)
         self.assertEqual( data['count'], 1)
 
 #         resp = self.app.get(urllib.quote_plus('/api/users?email=user.prov@prov1.com'))
-        resp = self.app.get('/api/users?email=user.prov@prov1.com')
+        resp = self.app.get('/api/users?email='+self.user.email)
         self.assertEqual( resp.status_code, 200)
         data = json.loads(resp.data)
         self.assertEqual( data['count'], 1)
@@ -77,7 +77,7 @@ class UserApiTest(AppTestCase):
         resp = self.app.get(u'/api/users/'+user_id)
         self.assertEqual( resp.status_code, 200)
         data = json.loads(resp.data)
-        self.assertEqual( data['email'], 'user.prov@prov1.com')
+        self.assertEqual( data['email'], self.user.email)
 
     def test_signin(self):
         self.create_admin()

@@ -7,11 +7,13 @@ from partner import Partner, Provider, Client
 from service import ServiceDescription, GenericService, CloudService
 from scontext import SContext
 
+SERVICE_CREATED=0
 SERVICE_SAVED=0
 SERVICE_PENDING=1
 SERVICE_COMFIRMED=2
 
 SERVICE_STATUS = (
+    ( SERVICE_CREATED,			u'Nou' ),
     ( SERVICE_SAVED,			u'Guardat' ),
     (	SERVICE_PENDING,	 	u'Pendent confirmar' ),
     ( SERVICE_COMFIRMED, 	u'Confirmat' ),
@@ -26,15 +28,25 @@ PROJECT_ROLES = (
     ( 'provider', 'Project provider' ),
 )
 
+PROJECT_CREATED=0
+PROJECT_SAVED=1
 PROJECT_COMFIRMED=3
+PROJECT_PROVISIONED=5
+PROJECT_DEPLOYED=6
+PROJECT_STARTED=7
+PROJECT_STOPPED=8
+PROJECT_FAILED=9
+PROJECT_ENDED=10
+
 PROJECT_STATUS = (
-    ( 								0, u'Nou' ),
-    ( 								1, u'Disseny' ),
-    ( 								2, u'Pendent confirmar' ),
+    ( PROJECT_CREATED, u'Nou' ),
+    ( PROJECT_SAVED, u'Guardat' ),
     ( PROJECT_COMFIRMED, u'Confirmat' ),
-    ( 								4, u'Instanciat' ),
-    ( 								5, u'Aturat' ),
-    ( 								6, u'Finalitzat' ),
+    ( PROJECT_PROVISIONED, u'Provisioned' ),
+    (	PROJECT_STARTED, u'Running' ),
+    (	PROJECT_STOPPED, u'Aturat' ),
+    (	PROJECT_FAILED, u'Fallat' ),
+    (	PROJECT_ENDED, u'Finalitzat' ),
 )
 
 class SProject(Document, Base):
@@ -45,13 +57,24 @@ class SProject(Document, Base):
 
     service = ReferenceField(ServiceDescription)
     project = ReferenceField('Project')
-    context = ReferenceField(SContext)
-    status = IntField(choices=SERVICE_STATUS)
+    context_type = StringField()
+    context = DictField() # ReferenceField(SContext)
+    status = IntField(choices=SERVICE_STATUS, default=SERVICE_CREATED)
     
-    def __init__(self, project, service, context=None):
+    def get_client(self):
+        return self.project.client
+
+    def get_provider(self):
+        return self.service.provider
+
+    client = property(get_client)
+    provider = property(get_provider)
+
+    def __init__(self, project, service, context_type, context=None):
         super(SProject, self).__init__()
         self.project=project
         self.service=service
+        self.context_type=context_type
         self.context=context
         self.status=0
 
@@ -72,31 +95,6 @@ class SProject(Document, Base):
 #         s_instance.save()
 #         return s_instance
 # 
-class Instance(Document, Base):
-    """
-    A Service when included in a Project whih its associated status and deployment info.
-    """
-    meta = {'allow_inheritance': True, 'collection': 'instances'}
-
-    service = ReferenceField(SProject)
-    project = ReferenceField('Project')
-    start_at = DateTimeField()
-    end_at = DateTimeField()
-    status = IntField(choices=SERVICE_STATUS)
-    exit_status = IntField()
-    exit_error = StringField()
-    
-    def __init__(self, project, service, context=None):
-        super(Instance, self).__init__()
-        self.project=project
-        self.service=service
-        self.context=context or {}
-        self.status=0
-
-    def ask_confirm(self):
-        assert self.status==SERVICE_SAVED
-        self.status=SERVICE_PENDING
-
 class Project(Document, Base):
     """
     """
@@ -110,7 +108,7 @@ class Project(Document, Base):
     client = ReferenceField(Client)
     user_roles = DictField()
     services = ListField(ReferenceField(SProject))
-    status = IntField(choices=PROJECT_STATUS)
+    status = IntField(choices=PROJECT_STATUS, default=PROJECT_CREATED)
 
     def create_instances(self):
         for service in self.services:

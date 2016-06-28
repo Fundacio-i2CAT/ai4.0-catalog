@@ -102,19 +102,23 @@ class ColRes(AnellaRes):
         except Exception,e:
             return error_api( msg=str(e) )
 
+    def _get_items(self, skip=0, limit=1000):
+        values = get_args().copy() # args are inmutable
+        filter = self._filter_from_inputs(values)
+        cursor = get_db()[self.collection].find( filter, skip=skip, limit=limit )
+        return [item for item in cursor ]
+
     def get(self):
         try:
             values = get_args().copy() # args are inmutable
             skip = int(values and values.pop('skip', 0) or 0)
             limit = int(values and values.pop('limit', 0) or self.LIMIT-skip)
-            filter = self._filter_from_inputs(values)
-            cursor = get_db()[self.collection].find( filter, skip=skip, limit=limit )
-            items = [item for item in cursor ]
-
+            items = self._get_items(skip=skip, limit=limit)
+            result=self._items_to_json(items)
             response = dict( status='ok', count=len(items), skip=skip, limit=limit,
                              msg='Items list' if items 
                                               else 'No items available',
-                             result=self._items_to_json(items) )
+                             result=result )
             return respond_json( response, status=200)
             # return response
     

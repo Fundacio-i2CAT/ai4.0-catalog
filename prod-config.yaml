@@ -7,7 +7,7 @@ anella:
 
     app: # Anella app
         host: 0.0.0.0
-        port: 3000
+        port: 8010
 
     database:
         host: 0.0.0.0
@@ -18,8 +18,8 @@ anella:
             log: log
 
     auth: # Authentication service
-        host: 127.0.0.1
-        port: 5672
+        host: 84.88.76.5
+        port: 9763
 
     orch: # Orchestrator service manager
         host: 127.0.0.1

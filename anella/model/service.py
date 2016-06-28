@@ -38,6 +38,7 @@ class ServiceDescription(Document, Base):
     service_type = StringField(choices=SERVICE_TYPES, default='generic')
 
     provider = ReferenceField(Partner)
+    reference = StringField(max_length=50)
     keywords = ListField(StringField(max_length=40))
     sectors = ListField(StringField(choices=ANELLA_SECTORS))
 
