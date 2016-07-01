@@ -168,7 +168,7 @@ class ProjectApiTest(AppTestCase):
 # 
 #         self.assertEqual( data['count'], 1)
 
-    def test_provider_projects_get(self):
+    def _test_provider_projects_get(self):
         self.create_all_project()
 
         resp = self.app.get(u'/api/providers/%s/projects' % unicode(self.provider.pk))
