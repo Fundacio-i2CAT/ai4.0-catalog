@@ -35,7 +35,7 @@ class User(Document, Base):
              if '.' in self.user_name and not(first_name or last_name):
                  self.first_name,self.last_name=self.user_name.split('.')
 
-        super(User, self).save(*args, **kwargs)
+        return super(User, self).save(*args, **kwargs)
 
     def has_password(self, password):
         """ Should deviate comprobation to Auth module.

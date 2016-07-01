@@ -68,6 +68,6 @@ class SContext(Document, Base):
         """
         return resolve_parameters(self.context, properties)
 
+
 # register_context_type('systemd',SContext)
 # register_context_type('docker',SContext)
-

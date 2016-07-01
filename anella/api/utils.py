@@ -183,7 +183,8 @@ def item_to_json(item, fields):
            js_data = unicode(data)
 
        elif isinstance(data, datetime):
-           js_data = str(data)
+           # js_data = str(data)
+           js_data = data.isoformat()
 
        else:
            js_data = data

@@ -89,15 +89,31 @@ class DocLoader(object):
 
 #         self.sc1 = SContext(name='scontext1', schema_file_name='schemas/schema-test.json' )
         context={
-            'host': 'localhost',
-            'port': 22,
-            'user_name': 'oscar.rambla',
-            'password': 'oscar.rambla',
-            'service_name': 'apachectl',
+        "service_name" : "apache2.service",
+        "host" : "87.236.219.21",
+        "user_name" : "test",
+        "password" : "test",
+        "port" : 22,
+#             'host': '',
+#             'port': 22,
+#             'user_name': 'oscar.rambla',
+#             'password': 'oscar.rambla',
+#             'service_name': 'apachectl',
+        "openstack" : {
+            "name_instance" : "test-openstack-1",
+            "auth_url" : "http://87.236.219.10:5000/v3",
+            "username" : "i2cat",
+            "password" : "c5QWZTSv9gn0",
+            "project_id" : "579eaa7245d04e778f0effd77565794c",
+            "user_domain_name" : "i2cat",
+            "flavor" : "VM.M1",
+            "image" : "CentOS Cloud Base",
+            "network" : "tenant-i2cat-demo"
+            }
         }
      
         self.scontext = SContext(name='context_apache',
-                                 context_type='apache',
+                                 context_type='ssh',
                                  context=context,
                                 )
         self.scontext.save()
@@ -107,33 +123,44 @@ class DocLoader(object):
 #         self.sc2 = SContext(name='scontext2' )
 #         self.sc2.save()
 
-    def create_scontext(self):
+    def create_scontext1(self):
         from anella.model.scontext import SContext
 
 #         self.sc1 = SContext(name='scontext1', schema_file_name='schemas/schema-test.json' )
         context={
-            'parameters':{
-                'service_name': '${service_name}',
-                'host': 'localhost',
-                'port': 22,
-                'user_name': 'oscar.rambla',
-                'password': 'oscar.rambla'
-            },
-            'lifecycle_events': {
-                'start': {
-                    'cmd': 'start ${service_name}'
-                 },
-                'stop': {
-                    'cmd': 'stop ${service_name}'
-                 }
-            }
+#             'parameters':{
+#                 'service_name': '${service_name}',
+#                 'host': 'localhost',
+#                 'port': 22,
+#                 'user_name': 'oscar.rambla',
+#                 'password': 'oscar.rambla'
+#             },
+#             'lifecycle_events': {
+#                 'start': {
+#                     'cmd': 'start ${service_name}'
+#                  },
+#                 'stop': {
+#                     'cmd': 'stop ${service_name}'
+#                  }
+#             }
+#         "openstack" : {
+            "name_instance" : "test-openstack-1",
+            "auth_url" : "http://87.236.219.10:5000/v3",
+            "username" : "i2cat",
+            "password" : "c5QWZTSv9gn0",
+            "project_id" : "579eaa7245d04e778f0effd77565794c",
+            "user_domain_name" : "i2cat",
+            "flavor" : "VM.M1",
+            "image" : "CentOS Cloud Base",
+            "network" : "tenant-i2cat-demo"
+#             }
         }
      
-        self.scontext = SContext(name='linux_service',
-                                 context_type='system',
+        self.scontext1 = SContext(name='openstack',
+                                 context_type='cloud',
                                  context=context,
                                 )
-        self.scontext.save()
+        self.scontext1.save()
 
     def create_apache_service(self):
         from anella.model.service import GenericService, CloudService
@@ -168,17 +195,47 @@ class DocLoader(object):
 #                            }
         self.project.save()
 
-        context = self.scontext.resolve_parameters(self.apache.properties)
+        # context = self.scontext.resolve_parameters(self.apache.properties)
+        context = self.scontext.context
         self.sproject= SProject(project=self.project, service=self.apache, 
                                 context_type=self.scontext.context_type, context=context )
         self.sproject.save()
         self.project.services.append(self.sproject)
         self.project.save()
 
+    def create_project1(self):
+        from anella.model.project import SProject, Project
+
+        self.project1 = Project(name='project2', client=self.client,) 
+#                           services=[ c_generic, c_cloud ]
+#                           services = {
+#                               service.name : SContext(service=service),
+#                               cloud.name : SContext(service=cloud),
+#                            }
+        self.project1.save()
+
+        sproject= SProject(project=self.project1, service=self.generic, 
+                                context_type=self.scontext.context_type, 
+                                context= self.scontext.context
+                          )
+        sproject.save()
+        self.project1.services.append(sproject)
+
+        sproject= SProject(project=self.project1, service=self.cloud, 
+                                context_type=self.scontext1.context_type, 
+                                context= self.scontext1.context )
+        sproject.save()
+        self.project1.services.append(sproject)
+        self.project1.save()
+
     def create_instance(self):
+        from random import randint
         from anella.model.instance import Instance
-        self.instance= Instance(sproject=self.sproject, context_type=self.scontext.context_type, 
-                                context=self.sproject.context )
+        self.instance= Instance(sproject=self.sproject, 
+                                instance_id=str(randint(1,9999)),
+                                # context_type=self.scontext.context_type, 
+                                # context=self.sproject.context 
+                               )
         self.instance.save()
 
 

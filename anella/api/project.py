@@ -3,8 +3,10 @@
 from bson import ObjectId
 
 from anella.common import *
-from anella.model.project import Project, SProject
+from anella.model.project import Project, SProject, CONFIRMED, STATES
+from anella.model.instance import Instance
 
+from anella.orch import Orchestrator
 from anella.api.utils import ColRes, ItemRes, respond_json, error_api, item_to_json
 
 def sprojects_to_json(sprojects):
@@ -47,6 +49,101 @@ class ProjectRes(ItemRes):
         services = item.get('services')
         item['services'] = sprojects_to_json(services)
         return item_to_json(item, self.fields)
+
+class ProjectStateRes(ProjectRes):
+
+    def __init__(self):
+         self.orch = Orchestrator()
+         self.spres = SProjectRes()
+
+    def _find_instance(self, id):
+        instance = get_db()['instances'].find_one({'sproject':ObjectId(id)})
+        return instance
+
+    def _set_state(self, services, state):
+        # Services are items (not obj)
+        for sproject in services:
+            service_id = unicode(sproject.pk)
+            item = self.spres._find_item(unicode(sproject.pk))
+            instance = self._find_instance(unicode(item['_id']))
+            if instance:
+                if self.orch.instance_set_state(instance['instance_id'], state):
+                    continue
+                else:
+                    return "Error instance '%s'." % instance['instance_id']
+            else: 
+                service = self.spres._item_to_json(item)
+                instance_id = self.orch.instance_create(service)
+                if instance_id:
+                    instance = Instance(sproject=sproject, instance_id=instance_id)
+                    instance.save()
+
+    def _get_state(self, services):
+        # Services are items (not obj)
+        project_state_order = None
+        for sproject in services:
+            service_id = unicode(sproject.pk)
+            item = self.spres._find_item(unicode(service_id))
+            instance = self._find_instance(unicode(item['_id']))
+            if instance:
+                state = self.orch.instance_get_state(instance['instance_id'])
+                if state:
+                    state_order = STATES.index(state)
+                    if project_state_order is None or state_order < project_state_order:
+                        project_state_order = state_order
+                    continue
+            # some error
+            break
+
+        if project_state_order is None:
+            return ''
+        else:
+            return STATES[project_state_order]
+            
+
+    def get(self, id):
+        # import pdb;pdb.set_trace()
+        self.project = self._find_obj(id)
+        if not self.project:
+            return error_api( msg='Error: wrong project id in request.', status=404 )
+        status = self.project.get_status()
+        if status < CONFIRMED:
+            response = dict( state= STATES[status] )
+            return respond_json( response, status=200)
+
+        state = self._get_state(self.project.services)
+        if state:
+            response = dict( state=state )
+            return respond_json( response, status=200)
+        else:
+            response = dict( state='CONFIRMED' )
+            return respond_json( response, status=200)
+#             return error_api( msg="Error: Getting state.", status=400 )
+
+        
+    def put(self, id):
+        # import pdb;pdb.set_trace()
+        self.project = self._find_obj(id)
+        if not self.project:
+            return error_api( msg='Error: wrong project id in request.', status=404 )
+        status = self.project.get_status()
+        if status < CONFIRMED:
+            return error_api( msg='Error: project is not confirmed yet.', status=400 )
+
+        data = get_json()
+        state = data.get('state')
+        if state not in  STATES:
+            return error_api( msg='Error: wrong state in request.', status=400 )
+
+        # In any case ensure instances exist
+        error = self._set_state(self.project.services, state )
+
+        if error:
+            return error_api( msg="Error: '%s' in request." % error, status=400 )
+        else:
+            response = dict( status='ok', msg="Project state set to %s" % state )
+            return respond_json( response, status=200)
+
 
 class ClientProjectsRes(ProjectsRes):
 
@@ -149,7 +246,7 @@ class SProjectRes(ItemRes):
     collection= 'sprojects'
     _cls = SProject
     name= 'SProject'
-    fields = 'project,service,context_type,context,status'.split(',')
+    fields = 'project,service,context_type,context'.split(',')
 
 
 class ProviderSProjectsRes(SProjectsRes):
@@ -165,6 +262,7 @@ class ProviderSProjectsRes(SProjectsRes):
         return filter
 
     def _get_items(self, skip=0, limit=1000):
+        # import pdb;pdb.set_trace()
         values = get_args().copy() # args are inmutable
         # status = int(values and values.pop('status', 0)) or None
         filter = self._filter_from_inputs(values)
@@ -174,3 +272,4 @@ class ProviderSProjectsRes(SProjectsRes):
 
     def _items_to_json(self, items):
         return sprojects_to_json(items)
+
