@@ -10,6 +10,8 @@ from flask import json, jsonify
 
 from app import AppTestCase
 
+from anella.model.project import CONFIRMED
+
 __all__ = ('ProjectApiTest', )
 
 class ProjectApiTest(AppTestCase):
@@ -51,12 +53,25 @@ class ProjectApiTest(AppTestCase):
         self.create_admin()
         self.create_client()
         self.create_provider()
+        self.create_cloud()
+        self.create_scontext()
+
         sleep(1)
 
-        data = { "name" : "project3", 
+        item = { "name" : "project3", 
                  "client" : unicode(self.client.pk),
+                 "services" : [],
                }
-        resp = self.app.post('/api/projects', data=json.dumps(data), content_type = 'application/json')
+        resp = self.app.post('/api/projects', data=json.dumps(item), content_type = 'application/json')
+        self.assertEqual( resp.status_code, 400)
+        data = json.loads(resp.data)
+        self.assertEqual( data['status'], 'fail')
+
+        item['services'] = [dict(service=unicode(self.cloud.pk), 
+                                 context_type=self.scontext.context_type,
+                                 context=self.scontext.context
+                                ),]
+        resp = self.app.post('/api/projects', data=json.dumps(item), content_type = 'application/json')
         self.assertEqual( resp.status_code, 201)
         data = json.loads(resp.data)
         self.assertEqual( data['status'], 'ok')
@@ -116,26 +131,19 @@ class ProjectApiTest(AppTestCase):
         resp = self.app.get(u'/api/projects/'+project_id)
         self.assertEqual( resp.status_code, 200)
 
-    def _test_sproject_post(self):
+    def test_sproject_put(self):
         self.create_all_project()
+        self.create_cloud()
 
-        project_id = unicode(self.project.pk)
+        sproject_id = unicode(self.project.services[0].pk)
         service_id = unicode(self.cloud.pk)
 
-        data = { 
-                 "service" : unicode(self.cloud.pk),
-                 "context" : {
-                    "param1" : "val1",
-                    "param2" : "val2",
-                 }
-               }
-        resp = self.app.post('/api/projects/'+project_id+'/services', data=json.dumps(data), content_type = 'application/json')
-        self.assertEqual( resp.status_code, 201)
+        data = { "status" : CONFIRMED }
+        resp = self.app.post('/api/sprojects/'+sproject_id, data=json.dumps(data), 
+                             content_type = 'application/json')
+        self.assertEqual( resp.status_code, 200)
         data = json.loads(resp.data)
         self.assertEqual( data['status'], 'ok')
-        self.assertIsNotNone( data['id'])
-
-        sproject_id = data['id']
 
     def _test_sprojects_get(self):
         self.create_all_project()
@@ -168,7 +176,7 @@ class ProjectApiTest(AppTestCase):
 # 
 #         self.assertEqual( data['count'], 1)
 
-    def _test_provider_projects_get(self):
+    def test_provider_projects_get(self):
         self.create_all_project()
 
         resp = self.app.get(u'/api/providers/%s/projects' % unicode(self.provider.pk))

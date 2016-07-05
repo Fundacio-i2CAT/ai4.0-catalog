@@ -3,13 +3,13 @@
 from bson import ObjectId
 
 from anella.common import *
-from anella.model.project import Project, SProject, CONFIRMED, STATES
+from anella.model.project import Project, SProject, CONFIRMED, STATES, Client, ServiceDescription
 from anella.model.instance import Instance
 
 from anella.orch import Orchestrator
 from anella.api.utils import ColRes, ItemRes, respond_json, error_api, item_to_json
 
-def sprojects_to_json(sprojects):
+def services_to_json(sprojects):
     sitems=[]
     for service_id in sprojects:
         sproject = get_db()['sprojects'].find_one({'_id':service_id})
@@ -24,6 +24,23 @@ def sprojects_to_json(sprojects):
 
     return sitems
 
+def sprojects_to_json(sprojects):
+    # import pdb;pdb.set_trace()
+    sitems=[]
+    for sproject in sprojects:
+        project = get_db()['projects'].find_one({'_id':sproject['project']})
+        sitem = item_to_json(sproject, ['_id', 'context_type', 'status'])
+        service = get_db()['services'].find_one({'_id':sproject['service']})
+        client = get_db()['partners'].find_one({'_id':service['provider']})
+
+        sitem['project'] = item_to_json(project, ['_id', 'name'])
+        sitem['client'] = item_to_json(client, ['_id', 'name'])
+        # sitem['service'] = item_to_json(service, ['_id', 'name'])
+        sitem['service'] = item_to_json(service, ['_id', 'name'])
+        sitems.append(sitem)
+
+    return sitems
+
 class ProjectsRes(ColRes):
     collection= 'projects'
     _cls = Project
@@ -31,13 +48,17 @@ class ProjectsRes(ColRes):
     fields = '_id,name,summary,client,status,services,created_at,updated_at'.split(',')
     filter_fields = 'name,status'.split(',')
 
+    def _item_to_json(self, item):
+        services = item.get('services')
+        item['services'] = services_to_json(services)
+        return item_to_json(item, self.fields)
+
     def get(self):
         return ColRes.get(self)
 
-    def _item_to_json(self, item):
-        services = item.get('services')
-        item['services'] = sprojects_to_json(services)
-        return item_to_json(item, self.fields)
+    def post(self):
+        item = get_json()
+        return create_project(item)
 
 class ProjectRes(ItemRes):
     collection= 'projects'
@@ -47,8 +68,10 @@ class ProjectRes(ItemRes):
 
     def _item_to_json(self, item):
         services = item.get('services')
-        item['services'] = sprojects_to_json(services)
+        item['services'] = services_to_json(services)
         return item_to_json(item, self.fields)
+
+
 
 class ProjectStateRes(ProjectRes):
 
@@ -166,7 +189,9 @@ class ClientProjectsRes(ProjectsRes):
 
     def _item_to_json(self, item):
         services = item.get('services')
-        item['services'] = sprojects_to_json(services)
+        project = self._find_obj(item['_id'])
+        item['status'] = project.get_status()
+        item['services'] = services_to_json(services)
         return item_to_json(item, self.fields)
 
 
@@ -182,23 +207,9 @@ class SessionProjectRes(ProjectRes):
         else:
             return error_api("Not signed in.", status=400)
 
-        client = Client.objects.get(id=user.partner_id)
-        if client is None:
-            return error_api("User is not a client.", status=400)
-
-        try:
-            project = self._obj_from_json(get_json())
-            project.client = client
-            project.save()
-
-            response = dict( status='ok', msg="Welcomed '%s'." % user.user_name )
-            return respond_json( response, status=200)
-    
-            response = dict( status='fail', msg="Wrong password." )
-            return respond_json( response, status=400)
-        except Exception,e:
-            response = dict( status='fail', msg=unicode(e) )
-            return respond_json( response, status=400)
+        item = get_json()
+        item['client'] = user.partner_id
+        return create_project(item)
     
 
 
@@ -227,6 +238,12 @@ class ProjectServicesRes(ColRes):
             return error_api( msg=str(e) )
         
 
+    def get(self, id):
+        project = get_db()['projects'].find_one({'_id':ObjectId(id)})
+        result = services_to_json(project['services'])
+        response = dict( status='ok', result=result )
+        return respond_json( response, status=200)
+
 class SProjectsRes(ColRes):
     collection= 'sprojects'
     _cls = SProject
@@ -248,15 +265,32 @@ class SProjectRes(ItemRes):
     name= 'SProject'
     fields = 'project,service,context_type,context'.split(',')
 
+    def put(self, id):
+        # import pdb;pdb.set_trace()
+        self.sproject = self._find_obj(id)
+        if not self.sproject:
+            return error_api( msg='Error: wrong service project id in request.', status=404 )
+        data = get_json()
+        state = data.get('state')
+        if state not in  STATES:
+            return error_api( msg='Error: wrong state in request.', status=400 )
+
+        if state and self.sproject.status >= CONFIRMED:
+            return error_api( msg='Error: service project is already confirmed yet.', status=400 )
+
+        response = dict( status='ok', msg="Project state set to %s" % state )
+        return respond_json( response, status=200)
 
 class ProviderSProjectsRes(SProjectsRes):
     filter_fields = 'provider,status'.split(',')
 
     def get(self, id):
+        # import pdb;pdb.set_trace()
         self.provider_id=id
         return super(ProviderSProjectsRes, self).get()
 
     def _filter_from_inputs(self, values):
+        # import pdb;pdb.set_trace()
         filter = super(ProviderSProjectsRes, self)._filter_from_inputs(values)
         filter['provider'] = ObjectId(self.provider_id)
         return filter
@@ -272,4 +306,45 @@ class ProviderSProjectsRes(SProjectsRes):
 
     def _items_to_json(self, items):
         return sprojects_to_json(items)
+
+
+def create_project(item):
+    # import pdb;pdb.set_trace()
+    try:
+        client_id = item.pop('client')
+        client = Client.objects.get(id=client_id)
+        if client is None:
+            return error_api("Client '%s' doesn't exist." % client_id, status=400)
+
+        sitems = item.pop('services')
+        services=[]
+        if not sitems:
+            return error_api("No services.", status=400)
+        for sitem in sitems:
+            service_id = sitem['service']
+            service = ServiceDescription.objects.get(id=service_id)
+            if service is None:
+                return error_api("Service '%s' doesn't exist." % service_id, status=400)
+            services.append(service)
+
+        project = Project(**item)
+        project.client = client
+        project.save()
+
+        for sitem,service in zip(sitems,services):
+            sproject = SProject(service=service, 
+                                project=project,
+                                provider=service.provider,
+                                context_type=sitem['context_type'], 
+                                context=sitem['context'])
+            sproject.save()
+            project.services.append(sproject)
+            project.save()
+
+        response = dict( status='ok', id=unicode(project.pk), msg="Project created." )
+        return respond_json( response, status=201)
+
+    except Exception,e:
+        response = dict( status='fail', msg=unicode(e) )
+        return respond_json( response, status=400)
 
