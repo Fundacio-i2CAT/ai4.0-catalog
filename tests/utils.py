@@ -24,11 +24,11 @@ class DocLoader(object):
 
     def create_admin(self):
         self.admin = User(email=cfg.admin__email, user_name=cfg.admin__user,
-                         admin=True, staff=True, phone_number="555 55 55 55" )
+                         admin=True, staff=True, phone_number="555 55 55 55", nif='5555555R' )
         self.admin.save()
 
     def create_user(self):
-        self.user = User(email='user.last@i2cat.net', phone_number="555 55 55 55")
+        self.user = User(email='user.last@i2cat.net', phone_number="666 66 66 66", nif='6666666R')
         self.user.save()
 
     def create_provider(self):
@@ -38,6 +38,7 @@ class DocLoader(object):
         self.provider = Provider(name='prov1', 
                             contact = contact,
                             # users=[user,],
+                            nif='B77777777',
                             sectors=[ sector[0] for sector in ANELLA_SECTORS],
                            )
         self.provider.save()
@@ -50,6 +51,7 @@ class DocLoader(object):
                             contact = contact,
                             # users=[user,],
                             partner_type='research',
+                            nif='B88888888',
                             sectors=[ sector[0] for sector in ANELLA_SECTORS],
                            )
         self.client.save()
@@ -112,8 +114,8 @@ class DocLoader(object):
             }
         }
      
-        self.scontext = SContext(name='context_apache',
-                                 context_type='ssh',
+        self.scontext = SContext(name='openstack',
+                                 context_type='openstack',
                                  context=context,
                                 )
         self.scontext.save()
@@ -156,7 +158,7 @@ class DocLoader(object):
 #             }
         }
      
-        self.scontext1 = SContext(name='openstack',
+        self.scontext1 = SContext(name='cloud',
                                  context_type='cloud',
                                  context=context,
                                 )

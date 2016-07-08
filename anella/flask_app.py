@@ -57,17 +57,18 @@ def add_resources(api):
 
     from anella.api.project import ProjectsRes, ProjectRes, ProjectServicesRes
     from anella.api.project import  ClientProjectsRes, ProviderSProjectsRes
-    from anella.api.project import  ProjectStateRes
+    from anella.api.project import  ProjectStateRes, ProjectStatesRes
     api.add_resource(ProjectsRes, '/api/projects')
+    api.add_resource(ProjectStatesRes, '/api/projects/states')
     api.add_resource(ProjectRes, '/api/projects/<id>')
     api.add_resource(ProjectServicesRes, '/api/projects/<id>/services')
     api.add_resource(ClientProjectsRes, '/api/clients/<id>/projects')
     api.add_resource(ProviderSProjectsRes, '/api/providers/<id>/projects')
     api.add_resource(ProjectStateRes, '/api/projects/<id>/state')
 
-#     from anella.api.sproject import SProjectRes, SProjectsRes
-#     api.add_resource(SProjectsRes, '/api/sprojects')
-#     api.add_resource(SProjectRes, '/api/sprojects/<id>')
+    from anella.api.project import SProjectRes, SProjectsRes
+    api.add_resource(SProjectsRes, '/api/sprojects')
+    api.add_resource(SProjectRes, '/api/sprojects/<id>')
 
 def add_rules(app):
     """

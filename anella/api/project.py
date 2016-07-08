@@ -3,23 +3,23 @@
 from bson import ObjectId
 
 from anella.common import *
-from anella.model.project import Project, SProject, CONFIRMED, STATES, Client, ServiceDescription
+from anella.model.project import Project, SProject, CONFIRMED, STATES, STATUS, Client, ServiceDescription
 from anella.model.instance import Instance
 
 from anella.orch import Orchestrator
-from anella.api.utils import ColRes, ItemRes, respond_json, error_api, item_to_json
+from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api, item_to_json
 
 def services_to_json(sprojects):
     sitems=[]
     for service_id in sprojects:
         sproject = get_db()['sprojects'].find_one({'_id':service_id})
-        sitem = item_to_json(sproject, ['context_type', 'status', 'provider'])
+        sitem = item_to_json(sproject, ['_id', 'context_type', 'status', 'provider'])
         service = get_db()['services'].find_one({'_id':sproject['service']})
         provider = get_db()['partners'].find_one({'_id':service['provider']})
 
         sitem['provider'] = item_to_json(provider, ['_id', 'name'])
         # sitem['service'] = item_to_json(service, ['_id', 'name'])
-        sitem.update( item_to_json(service, ['_id', 'name']))
+        sitem['service'] = item_to_json(service, ['_id', 'name'])
         sitems.append(sitem)
 
     return sitems
@@ -28,18 +28,30 @@ def sprojects_to_json(sprojects):
     # import pdb;pdb.set_trace()
     sitems=[]
     for sproject in sprojects:
-        project = get_db()['projects'].find_one({'_id':sproject['project']})
-        sitem = item_to_json(sproject, ['_id', 'context_type', 'status'])
-        service = get_db()['services'].find_one({'_id':sproject['service']})
-        client = get_db()['partners'].find_one({'_id':service['provider']})
-
-        sitem['project'] = item_to_json(project, ['_id', 'name'])
-        sitem['client'] = item_to_json(client, ['_id', 'name'])
-        # sitem['service'] = item_to_json(service, ['_id', 'name'])
-        sitem['service'] = item_to_json(service, ['_id', 'name'])
+        sitem = sproject_to_json(sproject)
         sitems.append(sitem)
-
+    
     return sitems
+
+def sproject_to_json(sproject, context=False):
+    project = get_db()['projects'].find_one({'_id':sproject['project']})
+    sitem = item_to_json(sproject, ['_id', 'status'])
+    service = get_db()['services'].find_one({'_id':sproject['service']})
+    client = get_db()['partners'].find_one({'_id':service['provider']})
+
+    sitem['project'] = item_to_json(project, ['_id', 'name'])
+    sitem['client'] = item_to_json(client, ['_id', 'name'])
+    # sitem['service'] = item_to_json(service, ['_id', 'name'])
+    sitem['service'] = item_to_json(service, ['_id', 'name'])
+
+    if context:
+        sitem.update( item_to_json(sproject, ['context_type', 'context']) )
+
+    return sitem
+
+class ProjectStatesRes(Resource):
+    def get(self):
+        return [ dict(status=st[0], name=st[1]) for st in STATUS]
 
 class ProjectsRes(ColRes):
     collection= 'projects'
@@ -50,6 +62,8 @@ class ProjectsRes(ColRes):
 
     def _item_to_json(self, item):
         services = item.get('services')
+        project = self._find_obj(item['_id'])
+        item['status'] = project.get_status()
         item['services'] = services_to_json(services)
         return item_to_json(item, self.fields)
 
@@ -67,6 +81,8 @@ class ProjectRes(ItemRes):
     fields = '_id,name,summary,description,client,services,status,created_at,created_by,updated_at,updated_by'.split(',')
 
     def _item_to_json(self, item):
+        project = self._find_obj(item['_id'])
+        item['status'] = project.get_status()
         services = item.get('services')
         item['services'] = services_to_json(services)
         return item_to_json(item, self.fields)
@@ -85,6 +101,7 @@ class ProjectStateRes(ProjectRes):
 
     def _set_state(self, services, state):
         # Services are items (not obj)
+        # import pdb;pdb.set_trace()
         for sproject in services:
             service_id = unicode(sproject.pk)
             item = self.spres._find_item(unicode(sproject.pk))
@@ -95,7 +112,7 @@ class ProjectStateRes(ProjectRes):
                 else:
                     return "Error instance '%s'." % instance['instance_id']
             else: 
-                service = self.spres._item_to_json(item)
+                service = sproject_to_json(item, context=True)
                 instance_id = self.orch.instance_create(service)
                 if instance_id:
                     instance = Instance(sproject=sproject, instance_id=instance_id)
@@ -103,6 +120,7 @@ class ProjectStateRes(ProjectRes):
 
     def _get_state(self, services):
         # Services are items (not obj)
+        # import pdb;pdb.set_trace()
         project_state_order = None
         for sproject in services:
             service_id = unicode(sproject.pk)
@@ -131,15 +149,16 @@ class ProjectStateRes(ProjectRes):
             return error_api( msg='Error: wrong project id in request.', status=404 )
         status = self.project.get_status()
         if status < CONFIRMED:
-            response = dict( state= STATES[status] )
+            response = dict( state= STATES[status], status=status )
             return respond_json( response, status=200)
 
         state = self._get_state(self.project.services)
         if state:
-            response = dict( state=state )
+            status = STATES.index(state)
+            response = dict( state=state, status=status )
             return respond_json( response, status=200)
         else:
-            response = dict( state='CONFIRMED' )
+            response = dict( state='CONFIRMED', status=3 )
             return respond_json( response, status=200)
 #             return error_api( msg="Error: Getting state.", status=400 )
 
@@ -154,9 +173,12 @@ class ProjectStateRes(ProjectRes):
             return error_api( msg='Error: project is not confirmed yet.', status=400 )
 
         data = get_json()
-        state = data.get('state')
+        status = data.get('status')
+        if status not in range(len(STATES)):
+            return error_api( msg='Error: wrong status in request.', status=400 )
+        state = STATES[status]
         if state not in  STATES:
-            return error_api( msg='Error: wrong state in request.', status=400 )
+            return error_api( msg='Error: wrong status in request.', status=400 )
 
         # In any case ensure instances exist
         error = self._set_state(self.project.services, state )
@@ -265,20 +287,26 @@ class SProjectRes(ItemRes):
     name= 'SProject'
     fields = 'project,service,context_type,context'.split(',')
 
+    def _item_to_json(self, item):
+        return sproject_to_json(item)
+
     def put(self, id):
         # import pdb;pdb.set_trace()
         self.sproject = self._find_obj(id)
         if not self.sproject:
             return error_api( msg='Error: wrong service project id in request.', status=404 )
         data = get_json()
-        state = data.get('state')
-        if state not in  STATES:
-            return error_api( msg='Error: wrong state in request.', status=400 )
+        status = data.get('status')
+        if status != CONFIRMED: # Only support confirm by now. not in range(len(STATES)):
+            return error_api( msg='Error: wrong status in request.', status=400 )
 
-        if state and self.sproject.status >= CONFIRMED:
+        if status and self.sproject.status >= CONFIRMED:
             return error_api( msg='Error: service project is already confirmed yet.', status=400 )
 
-        response = dict( status='ok', msg="Project state set to %s" % state )
+        state = STATES[status]
+        self.sproject.status= status
+        self.sproject.save()
+        response = dict( status='ok', msg="Service project state set to %s" % state )
         return respond_json( response, status=200)
 
 class ProviderSProjectsRes(SProjectsRes):
@@ -332,11 +360,16 @@ def create_project(item):
         project.save()
 
         for sitem,service in zip(sitems,services):
+            context_type=sitem.get('context_type', 'openstack')
+            context=sitem.get('context',{})
+            if not context:
+                context = get_db()['scontext'].find_one({'context_type':context_type})
+
             sproject = SProject(service=service, 
                                 project=project,
                                 provider=service.provider,
-                                context_type=sitem['context_type'], 
-                                context=sitem['context'])
+                                context_type=context_type, 
+                                context=context)
             sproject.save()
             project.services.append(sproject)
             project.save()

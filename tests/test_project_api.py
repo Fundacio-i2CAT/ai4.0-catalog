@@ -49,7 +49,7 @@ class ProjectApiTest(AppTestCase):
 
         self.assertEqual( data['count'], 1)
 
-    def _test_projects_post(self):
+    def test_projects_post(self):
         self.create_admin()
         self.create_client()
         self.create_provider()
@@ -135,15 +135,26 @@ class ProjectApiTest(AppTestCase):
         self.create_all_project()
         self.create_cloud()
 
+        project_id = unicode(self.project.pk)
         sproject_id = unicode(self.project.services[0].pk)
         service_id = unicode(self.cloud.pk)
 
         data = { "status" : CONFIRMED }
-        resp = self.app.post('/api/sprojects/'+sproject_id, data=json.dumps(data), 
+        resp = self.app.put('/api/sprojects/'+sproject_id, data=json.dumps(data), 
                              content_type = 'application/json')
         self.assertEqual( resp.status_code, 200)
         data = json.loads(resp.data)
         self.assertEqual( data['status'], 'ok')
+
+        resp = self.app.get('/api/sprojects/'+sproject_id )
+        self.assertEqual( resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertEqual( data['status'], CONFIRMED)
+
+        resp = self.app.get('/api/projects/%s/state' % project_id )
+        self.assertEqual( resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertEqual( data['status'], CONFIRMED)
 
     def _test_sprojects_get(self):
         self.create_all_project()

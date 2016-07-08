@@ -52,6 +52,7 @@ class Partner(Document, Base):
     admin = ReferenceField(User)
     users = ListField(ReferenceField(User))
     auth_id = StringField() # Id returned from Eurecat auth module
+    nif = StringField(max_length=10)
 
     def save(self):
         assert self.contact and self.contact.email, "Contact email is required."

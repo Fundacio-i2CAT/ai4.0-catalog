@@ -3,7 +3,7 @@
 from mongoengine import *
 
 from base import Base
-from partner import Partner, Provider, Client
+from partner import Partner, Provider, Client, ANELLA_SECTORS
 from service import ServiceDescription, GenericService, CloudService
 from scontext import SContext
 
@@ -98,6 +98,7 @@ class Project(Document, Base):
     name = StringField(max_length=40, required=True, unique=True)
     summary = StringField(max_length=120)
     description = StringField()
+    sector = StringField(choices=ANELLA_SECTORS)
 
     client = ReferenceField(Client)
     user_roles = DictField()

@@ -20,7 +20,9 @@ class SessionRes(ItemRes):
                 get_session()['user']=unicode(user.pk)
                 # item = get_db()['users'].find_one({'_id':user.pk})
                 # item = UserRes()._item_to_json(item) 
-                response = dict( status='ok', id=unicode(user.pk), msg="Welcomed '%s'." % user.user_name )
+                session_id = get_session().sid
+                response = dict( status='ok', user_id=unicode(user.pk), session_id=session_id,
+                                 msg="Welcomed '%s'." % user.user_name )
                 return respond_json( response, status=200)
     
             response = dict( status='fail', msg="Wrong password." )
