@@ -362,14 +362,17 @@ def create_project(item):
         for sitem,service in zip(sitems,services):
             context_type=sitem.get('context_type', 'openstack')
             context=sitem.get('context',{})
-            if not context:
-                context = get_db()['scontext'].find_one({'context_type':context_type})
 
-            sproject = SProject(service=service, 
+            if not context:
+                scontext = get_db()['scontexts'].find_one({'context_type':context_type})
+                context=scontext['context']
+
+            sproject = SProject(service=service,
                                 project=project,
                                 provider=service.provider,
-                                context_type=context_type, 
+                                context_type=context_type,
                                 context=context)
+
             sproject.save()
             project.services.append(sproject)
             project.save()
