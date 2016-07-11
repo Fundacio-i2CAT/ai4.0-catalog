@@ -15,8 +15,8 @@ PROVISIONED=4
 RUNNING=5
 # STOPPED=6
 DEPLOYED=6
-# FAILED=9
-# ENDED=10
+FAILED=7
+DISABLED=8
 
 STATUS = (
     ( CREATED,		u'CREATED' ),
@@ -26,6 +26,8 @@ STATUS = (
     ( PROVISIONED, 	u'PROVISIONED' ),
     ( RUNNING, 		u'RUNNING' ),
     ( DEPLOYED, 	u'DEPLOYED' ),
+    ( FAILED, 		u'FAILED' ),
+    ( DISABLED, 	u'DISABLED' ),
 )
 
 STATES = [status[1] for status in STATUS]
