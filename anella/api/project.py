@@ -88,6 +88,32 @@ class ProjectRes(ItemRes):
         return item_to_json(item, self.fields)
 
 
+    def put(self, id):
+        """ Modifies the project when not confirmed.
+            Use Project/state othercase
+        """
+        # import pdb;pdb.set_trace()
+        self.project = self._find_obj(id)
+        if not self.project:
+            return error_api( msg='Error: wrong project id in request.', status=404 )
+        status = self.project.get_status()
+        if status >= CONFIRMED:
+            return error_api( msg='Error: project is confirmed yet.', status=400 )
+
+        data = get_json()
+        status = data.get('status')
+        if status not in range(len(STATES)):
+            return error_api( msg='Error: wrong status in request.', status=400 )
+        state = STATES[status]
+        if state not in  STATES:
+            return error_api( msg='Error: wrong status in request.', status=400 )
+
+        if error:
+            return error_api( msg="Error: '%s' in request." % error, status=400 )
+        else:
+            response = dict( status='ok', msg="Project state set to %s" % state )
+            return respond_json( response, status=200)
+
 
 class ProjectStateRes(ProjectRes):
 

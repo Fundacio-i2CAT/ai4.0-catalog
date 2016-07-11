@@ -51,7 +51,7 @@ class Partner(Document, Base):
     contact = EmbeddedDocumentField(Contact)
     admin = ReferenceField(User)
     users = ListField(ReferenceField(User))
-    auth_id = StringField() # Id returned from Eurecat auth module
+    auth_id = IntField() # Id returned from Eurecat auth module
     nif = StringField(max_length=10)
 
     def save(self):

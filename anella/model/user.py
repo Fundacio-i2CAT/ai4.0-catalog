@@ -17,7 +17,7 @@ class User(Document, Base):
     first_name = StringField(max_length=50)
     last_name = StringField(max_length=50)
     phone_number = StringField(max_length=50)
-    auth_id = StringField() # Id returned from Eurecat auth module
+    auth_id = IntField() # Id returned from Eurecat auth module
     nif = StringField(max_length=10)
 
     idiom = StringField(choices=IDIOMS, default='ca')
