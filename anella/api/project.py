@@ -13,7 +13,7 @@ def services_to_json(sprojects):
     sitems=[]
     for service_id in sprojects:
         sproject = get_db()['sprojects'].find_one({'_id':service_id})
-        sitem = item_to_json(sproject, ['_id', 'context_type', 'status', 'provider'])
+        sitem = item_to_json(sproject, ['_id', 'context_type', 'status', 'provider', 'created_at' ])
         service = get_db()['services'].find_one({'_id':sproject['service']})
         provider = get_db()['partners'].find_one({'_id':service['provider']})
 
@@ -35,7 +35,7 @@ def sprojects_to_json(sprojects):
 
 def sproject_to_json(sproject, context=False):
     project = get_db()['projects'].find_one({'_id':sproject['project']})
-    sitem = item_to_json(sproject, ['_id', 'status'])
+    sitem = item_to_json(sproject, ['_id', 'status', 'created_at' ])
     service = get_db()['services'].find_one({'_id':sproject['service']})
     client = get_db()['partners'].find_one({'_id':service['provider']})
 
@@ -270,7 +270,7 @@ class SProjectsRes(ColRes):
     collection= 'sprojects'
     _cls = SProject
     name= 'SProjects'
-    fields = '_id,project,service,context'.split(',')
+    fields = '_id,project,service,context,created_at'.split(',')
 
     def item_from_json(self, data):
         service_cls = get_service_cls( data.get('service_type') )
@@ -285,7 +285,7 @@ class SProjectRes(ItemRes):
     collection= 'sprojects'
     _cls = SProject
     name= 'SProject'
-    fields = 'project,service,context_type,context'.split(',')
+    fields = 'project,service,context_type,context,created_at'.split(',')
 
     def _item_to_json(self, item):
         return sproject_to_json(item)
