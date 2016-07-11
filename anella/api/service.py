@@ -27,8 +27,10 @@ class ServicesRes(ColRes):
 
     def _item_to_json(self, item):
         sitem = ColRes._item_to_json(self, item)
-        provider = get_db()['partners'].find_one({'_id':ObjectId(sitem['provider'])})
-        sitem['provider'] = item_to_json(provider, ['_id', 'name'])
+        provider_id = sitem['provider']
+        if provider_id:
+            provider = get_db()['partners'].find_one({'_id':ObjectId(provider_id)})
+            sitem['provider'] = item_to_json(provider, ['_id', 'name'])
         return sitem
 
 class ServiceRes(ItemRes):
@@ -36,6 +38,14 @@ class ServiceRes(ItemRes):
     _cls = GenericService
     name= 'Service'
     fields = '_id,name,summary,description,service_type,provider,sectors,keywords,link,created_at,created_by,updated_at,updated_by'.split(',')
+
+    def _item_to_json(self, item):
+        sitem = ColRes._item_to_json(self, item)
+        provider_id = sitem['provider']
+        if provider_id:
+            provider = get_db()['partners'].find_one({'_id':ObjectId(provider_id)})
+            sitem['provider'] = item_to_json(provider, ['_id', 'name'])
+        return sitem
 
 
 class ServiceTypesRes(Resource):

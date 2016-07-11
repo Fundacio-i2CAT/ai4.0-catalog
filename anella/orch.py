@@ -1,3 +1,7 @@
+"""
+Module to be used as proxy with the Orchestation service.
+"""
+
 import sys
 import json
 import os
