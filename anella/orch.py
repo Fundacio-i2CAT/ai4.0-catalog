@@ -13,10 +13,10 @@ from anella.common import *
 
 class Orchestrator(object):
 
-    def __init__(self, debug=False):
+    def __init__(self, debug=True, is_fake=False):
         if get_cfg('orch__host'):
             self.root_path='http://%s:%s/orchestrator/api/v0.1/' % (get_cfg('orch__host'), get_cfg('orch__port'))
-            self.is_fake=False
+            self.is_fake=is_fake
         else:
             self.is_fake=True
 

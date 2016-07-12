@@ -93,32 +93,21 @@ class ProjectRes(ItemRes):
             Use Project/state othercase
         """
         # import pdb;pdb.set_trace()
-        self.project = self._find_obj(id)
-        if not self.project:
+        project = self._find_obj(id)
+        if not project:
             return error_api( msg='Error: wrong project id in request.', status=404 )
-        status = self.project.get_status()
+        status = project.get_status()
         if status >= CONFIRMED:
             return error_api( msg='Error: project is confirmed yet.', status=400 )
 
-        data = get_json()
-        status = data.get('status')
-        if status not in range(len(STATES)):
-            return error_api( msg='Error: wrong status in request.', status=400 )
-        state = STATES[status]
-        if state not in  STATES:
-            return error_api( msg='Error: wrong status in request.', status=400 )
-
-        if error:
-            return error_api( msg="Error: '%s' in request." % error, status=400 )
-        else:
-            response = dict( status='ok', msg="Project state set to %s" % state )
-            return respond_json( response, status=200)
+        item = get_json()
+        return update_project(project, item)
 
 
 class ProjectStateRes(ProjectRes):
 
     def __init__(self):
-         self.orch = Orchestrator()
+         self.orch = Orchestrator(debug=True)
          self.spres = SProjectRes()
 
     def _find_instance(self, id):
@@ -133,6 +122,7 @@ class ProjectStateRes(ProjectRes):
             item = self.spres._find_item(unicode(sproject.pk))
             instance = self._find_instance(unicode(item['_id']))
             if instance:
+#                 if self.orch:
                 if self.orch.instance_set_state(instance['instance_id'], state):
                     continue
                 else:
@@ -212,7 +202,7 @@ class ProjectStateRes(ProjectRes):
         if error:
             return error_api( msg="Error: '%s' in request." % error, status=400 )
         else:
-            response = dict( status='ok', msg="Project state set to %s" % state )
+            response = dict( status='ok', msg="Project state set to '%s'" % state )
             return respond_json( response, status=200)
 
 
@@ -362,14 +352,27 @@ class ProviderSProjectsRes(SProjectsRes):
         return sprojects_to_json(items)
 
 
-def create_project(item):
+def update_project(project, item):
     # import pdb;pdb.set_trace()
     try:
-        client_id = item.pop('client')
-        client = Client.objects.get(id=client_id)
-        if client is None:
-            return error_api("Client '%s' doesn't exist." % client_id, status=400)
+        client = None
+        client_id = item.pop('client',None)
+        if client_id:
+            client = Client.objects.get(id=client_id)
+        if project.client:
+            if client and project.client!=client:
+                return error_api( msg='Error: Client project can not be changed.', status=400 )
+        elif client is None:
+            return error_api("Client not defined.", status=400)
+        else:
+            project.client = client
 
+        services = project.services
+        if services:
+            for sproject in list(services):
+                result = get_db()['sprojects'].delete_one({'_id':sproject.pk})
+                project.services.remove(sproject)
+                
         sitems = item.pop('services')
         services=[]
         if not sitems:
@@ -381,13 +384,19 @@ def create_project(item):
                 return error_api("Service '%s' doesn't exist." % service_id, status=400)
             services.append(service)
 
-        project = Project(**item)
-        project.client = client
+        for name,value in item.items():
+            setattr(project, name, value)
+
         project.save()
 
         for sitem,service in zip(sitems,services):
-            context_type=sitem.get('context_type', 'openstack')
+            context_type=sitem.get('context_type', '')
             context=sitem.get('context',{})
+
+            if not context_type:
+                context_type= service.properties.get('context_type')
+                if not context_type:
+                    return error_api("Context_type not defined.", status=400)
 
             if not context:
                 scontext = get_db()['scontexts'].find_one({'context_type':context_type})
@@ -409,4 +418,10 @@ def create_project(item):
     except Exception,e:
         response = dict( status='fail', msg=unicode(e) )
         return respond_json( response, status=400)
+
+
+def create_project(item):
+    # import pdb;pdb.set_trace()
+    project = Project()
+    return update_project(project, item)
 

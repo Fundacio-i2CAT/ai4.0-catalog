@@ -125,6 +125,21 @@ class DocLoader(object):
 #         self.sc2 = SContext(name='scontext2' )
 #         self.sc2.save()
 
+    def create_scontext_ssh(self):
+        from anella.model.scontext import SContext
+        self.scontext_ssh = SContext(name='context_apache',
+                                 context_type='ssh',
+                                 context={
+        "service_name" : "apache2.service",
+        "host" : "84.88.34.24",
+        "openstack" : {},
+        "password" : "segmngr",
+        "user_name" : "test",
+        "port" : 22
+    }
+                                )
+        self.scontext_ssh.save()
+
     def create_scontext1(self):
         from anella.model.scontext import SContext
 
@@ -169,7 +184,8 @@ class DocLoader(object):
 
 #         image = DockerImage(name='orambla/anella')
         properties={
-            'service_name' : 'apache2'
+            'service_name' : 'apache2',
+            'context_type' : 'ssh',
         }
         self.apache = GenericService(name='apache',
                                  summary = "summary apache",
@@ -183,7 +199,25 @@ class DocLoader(object):
                                 )
         self.apache.save()
 
-#         import pdb;pdb.set_trace()
+    def create_apache1_service(self):
+        from anella.model.service import GenericService, CloudService
+
+#         image = DockerImage(name='orambla/anella')
+        properties={
+            'service_name' : 'apache2',
+            'context_type' : 'ssh',
+        }
+        self.apache1 = GenericService(name='apache1',
+                                 summary = "summary apache1",
+                                 description = "description apache1",
+                                 link = "http://linkapache.com",
+                                 provider = self.provider,
+                                 keywords= [ "web", "server" ],
+                                 sectors= [ "industry" ],
+#                                  images = [image,],
+                                 properties=properties
+                                )
+        self.apache1.save()
 
 
     def create_project(self):
