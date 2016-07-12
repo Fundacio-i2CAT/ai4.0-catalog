@@ -15,7 +15,7 @@ class Orchestrator(object):
 
     def __init__(self, debug=True, is_fake=False):
         if get_cfg('orch__host'):
-            self.root_path='http://%s:%s/orchestrator/api/v0.1/' % (get_cfg('orch__host'), get_cfg('orch__port'))
+            self.root_path='http://%s:%s/orchestrator/api/v0.1/service/instance' % (get_cfg('orch__host'), get_cfg('orch__port'))
             self.is_fake=is_fake
         else:
             self.is_fake=True
@@ -27,7 +27,7 @@ class Orchestrator(object):
         if self.is_fake:
             return randint(1,9999)
  
-        self.path = self.root_path+'service/instance'
+        self.path = self.root_path
         # self.r_data = json.dumps(sproject)
         self.r_data = sproject
     
@@ -45,7 +45,7 @@ class Orchestrator(object):
         if self.is_fake:
             return randint(0,2)
  
-        self.path = self.root_path+'service/instance/%s/state' % id
+        self.path = self.root_path+'/%s' % id
         self.req = get(self.path)
         if self.debug:
             print_resp(self.req)
@@ -60,7 +60,8 @@ class Orchestrator(object):
         if self.is_fake:
             return randint(0,2)
  
-        self.path = self.root_path+'service/instance/%s/state' % id
+        # ULL: Orch. expects /state on PUT :/
+        self.path = self.root_path+'/%s/state' % id
         self.r_data = dict(state=state)
         self.req = put(self.path, json=self.r_data)
         if self.debug:
@@ -68,6 +69,14 @@ class Orchestrator(object):
 
         return bool(self.req.status_code == 200)
  
+    def instance_delete(self,id):
+        self.path = self.root_path+'/%s' % id
+        self.req = delete(self.path)
+        if self.debug:
+            print_resp(self.req)
+
+        return bool(self.req.status_code == 204)
+
 
 def print_resp(req, data=None):
     print '%s %s %s' % (req.request.method, req.request.url, req.status_code)

@@ -3,7 +3,7 @@
 from bson import ObjectId
 
 from anella.common import *
-from anella.model.project import Project, SProject, CONFIRMED, STATES, STATUS, Client, ServiceDescription
+from anella.model.project import Project, SProject, DISABLED, CONFIRMED, STATES, STATUS, Client, ServiceDescription
 from anella.model.instance import Instance
 
 from anella.orch import Orchestrator
@@ -123,11 +123,14 @@ class ProjectStateRes(ProjectRes):
             instance = self._find_instance(unicode(item['_id']))
             if instance:
 #                 if self.orch:
-                if self.orch.instance_set_state(instance['instance_id'], state):
-                    continue
-                else:
-                    return "Error instance '%s'." % instance['instance_id']
-            else: 
+                if state=='DISABLED':
+                    ok = self.orch.instance_delete(instance['instance_id'])
+                    if not ok:
+                        return "Error instance '%s' delete." % instance['instance_id']
+                elif not self.orch.instance_set_state(instance['instance_id'], state):
+                    return "Error instance '%s' set_state." % instance['instance_id']
+
+            elif state!='DISABLED': 
                 service = sproject_to_json(item, context=True)
                 instance_id = self.orch.instance_create(service)
                 if instance_id:
@@ -137,25 +140,27 @@ class ProjectStateRes(ProjectRes):
     def _get_state(self, services):
         # Services are items (not obj)
         # import pdb;pdb.set_trace()
-        project_state_order = None
+        project_status = None
         for sproject in services:
             service_id = unicode(sproject.pk)
             item = self.spres._find_item(unicode(service_id))
             instance = self._find_instance(unicode(item['_id']))
+            if sproject.status== DISABLED:
+                project_status=DISABLED
             if instance:
                 state = self.orch.instance_get_state(instance['instance_id'])
                 if state:
-                    state_order = STATES.index(state)
-                    if project_state_order is None or state_order < project_state_order:
-                        project_state_order = state_order
+                    status = STATES.index(state)
+                    if project_status is None or status < project_status:
+                        project_status = status
                     continue
             # some error
             break
 
-        if project_state_order is None:
+        if project_status is None:
             return ''
         else:
-            return STATES[project_state_order]
+            return STATES[project_status]
             
 
     def get(self, id):
@@ -352,7 +357,7 @@ class ProviderSProjectsRes(SProjectsRes):
         return sprojects_to_json(items)
 
 
-def update_project(project, item):
+def update_project(project, item, is_new=False):
     # import pdb;pdb.set_trace()
     try:
         client = None
@@ -412,8 +417,12 @@ def update_project(project, item):
             project.services.append(sproject)
             project.save()
 
-        response = dict( status='ok', id=unicode(project.pk), msg="Project created." )
-        return respond_json( response, status=201)
+        if is_new:
+            response = dict( status='ok', id=unicode(project.pk), msg="Project created." )
+            return respond_json( response, status=201)
+        else:
+            response = dict( status='ok', id=unicode(project.pk), msg="Project updated." )
+            return respond_json( response, status=200)
 
     except Exception,e:
         response = dict( status='fail', msg=unicode(e) )
@@ -423,5 +432,5 @@ def update_project(project, item):
 def create_project(item):
     # import pdb;pdb.set_trace()
     project = Project()
-    return update_project(project, item)
+    return update_project(project, item, is_new=True)
 
