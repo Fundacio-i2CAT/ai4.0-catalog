@@ -3,7 +3,7 @@
 from bson import ObjectId
 
 from anella.common import *
-from anella.model.project import Project, SProject, DISABLED, CONFIRMED, STATES, STATUS, Client, ServiceDescription
+from anella.model.project import Project, SProject, SAVED, DISABLED, CONFIRMED, STATES, STATUS, Client, ServiceDescription
 from anella.model.instance import Instance
 
 from anella.orch import Orchestrator
@@ -396,7 +396,7 @@ def delete_project(project):
                 
 
 def update_project(project, item, is_new=False):
-    # import pdb;pdb.set_trace()
+    import pdb;pdb.set_trace()
     try:
         client = None
         client_id = item.pop('client',None)
@@ -417,6 +417,12 @@ def update_project(project, item, is_new=False):
                 project.services.remove(sproject)
                 
         sitems = item.pop('services')
+
+        for name,value in item.items():
+            setattr(project, name, value)
+
+        project.save()
+
         services=[]
         if not sitems:
             return error_api("No services.", status=400)
@@ -427,10 +433,6 @@ def update_project(project, item, is_new=False):
                 return error_api("Service '%s' doesn't exist." % service_id, status=400)
             services.append(service)
 
-        for name,value in item.items():
-            setattr(project, name, value)
-
-        project.save()
 
         try:
             for sitem,service in zip(sitems,services):
@@ -439,8 +441,8 @@ def update_project(project, item, is_new=False):
     
                 if not context_type:
                     context_type= service.properties.get('context_type', '')
-                    if not context_type:
-                        return error_api("Context_type not defined.", status=400)
+                    # if not context_type:
+                    #     return error_api("Context_type not defined.", status=400)
     
                 if not context:
                     if context_type:
@@ -453,7 +455,8 @@ def update_project(project, item, is_new=False):
                                     project=project,
                                     provider=service.provider,
                                     context_type=context_type,
-                                    context=context)
+                                    context=context,
+                                    status=SAVED )
     
                 sproject.save()
                 project.services.append(sproject)
@@ -479,7 +482,6 @@ def update_project(project, item, is_new=False):
 
 
 def create_project(item):
-    # import pdb;pdb.set_trace()
     project = Project()
     return update_project(project, item, is_new=True)
 

@@ -62,7 +62,7 @@ class SProject(Document, Base):
 
 #     provider = property(get_provider)
 
-    def __init__(self, project, service, context_type, context=None, status=CREATED, **kwargs):
+    def __init__(self, project=None, service=None, context_type='', context=None, status=CREATED, **kwargs):
         super(SProject, self).__init__( project=project, service=service, 
                                 context_type=context_type, context=context, status=status, **kwargs)
         self.provider=self.service.provider
