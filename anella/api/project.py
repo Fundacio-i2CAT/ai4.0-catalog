@@ -333,11 +333,14 @@ class SProjectRes(ItemRes):
             return error_api( msg='Error: wrong service project id in request.', status=404 )
         data = get_json()
         status = data.get('status')
-        if status != CONFIRMED: # Only support confirm by now. not in range(len(STATES)):
+        if status not in [CONFIRMED, DISABLED]: # Only support confirm by now. not in range(len(STATES)):
             return error_api( msg='Error: wrong status in request.', status=400 )
 
-        if status and self.sproject.status >= CONFIRMED:
+        if status==CONFIRMED and self.sproject.status in range(CONFIRMED, DISABLED):
             return error_api( msg='Error: service project is already confirmed yet.', status=400 )
+
+#         if status==DISABLED and self.sproject.status < CONFIRMED, DISABLED):
+#             return error_api( msg='Error: service project is already confirmed yet.', status=400 )
 
         state = STATES[status]
         self.sproject.status= status
@@ -396,7 +399,7 @@ def delete_project(project):
                 
 
 def update_project(project, item, is_new=False):
-    import pdb;pdb.set_trace()
+    # import pdb;pdb.set_trace()
     try:
         client = None
         client_id = item.pop('client',None)
@@ -418,9 +421,10 @@ def update_project(project, item, is_new=False):
                 
         sitems = item.pop('services')
 
-        for name,value in item.items():
-            setattr(project, name, value)
-
+        for name in ['name', 'description', 'summary']:
+            if name in item:
+                setattr(project, name, item[name])
+     
         project.save()
 
         services=[]
