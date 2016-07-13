@@ -90,5 +90,7 @@ def print_resp(req, data=None):
         print('*'*70)
 
 #     pprint(json.loads(req.text))
-    print(json.dumps(json.loads(req.text), indent=4))
+    if req.text:
+        print(json.dumps(json.loads(req.text), indent=4))
+
 #     print('*'*70)

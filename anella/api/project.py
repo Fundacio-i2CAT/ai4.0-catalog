@@ -103,6 +103,13 @@ class ProjectRes(ItemRes):
         item = get_json()
         return update_project(project, item)
 
+    def delete(self, id):
+        project = self._find_obj(id)
+        if not project:
+            return error_api( msg='Error: wrong project id in request.', status=404 )
+        status = project.get_status()
+        return delete_project(project)
+
 
 class ProjectStateRes(ProjectRes):
 
@@ -127,6 +134,11 @@ class ProjectStateRes(ProjectRes):
                     ok = self.orch.instance_delete(instance['instance_id'])
                     if not ok:
                         return "Error instance '%s' delete." % instance['instance_id']
+                    else:
+                        sproject.instance_id = None
+                        sproject.status = DISABLED
+                        sproject.save()
+
                 elif not self.orch.instance_set_state(instance['instance_id'], state):
                     return "Error instance '%s' set_state." % instance['instance_id']
 
@@ -359,6 +371,29 @@ class ProviderSProjectsRes(SProjectsRes):
     def _items_to_json(self, items):
         return sprojects_to_json(items)
 
+def delete_project(project):
+    # import pdb;pdb.set_trace()
+    try:
+        status = project.get_status()
+        services = project.services
+        if services:
+            for sproject in list(services):
+                if status<CONFIRMED:
+                    sproject.delete()
+                else:
+                    sproject.status=DISABLED
+
+        if status<CONFIRMED:
+            project.delete()
+
+        response = dict( status='ok', id=unicode(project.pk), msg="Project disabled." )
+        return respond_json( response, status=200)
+
+    except Exception,e:
+        response = dict( status='fail', msg=unicode(e) )
+        return respond_json( response, status=400)
+
+                
 
 def update_project(project, item, is_new=False):
     # import pdb;pdb.set_trace()
@@ -378,7 +413,7 @@ def update_project(project, item, is_new=False):
         services = project.services
         if services:
             for sproject in list(services):
-                result = get_db()['sprojects'].delete_one({'_id':sproject.pk})
+                sproject.delete()
                 project.services.remove(sproject)
                 
         sitems = item.pop('services')
@@ -397,27 +432,38 @@ def update_project(project, item, is_new=False):
 
         project.save()
 
-        for sitem,service in zip(sitems,services):
-            context_type=sitem.get('context_type', '')
-            context=sitem.get('context',{})
-
-            if not context_type:
-                context_type= service.properties.get('context_type')
+        try:
+            for sitem,service in zip(sitems,services):
+                context_type=sitem.get('context_type', '')
+                context=sitem.get('context',{})
+    
                 if not context_type:
-                    return error_api("Context_type not defined.", status=400)
-
-            if not context:
-                scontext = get_db()['scontexts'].find_one({'context_type':context_type})
-                context=scontext['context']
-
-            sproject = SProject(service=service,
-                                project=project,
-                                provider=service.provider,
-                                context_type=context_type,
-                                context=context)
-
-            sproject.save()
-            project.services.append(sproject)
+                    context_type= service.properties.get('context_type', '')
+                    if not context_type:
+                        return error_api("Context_type not defined.", status=400)
+    
+                if not context:
+                    if context_type:
+                        scontext = get_db()['scontexts'].find_one({'context_type':context_type})
+                        context=scontext['context']
+                    else:
+                        context={}
+    
+                sproject = SProject(service=service,
+                                    project=project,
+                                    provider=service.provider,
+                                    context_type=context_type,
+                                    context=context)
+    
+                sproject.save()
+                project.services.append(sproject)
+        except Exception,err:
+            if project.services:
+                for sproject in project.services:
+                    sproject.delete()
+            project.delete()
+            return error_api( msg="Error: updating project '%s'." % err, status=400 )
+        else:
             project.save()
 
         if is_new:
