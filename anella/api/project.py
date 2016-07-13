@@ -132,6 +132,9 @@ class ProjectStateRes(ProjectRes):
 
             elif state!='DISABLED': 
                 service = sproject_to_json(item, context=True)
+                del service['_id']
+                del service['status']
+                del service['created_at']
                 instance_id = self.orch.instance_create(service)
                 if instance_id:
                     instance = Instance(sproject=sproject, instance_id=instance_id)
