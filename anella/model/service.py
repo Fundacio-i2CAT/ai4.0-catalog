@@ -7,23 +7,21 @@ from partner import Partner, Provider, Client, ANELLA_SECTORS
 
 # TODO: Service types should be dynamic and use as options to validate field
 
-SERVICE_TYPES = (
-    ('generic', u'Generic Service' ),
-    ('cloud', u'Cloud Service' ),
-)
-
 _service_types = {}
 
-def register_service_type(name,cls):
+def register_service_type(name,cls, des):
     _service_types[name]=cls
 
 def get_service_type(cls):
     for n,t in _service_types.items():
-        if cls==t:
+        if cls==t[0]:
             return n
 
 def get_service_cls(name):
     return _service_types[name]
+
+def get_service_types():
+    return _service_types.items()
 
 class ServiceDescription(Document, Base):
     """
@@ -35,7 +33,7 @@ class ServiceDescription(Document, Base):
     name = StringField(max_length=40, required=True, unique=True)
     summary = StringField(max_length=120)
     description = StringField()
-    service_type = StringField(choices=SERVICE_TYPES, default='generic')
+    service_type = StringField(default='app')
 
     provider = ReferenceField(Partner)
     reference = StringField(max_length=50)
@@ -51,18 +49,18 @@ class ServiceDescription(Document, Base):
 #     bootstrap_script = StringField()
 
 
-class GenericService(ServiceDescription):
-    type_name = 'Generic'  # A type name to use in UI
+class AppService(ServiceDescription):
+    type_name = 'App'  # A type name to use in UI
     scheme = 'service-scheme.json'
 
-class CloudService(ServiceDescription):
-    type_name = 'Cloud'  # A type name to use in UI
+class ISService(ServiceDescription):
+    type_name = 'Infrastructure'  # A type name to use in UI
     scheme = 'cloud-service-scheme.json'
 
-    service_type = StringField(choices=SERVICE_TYPES, default='cloud')
+    service_type = StringField(default='iss')
 
-register_service_type('generic',GenericService)
-register_service_type('cloud',CloudService)
+register_service_type('app', AppService, 'App')
+register_service_type('iss', ISService, 'Infraestructura')
 
 
 class Image(EmbeddedDocument):

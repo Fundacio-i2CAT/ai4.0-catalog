@@ -10,7 +10,7 @@ from anella.common import *
 from anella.model.partner import Client
 
 from anella.api.utils import ColRes, ItemRes
-from anella.api.service import ServicesRes, GenericService
+from anella.api.service import ServicesRes
 
 class ClientsRes(ColRes):
     collection= 'partners'

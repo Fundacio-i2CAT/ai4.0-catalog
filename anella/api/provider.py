@@ -10,7 +10,7 @@ from anella.common import *
 from anella.model.partner import Provider, ANELLA_SECTORS, PARTNER_TYPES
 
 from anella.api.utils import ColRes, ItemRes
-from anella.api.service import ServicesRes, GenericService
+from anella.api.service import ServicesRes, AppService
 
 class ProvidersRes(ColRes):
     collection= 'partners'
@@ -32,7 +32,7 @@ class ProviderRes(ItemRes):
 
 class ProviderServicesRes(ServicesRes):
     collection= 'services'
-    document_cls = GenericService
+    document_cls = AppService
     name= 'Services'
     fields = '_id,name,summary,service_type,provider,sectors,link'.split(',')
     query_fields = 'name,keywords,sectors,link'.split(',')

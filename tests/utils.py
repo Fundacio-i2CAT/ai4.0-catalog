@@ -57,10 +57,10 @@ class DocLoader(object):
         self.client.save()
 
     def create_generic(self):
-        from anella.model.service import GenericService, CloudService
+        from anella.model.service import AppService
 
 #         image = DockerImage(name='orambla/anella')
-        self.generic = GenericService(name='service1',
+        self.generic = AppService(name='service1',
                                  summary = "summary 1",
                                  description = "description 1",
                                  link = "http://link1.com",
@@ -72,9 +72,9 @@ class DocLoader(object):
         self.generic.save()
 
     def create_cloud(self):
-        from anella.model.service import GenericService, CloudService
+        from anella.model.service import ISService
 #         image = DockerImage(name='orambla/anella')
-        self.cloud = CloudService(name='cloud_service2',
+        self.cloud = ISService(name='cloud_service2',
                                  summary = "summary 2",
                                  description = "description 2",
                                  link = "http://link2.com",
@@ -180,14 +180,14 @@ class DocLoader(object):
         self.scontext1.save()
 
     def create_apache_service(self):
-        from anella.model.service import GenericService, CloudService
+        from anella.model.service import AppService
 
 #         image = DockerImage(name='orambla/anella')
         properties={
             'service_name' : 'apache2',
             'context_type' : 'ssh',
         }
-        self.apache = GenericService(name='apache',
+        self.apache = AppService(name='apache',
                                  summary = "summary apache",
                                  description = "description apache",
                                  link = "http://linkapache.com",
@@ -200,14 +200,14 @@ class DocLoader(object):
         self.apache.save()
 
     def create_apache1_service(self):
-        from anella.model.service import GenericService, CloudService
+        from anella.model.service import AppService, ISService
 
 #         image = DockerImage(name='orambla/anella')
         properties={
             'service_name' : 'apache2',
             'context_type' : 'ssh',
         }
-        self.apache1 = GenericService(name='apache1',
+        self.apache1 = AppService(name='apache1',
                                  summary = "summary apache1",
                                  description = "description apache1",
                                  link = "http://linkapache.com",

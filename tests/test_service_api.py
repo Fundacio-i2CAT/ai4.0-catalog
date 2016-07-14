@@ -47,8 +47,11 @@ class ServiceApiTest(AppTestCase):
         self.create_provider()
         sleep(1)
 
-        data = '''{ "name" : "cloud_service3", "provider" : "575062ee76e63a35bede35d3", "keywords" : [ "storage" ], "sectors" : [ "industry" ], "service_type" : "cloud" }''' 
-        resp = self.app.post('/api/services', data=data, content_type = 'application/json')
+        data = { "name" : "cloud_service3", 
+                 "provider" : unicode(self.provider.pk), 
+                 "keywords" : [ "storage" ], "sectors" : [ "industry" ], 
+                 "service_type" : "iss" }
+        resp = self.app.post('/api/services', data=json.dumps(data), content_type = 'application/json')
         self.assertEqual( resp.status_code, 201)
         data = json.loads(resp.data)
         self.assertEqual( data['status'], 'ok')
@@ -59,7 +62,7 @@ class ServiceApiTest(AppTestCase):
         resp = self.app.get(u'/api/services/'+service_id)
         self.assertEqual( resp.status_code, 200)
         data = json.loads(resp.data)
-        self.assertEqual( data['service_type'], 'cloud')
+        self.assertEqual( data['service_type'], 'iss')
 
 
     def test_service_get(self):
@@ -73,7 +76,7 @@ class ServiceApiTest(AppTestCase):
         resp = self.app.get(u'/api/services/'+service_id)
         self.assertEqual( resp.status_code, 200)
         data = json.loads(resp.data)
-        self.assertEqual( data['service_type'], 'generic')
+        self.assertEqual( data['service_type'], 'app')
 
     def test_service_delete(self):
         self.create_admin()
@@ -102,7 +105,7 @@ class ServiceApiTest(AppTestCase):
         service_id = unicode(self.cloud.pk)
 
         sleep(1)
-        data = '''{ "name" : "cloud_service3", "provider" : "575062ee76e63a35bede35d3", "keywords" : [ "storage" ], "sectors" : [ "industry" ], "service_type" : "cloud" }''' 
+        data = '''{ "name" : "cloud_service3", "provider" : "575062ee76e63a35bede35d3", "keywords" : [ "storage" ], "sectors" : [ "industry" ], "service_type" : "iss" }''' 
         resp = self.app.put('/api/services/'+service_id, data=data, 
                             content_type='application/json')
 
@@ -113,7 +116,7 @@ class ServiceApiTest(AppTestCase):
         resp = self.app.get(u'/api/services/'+service_id)
         self.assertEqual( resp.status_code, 200)
         data = json.loads(resp.data)
-        self.assertEqual( data['service_type'], 'cloud')
+        self.assertEqual( data['service_type'], 'iss')
 
 if __name__ == '__main__':
     unittest.main()

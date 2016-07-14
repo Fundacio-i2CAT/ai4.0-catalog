@@ -152,6 +152,7 @@ class ProjectStateRes(ProjectRes):
                     instance = Instance(sproject=sproject, instance_id=instance_id)
                     instance.save()
 
+
     def _get_state(self, services):
         # Services are items (not obj)
         # import pdb;pdb.set_trace()
