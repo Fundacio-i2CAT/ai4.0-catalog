@@ -239,7 +239,14 @@ class ClientProjectsRes(ProjectsRes):
         filter = self._filter_from_inputs(values)
         filter['client'] = ObjectId(self.client_id)
         cursor = get_db()['projects'].find(filter, skip=skip, limit=limit )
-        return [item for item in cursor ]
+        items = []
+        for item in cursor:
+            project = self._find_obj(item['_id'])
+            status = project.get_status()
+            if status == DISABLED:
+                continue
+            items.append(item)
+        return items
 
     def _filter_from_inputs(self, values):
         filter = super(ClientProjectsRes, self)._filter_from_inputs(values)

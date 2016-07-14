@@ -67,6 +67,7 @@ class DocLoader(object):
                                  provider = self.provider,
                                  keywords= [ "storage" ],
                                  sectors= [ "industry" ],
+                                 properties={'context_type':'ssh'}
 #                                  images = [image,],
                                 )
         self.generic.save()
@@ -81,6 +82,7 @@ class DocLoader(object):
                                  provider = self.provider,
                                  keywords= [ "analysis" ],
                                  sectors= [ "cities" ],
+                                 properties={'context_type':'openstack'}
 #                                  images = [image,],
                                 )
         self.cloud.save()
