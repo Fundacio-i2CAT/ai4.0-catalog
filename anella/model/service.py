@@ -10,7 +10,7 @@ from partner import Partner, Provider, Client, ANELLA_SECTORS
 _service_types = {}
 
 def register_service_type(name,cls, des):
-    _service_types[name]=cls
+    _service_types[name]=(cls,des)
 
 def get_service_type(cls):
     for n,t in _service_types.items():

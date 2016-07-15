@@ -163,6 +163,7 @@ class ProjectStateRes(ProjectRes):
             instance = self._find_instance(unicode(item['_id']))
             if sproject.status== DISABLED:
                 project_status=DISABLED
+                break
             if instance:
                 state = self.orch.instance_get_state(instance['instance_id'])
                 if state:
@@ -393,11 +394,13 @@ def delete_project(project):
                     sproject.delete()
                 else:
                     sproject.status=DISABLED
+                    sproject.save()
 
         if status<CONFIRMED:
             project.delete()
-
-        response = dict( status='ok', id=unicode(project.pk), msg="Project disabled." )
+            response = dict( status='ok', id=unicode(project.pk), msg="Project deleted." )
+        else:
+            response = dict( status='ok', id=unicode(project.pk), msg="Project disabled." )
         return respond_json( response, status=200)
 
     except Exception,e:

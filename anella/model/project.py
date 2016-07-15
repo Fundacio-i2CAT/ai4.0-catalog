@@ -119,6 +119,10 @@ class Project(Document, Base):
             return CREATED
         project_status = None
         for sproject in self.services:
+            if sproject.status == DISABLED:
+                project_status = DISABLED
+                break
+          
             if project_status is None or sproject.status < project_status:
                 project_status = sproject.status
                 continue
