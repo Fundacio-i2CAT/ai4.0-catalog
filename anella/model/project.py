@@ -57,11 +57,6 @@ class SProject(Document, Base):
 
     client = property(get_client)
 
-#     def get_provider(self):
-#         return self.service.provider
-
-#     provider = property(get_provider)
-
     def __init__(self, project=None, service=None, context_type='', context=None, status=CREATED, **kwargs):
         super(SProject, self).__init__( project=project, service=service, 
                                 context_type=context_type, context=context, status=status, **kwargs)
@@ -74,7 +69,7 @@ class SProject(Document, Base):
 
     def confirm(self):
         """
-        - sendmail provider
+        - sendmail provider ?
         """
         assert self.status<CONFIRMED
         self.status=CONFIRMED
@@ -85,12 +80,7 @@ class SProject(Document, Base):
             self.status=SAVED
         return super(SProject,self).save(*args, **kwargs)
 
-#     def create_instance(self, project):
-#         assert self.status==CONFIRMED
-#         s_instance = Instance(service=self.service, project=self.project)
-#         s_instance.save()
-#         return s_instance
-# 
+
 class Project(Document, Base):
     """
     """
@@ -105,13 +95,6 @@ class Project(Document, Base):
     client = ReferenceField(Client)
     user_roles = DictField()
     services = ListField(ReferenceField(SProject))
-
-#     def create_instances(self):
-#         for service in self.services:
-#             s_instance = service.create_instance(project=self)
-#             self.instances.append( s_instance )
-# 
-#         self.status==CONFIRMED
 
     def get_status(self):
         # Services are items (not obj)

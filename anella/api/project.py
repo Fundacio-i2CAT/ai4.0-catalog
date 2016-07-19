@@ -152,6 +152,8 @@ class ProjectStateRes(ProjectRes):
                     instance = Instance(sproject=sproject, instance_id=instance_id)
                     instance.save()
 
+        # 20160719: Cache status in db
+        self._get_state(services)
 
     def _get_state(self, services):
         # Services are items (not obj)
@@ -168,6 +170,9 @@ class ProjectStateRes(ProjectRes):
                 state = self.orch.instance_get_state(instance['instance_id'])
                 if state:
                     status = STATES.index(state)
+                    # 20160719 Cache status in db
+                    sproject.status = status
+                    sproject.save()
                     if project_status is None or status < project_status:
                         project_status = status
                     continue
