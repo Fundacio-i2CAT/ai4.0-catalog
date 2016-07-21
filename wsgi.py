@@ -13,5 +13,8 @@ def after_request(response):
 #   response.headers.add('Access-Control-Allow-Credentials', 'true')
   return response
 
+def bootstrap_app():
+  return app
+
 if __name__ == "__main__":
-    app.run(host=app.config['HOST'], port=app.config['PORT'])
+    app.run(host=app.config['HOST'], port=app.config['PORT'], processes=3 )

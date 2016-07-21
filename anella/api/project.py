@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from time import sleep
 from bson import ObjectId
 
 from anella.common import *
@@ -37,10 +38,12 @@ def sproject_to_json(sproject, context=False):
     project = get_db()['projects'].find_one({'_id':sproject['project']})
     sitem = item_to_json(sproject, ['_id', 'status', 'created_at' ])
     service = get_db()['services'].find_one({'_id':sproject['service']})
-    client = get_db()['partners'].find_one({'_id':service['provider']})
+    provider = get_db()['partners'].find_one({'_id':service['provider']})
+    client = get_db()['partners'].find_one({'_id':project['client']})
 
     sitem['project'] = item_to_json(project, ['_id', 'name'])
     sitem['client'] = item_to_json(client, ['_id', 'name'])
+    sitem['provider'] = item_to_json(provider, ['_id', 'name'])
     # sitem['service'] = item_to_json(service, ['_id', 'name'])
     sitem['service'] = item_to_json(service, ['_id', 'name'])
 
@@ -151,9 +154,14 @@ class ProjectStateRes(ProjectRes):
                 if instance_id:
                     instance = Instance(sproject=sproject, instance_id=instance_id)
                     instance.save()
+                else:
+                    return "Error instance create."
 
         # 20160719: Cache status in db
-        self._get_state(services)
+        sleep(2)
+        status,error = self._get_state(services)
+        if self.orch.req.status_code not in (200,201):
+            return "Error instance create."
 
     def _get_state(self, services):
         # Services are items (not obj)
@@ -168,6 +176,9 @@ class ProjectStateRes(ProjectRes):
                 break
             if instance:
                 state = self.orch.instance_get_state(instance['instance_id'])
+                if self.orch.req.status_code not in (200,201):
+                    return '','Error in get project status.'
+
                 if state:
                     status = STATES.index(state)
                     # 20160719 Cache status in db
@@ -176,13 +187,15 @@ class ProjectStateRes(ProjectRes):
                     if project_status is None or status < project_status:
                         project_status = status
                     continue
+                else:
+                    return '',''
             # some error
             break
 
         if project_status is None:
-            return ''
+            return '',''
         else:
-            return STATES[project_status]
+            return STATES[project_status],''
             
 
     def get(self, id):
@@ -195,7 +208,9 @@ class ProjectStateRes(ProjectRes):
             response = dict( state= STATES[status], status=status )
             return respond_json( response, status=200)
 
-        state = self._get_state(self.project.services)
+        state,error = self._get_state(self.project.services)
+        if error:
+            return error_api( msg=error, status=400 )
         if state:
             status = STATES.index(state)
             response = dict( state=state, status=status )
