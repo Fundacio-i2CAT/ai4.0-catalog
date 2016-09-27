@@ -1,0 +1,7 @@
+simplejson >= 3
+pymongo >= 2.0
+PyYAML >= 3.09
+python-dateutil >= 1.4.1
+requests
+jsonschema
+mongoengine

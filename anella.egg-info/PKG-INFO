@@ -1,0 +1,14 @@
+Metadata-Version: 1.1
+Name: anella
+Version: 0.0.1
+Summary: Anella-Catalog
+Home-page: UNKNOWN
+Author: UNKNOWN
+Author-email: oscar.rambla@i2cat.net
+License: Apache License, http://www.apache.org/licenses/LICENSE-2.0
+Description: UNKNOWN
+Keywords: web mongo
+Platform: Linux
+Platform: MacOS X
+Classifier: Programming Language :: Python
+Classifier: Topic :: Internet :: WWW/HTTP :: WSGI :: Application
