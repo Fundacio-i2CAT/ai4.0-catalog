@@ -70,6 +70,9 @@ def add_resources(api):
     api.add_resource(SProjectsRes, '/api/sprojects')
     api.add_resource(SProjectRes, '/api/sprojects/<id>')
 
+    from anella.api.register import RegisterRes
+    api.add_resource(RegisterRes, '/api/register')
+
 def add_rules(app):
     """
     """
