@@ -60,7 +60,6 @@ class Register(Document, Base):
 
     def set_provider_role(self, provider_role):
         self.provider_role = provider_role
-        print ('4')
 
     def set_nif_cif(self, identification):
         self.nif_cif = identification
@@ -101,11 +100,9 @@ def set_register(item):
 
 
 def exists_register(item):
-    idn = item.get('identification_number')
-    email = item.get('email')
-    search_fields = {'email': email}
-    if idn['isnif']:
-        search_fields = {'email': email, 'nif_cif': idn['value']}
+    search_fields = {'email': item.get('email')}
+    if item.get('identification_number')['isnif']:
+        search_fields = {'email': item.get('email'), 'nif_cif': item.get('identification_number')['value']}
     return find_register_by_fields(search_fields)
 
 
