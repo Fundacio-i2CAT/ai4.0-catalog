@@ -24,6 +24,7 @@ class Register(Document, Base):
     client_role = BooleanField()
     provider_role = BooleanField()
     nif_cif = StringField()
+    company = StringField()
 
     def set_email(self, email):
         self.email = email
@@ -63,6 +64,9 @@ class Register(Document, Base):
 
     def set_nif_cif(self, identification):
         self.nif_cif = identification
+
+    def set_company(self, company):
+        self.company = company
 
 
 def create_register(item):
