@@ -69,14 +69,14 @@ def create_register(item):
     try:
         if exists_register(item) > 0:
             response = dict(status='409', msg="This register already exists.")
-            return error_api(response, status=409)
+            return respond_json(response, status=409)
         register = set_register(item)
         register.save()
         response = dict(status='ok', id=unicode(register.pk), msg="Register created.")
         return respond_json(response, status=201)
     except Exception, e:
         response = dict(status='404', msg=e.message)
-        return error_api(response, status=404)
+        return respond_json(response, status=404)
 
 
 def set_register(item):
