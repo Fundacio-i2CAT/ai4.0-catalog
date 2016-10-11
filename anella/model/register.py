@@ -1,6 +1,6 @@
 from mongoengine import *
 from base import Base
-from anella.api.utils import respond_json
+from anella.api.utils import respond_json, error_api
 from anella.common import get_db
 
 
@@ -68,15 +68,15 @@ class Register(Document, Base):
 def create_register(item):
     try:
         if exists_register(item) > 0:
-            response = dict(status='nok', msg="This register already exists.")
-            return respond_json(response, status=409)
+            response = dict(status='409', msg="This register already exists.")
+            return error_api(response, status=409)
         register = set_register(item)
         register.save()
         response = dict(status='ok', id=unicode(register.pk), msg="Register created.")
         return respond_json(response, status=201)
     except Exception, e:
-        response = dict(status='nok', msg=e.message)
-        return respond_json(response, status=404)
+        response = dict(status='404', msg=e.message)
+        return error_api(response, status=404)
 
 
 def set_register(item):
