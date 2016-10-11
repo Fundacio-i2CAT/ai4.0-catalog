@@ -9,7 +9,7 @@ class RegisterRes(ColRes):
     collection = 'register'
     _cls = Register
     name = 'Register'
-    fields = '_id,email, name, secondname, lastname, company, comp_position, legal, ' \
+    fields = '_id,email, name, surname, company, comp_position, legal, ' \
              'comp_address, comp_phone, password, client_role, provider_role, nif_cif, company'.split(',')
     filter_fields = 'name,'.split(',')
 

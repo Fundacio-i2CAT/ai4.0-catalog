@@ -12,8 +12,7 @@ class Register(Document, Base):
     # Collection fields
     email = StringField()
     name = StringField()
-    second_name = StringField()
-    last_name = StringField()
+    surname = StringField()
 
     company = StringField()
     comp_position = StringField()
@@ -32,11 +31,8 @@ class Register(Document, Base):
     def set_name(self, name):
         self.name = name
 
-    def set_second_name(self, second_name):
-        self.second_name = second_name
-
-    def set_last_name(self, last_name):
-        self.last_name = last_name
+    def set_surname(self, surname):
+        self.surname = surname
 
     def set_company(self, company):
         self.company = company
@@ -87,8 +83,7 @@ def set_register(item):
     register = Register()
     register.set_email(item.pop('email'))
     register.set_name(item.pop('name'))
-    register.set_second_name(item.pop('secondname'))
-    register.set_last_name(item.pop('lastname'))
+    register.set_surname(item.pop('surname'))
     register.set_company(item.pop('company'))
     register.set_comp_position(item.pop('comp_position'))
     register.set_legal(item.pop('legal'))
