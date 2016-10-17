@@ -20,6 +20,7 @@ anella/api/__init__.py
 anella/api/client.py
 anella/api/project.py
 anella/api/provider.py
+anella/api/register.py
 anella/api/service.py
 anella/api/session.py
 anella/api/user.py
@@ -29,6 +30,7 @@ anella/model/base.py
 anella/model/instance.py
 anella/model/partner.py
 anella/model/project.py
+anella/model/register.py
 anella/model/scontext.py
 anella/model/service.py
 anella/model/user.py

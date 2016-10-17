@@ -10,7 +10,7 @@ anella:
         port: 8010
 
     database:
-        host: 0.0.0.0
+        host: 127.0.0.1
         port: 27017
         database_name: anella
         collections:
@@ -22,6 +22,6 @@ anella:
         port: 9763
 
     orch: # Orchestrator service manager
-        host: anella.i2cat.net
+        host: 127.0.0.1
         port: 8081
 
