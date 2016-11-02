@@ -17,7 +17,7 @@ RUNNING=5
 DEPLOYED=6
 FAILED=7
 DISABLED=8
-UNKOWN=9
+UNKNOWN=9
 
 STATUS = (
     ( CREATED,		u'CREATED' ),
@@ -29,7 +29,7 @@ STATUS = (
     ( DEPLOYED, 	u'DEPLOYED' ),
     ( FAILED, 		u'FAILED' ),
     ( DISABLED, 	u'DISABLED' ),
-    ( UNKOWN, 	    u'UNKOWN' )
+    ( UNKNOWN, 	    u'UNKNOWN' )
 )
 
 STATES = [status[1] for status in STATUS]
