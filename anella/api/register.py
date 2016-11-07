@@ -15,5 +15,4 @@ class RegisterRes(ColRes):
 
     def post(self):
         item = get_json()
-        print (item)
         return create_register(item)

@@ -1,7 +1,10 @@
 from mongoengine import *
 from base import Base
 from anella.api.utils import respond_json, error_api
-from anella.common import get_db
+from anella.common import get_db, get_cfg
+import smtplib
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEText import MIMEText
 
 
 class Register(Document, Base):
@@ -72,6 +75,7 @@ def create_register(item):
             return respond_json(response, status=409)
         register = set_register(item)
         register.save()
+        send_email(item)
         response = dict(status='ok', id=unicode(register.pk), msg="Register created.")
         return respond_json(response, status=201)
     except Exception, e:
@@ -81,9 +85,9 @@ def create_register(item):
 
 def set_register(item):
     register = Register()
-    register.set_email(item.pop('email'))
-    register.set_name(item.pop('name'))
-    register.set_surname(item.pop('surname'))
+    register.set_email(item.get('email'))
+    register.set_name(item.get('name'))
+    register.set_surname(item.get('surname'))
     register.set_company(item.pop('company'))
     register.set_comp_position(item.pop('comp_position'))
     register.set_legal(item.pop('legal'))
@@ -107,3 +111,21 @@ def exists_register(item):
 
 def find_register_by_fields(search_fields):
     return get_db()['register'].count(search_fields)
+
+
+def send_email(item):
+    toaddr = get_cfg('mail__to')
+    fromaddr = get_cfg('mail__from')
+    msg = MIMEMultipart()
+    msg['Subject'] = get_cfg('mail__subject')
+    msg['From'] = fromaddr
+    msg['To'] = toaddr
+    body = get_cfg('mail__body') + ':\n\n Nom: ' + item.pop('name') + '\n\n Cognoms: ' \
+           + item.pop('surname') + '\n\n Email: ' + item.pop('email')
+    msg.attach(MIMEText(body, 'plain'))
+    server = smtplib.SMTP(get_cfg('mail__smtp'), get_cfg('mail__port'))
+    server.starttls()
+    server.login(fromaddr, get_cfg('mail__pass'))
+    server.sendmail(msg.get('From'), msg["To"], msg.as_string())
+    server.quit()
+    server.close()

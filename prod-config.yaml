@@ -25,3 +25,11 @@ anella:
         host: 127.0.0.1
         port: 8082
 
+    mail:
+        from: anella.suport@gmail.com
+        to: anella.suport@gmail.com
+        pass: i2catAnellaNexusII
+        port: 587
+        smtp: smtp.gmail.com
+        subject: Registre de nou usuari
+        body: Nou registre

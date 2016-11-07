@@ -21,3 +21,12 @@ auth__port = None
 # Orchestrator Manager Service
 orch__host = None
 orch__port = None
+
+# Mail
+mail__from = None
+mail__to = None
+mail__pass = None
+mail__port = None
+mail__smtp = None
+mail__subject = None
+mail__body = None
