@@ -27,7 +27,7 @@ anella:
 
     mail:
         from: anella.suport@gmail.com
-        to: anella.suport@gmail.com
+        to: info@anellaindustrial.cat
         pass: i2catAnellaNexusII
         port: 587
         smtp: smtp.gmail.com
