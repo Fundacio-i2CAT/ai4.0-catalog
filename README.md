@@ -2,7 +2,13 @@
 See doc
 
 ## Installation
+## Si al instalar el entorno no funciona por un tema de imágenes hacer lo siguiente
 ```
+## Desde la raíz
+```
+$ sudo apt-get install libjpeg-dev 
+## Y ya podremos instalarlo (desde el virtualenv (venv) )
+
 $ pip install -r requirements.txt
 $ python setup.py install
 
