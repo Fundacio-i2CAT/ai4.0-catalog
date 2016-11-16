@@ -22,7 +22,9 @@ anella:
         port: 9763
 
     orch: # Orchestrator service manager
-        host: 127.0.0.1
+        #host: 127.0.0.1
+        host: 192.168.10.165
+        #host: dev.anella.i2cat.net
         port: 8082
 
     mail:

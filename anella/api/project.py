@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from time import sleep
 from bson import ObjectId
 
 from anella.common import *
@@ -9,6 +8,8 @@ from anella.model.instance import Instance
 
 from anella.orch import Orchestrator
 from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api, item_to_json
+
+from anella.enum.status_enum import get_state_enum_value
 
 def services_to_json(sprojects):
     sitems=[]
@@ -40,7 +41,6 @@ def sproject_to_json(sproject, context=False):
     service = get_db()['services'].find_one({'_id':sproject['service']})
     provider = get_db()['partners'].find_one({'_id':service['provider']})
     client = get_db()['partners'].find_one({'_id':project['client']})
-
     sitem['project'] = item_to_json(project, ['_id', 'name'])
     sitem['client'] = item_to_json(client, ['_id', 'name'])
     sitem['provider'] = item_to_json(provider, ['_id', 'name'])
@@ -128,6 +128,7 @@ class ProjectStateRes(ProjectRes):
         # Services are items (not obj)
         # import pdb;pdb.set_trace()
         for sproject in services:
+            print '1232423'
             service_id = unicode(sproject.pk)
             item = self.spres._find_item(unicode(sproject.pk))
             instance = self._find_instance(unicode(item['_id']))
@@ -158,7 +159,7 @@ class ProjectStateRes(ProjectRes):
                     return "Error instance create."
 
         # 20160719: Cache status in db
-        sleep(2)
+        # sleep(2)
         status,error = self._get_state(services)
         if self.orch.req.status_code not in (200,201):
             return "Error instance create."
@@ -168,30 +169,7 @@ class ProjectStateRes(ProjectRes):
         # import pdb;pdb.set_trace()
         project_status = None
         for sproject in services:
-            service_id = unicode(sproject.pk)
-            item = self.spres._find_item(unicode(service_id))
-            instance = self._find_instance(unicode(item['_id']))
-            if sproject.status== DISABLED:
-                project_status=DISABLED
-                break
-            if instance:
-                state = self.orch.instance_get_state(instance['instance_id'])
-                if self.orch.req.status_code not in (200,201):
-                    return '','Error in get project status.'
-
-                if state:
-                    status = STATES.index(state)
-                    # 20160719 Cache status in db
-                    sproject.status = status
-                    sproject.save()
-                    if project_status is None or status < project_status:
-                        project_status = status
-                    continue
-                else:
-                    return '',''
-            # some error
-            break
-
+            project_status = sproject.status
         if project_status is None:
             return '',''
         else:
@@ -376,6 +354,28 @@ class SProjectRes(ItemRes):
         self.sproject.save()
         response = dict( status='ok', msg="Service project state set to %s" % state )
         return respond_json( response, status=200)
+
+class SProjectInstanceRes(ItemRes):
+    collection = 'sprojects'
+    _cls = SProject
+    name = 'SProject'
+    fields = 'project,service,context_type,context,created_at'.split(',')
+
+    def put(self, id):
+        # import pdb;pdb.set_trace()
+        instance = get_db()['instances'].find_one({'instance_id':id})
+        self.sproject = self._find_obj(ObjectId(instance['sproject']))
+        if not self.sproject:
+            return error_api(msg='Error: wrong service project id in request.', status=404)
+        data = get_json()
+        data_status = data.get('state')
+        state = get_state_enum_value(data_status)
+        print state
+        self.sproject.status = state
+        self.sproject.save()
+        response = dict(status='ok', msg="Service project state set to %s" % state)
+        return respond_json(response, status=200)
+
 
 class ProviderSProjectsRes(SProjectsRes):
     filter_fields = 'provider,status'.split(',')
