@@ -128,7 +128,6 @@ class ProjectStateRes(ProjectRes):
         # Services are items (not obj)
         # import pdb;pdb.set_trace()
         for sproject in services:
-            print '1232423'
             service_id = unicode(sproject.pk)
             item = self.spres._find_item(unicode(sproject.pk))
             instance = self._find_instance(unicode(item['_id']))
@@ -370,7 +369,6 @@ class SProjectInstanceRes(ItemRes):
         data = get_json()
         data_status = data.get('state')
         state = get_state_enum_value(data_status)
-        print state
         self.sproject.status = state
         self.sproject.save()
         response = dict(status='ok', msg="Service project state set to %s" % state)
