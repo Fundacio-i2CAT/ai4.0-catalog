@@ -78,6 +78,7 @@ def load_config(configfile, clear_db_config=False):
         cfg.database__host = yaml_config['anella']['database']['host']
         cfg.database__port = yaml_config['anella']['database']['port']
         cfg.database__database_name = yaml_config['anella']['database']['database_name']
+        cfg.database__database_repository = yaml_config['anella']['database']['database_repository']
         cfg.database__collection_config = yaml_config['anella']['database']['collections']['config']
         cfg.database__collection_log = yaml_config['anella']['database']['collections']['log']
 
@@ -94,6 +95,8 @@ def load_config(configfile, clear_db_config=False):
         cfg.mail__smtp = yaml_config['anella']['mail']['smtp']
         cfg.mail__subject = yaml_config['anella']['mail']['subject']
         cfg.mail__body = yaml_config['anella']['mail']['body']
+
+        cfg.repository__path = yaml_config['anella']['repository']['path']
 
     except Exception, err:
         print "Exception loading config file [{0}]: ({1})".format(

@@ -4,6 +4,7 @@ from anella.common import get_db
 from anella.model.user import User
 
 from anella.api.utils import ColRes, ItemRes, item_to_json
+from anella import configuration as _cfg
 
 class UsersRes(ColRes):
     collection = 'users'
@@ -32,7 +33,7 @@ class UserRes(ItemRes):
 def partner_to_json(item):
     partner_id = item.pop('partner_id', None)
     if partner_id:
-        partner = get_db()['partners'].find_one({'_id':partner_id})
+        partner = get_db(_cfg.database__database_name)['partners'].find_one({'_id':partner_id})
         item['partner'] = item_to_json(partner, ['_id', '_cls', 'name'])
     else:
         item['partner'] = None

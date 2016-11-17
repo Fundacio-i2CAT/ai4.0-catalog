@@ -13,6 +13,7 @@ app__port = None
 database__host = None
 database__port = None
 database__database_name = None
+database__database_repository = None
 
 # Authentication Service
 auth__host = None
@@ -30,3 +31,5 @@ mail__port = None
 mail__smtp = None
 mail__subject = None
 mail__body = None
+
+repository__path = None

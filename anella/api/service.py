@@ -7,6 +7,7 @@ import time
 from anella.common import *
 from anella.model.service import get_service_type, get_service_cls, get_service_types
 from anella.model.service import AppService, ISService
+from anella import configuration as _cfg
 
 from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId
 
@@ -30,7 +31,7 @@ class ServicesRes(ColRes):
         sitem = ColRes._item_to_json(self, item)
         provider_id = sitem['provider']
         if provider_id:
-            provider = get_db()['partners'].find_one({'_id':ObjectId(provider_id)})
+            provider = get_db(_cfg.database__database_name)['partners'].find_one({'_id':ObjectId(provider_id)})
             sitem['provider'] = item_to_json(provider, ['_id', 'name'])
         return sitem
 
@@ -44,7 +45,7 @@ class ServiceRes(ItemRes):
         sitem = ItemRes._item_to_json(self, item)
         provider_id = sitem['provider']
         if provider_id:
-            provider = get_db()['partners'].find_one({'_id':ObjectId(provider_id)})
+            provider = get_db(_cfg.database__database_name)['partners'].find_one({'_id':ObjectId(provider_id)})
             sitem['provider'] = item_to_json(provider, ['_id', 'name'])
         return sitem
 

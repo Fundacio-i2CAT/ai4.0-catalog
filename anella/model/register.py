@@ -5,6 +5,7 @@ from anella.common import get_db, get_cfg
 import smtplib
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
+from anella import configuration as _cfg
 
 
 class Register(Document, Base):
@@ -110,7 +111,7 @@ def exists_register(item):
 
 
 def find_register_by_fields(search_fields):
-    return get_db()['register'].count(search_fields)
+    return get_db(_cfg.database__database_name)['register'].count(search_fields)
 
 
 def send_email(item):

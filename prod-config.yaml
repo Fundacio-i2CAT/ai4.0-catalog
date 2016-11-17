@@ -16,6 +16,7 @@ anella:
         collections:
             config: config
             log: log
+        database_repository: anella_repository
 
     auth: # Authentication service
         host: 84.88.76.5
@@ -33,3 +34,6 @@ anella:
         smtp: smtp.gmail.com
         subject: Registre de nou usuari
         body: Nou registre
+
+    repository:
+        path: /home/david/tmp/

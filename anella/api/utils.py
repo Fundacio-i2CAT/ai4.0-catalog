@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
-import time
-from collections import Iterable
 from datetime import datetime
 
 from mongoengine import *
@@ -13,6 +10,7 @@ from flask import json, jsonify, make_response
 from flask_restful  import Resource
 
 from anella.common import *
+from anella import configuration as _cfg
 
 class AnellaRes(Resource):
     _cls=None
@@ -41,7 +39,7 @@ class AnellaRes(Resource):
         return items
 
     def _find_item(self, id):
-        return get_db()[self.collection].find_one({'_id':ObjectId(id)})
+        return get_db(_cfg.database__database_name)[self.collection].find_one({'_id':ObjectId(id)})
 
     def _obj_from_json(self, data, obj=None):
         return obj_from_json(data, cls=self._cls, obj=obj)
@@ -105,7 +103,7 @@ class ColRes(AnellaRes):
     def _get_items(self, skip=0, limit=1000):
         values = get_args().copy() # args are inmutable
         filter = self._filter_from_inputs(values)
-        cursor = get_db()[self.collection].find( filter, skip=skip, limit=limit )
+        cursor = get_db(_cfg.database__database_name)[self.collection].find( filter, skip=skip, limit=limit )
         return [item for item in cursor ]
 
     def get(self):
@@ -129,7 +127,7 @@ class ItemRes(AnellaRes):
   
     def delete(self, id):
         try:
-            result = get_db()[self.collection].delete_one({'_id':ObjectId(id)})
+            result = get_db(_cfg.database__database_name)[self.collection].delete_one({'_id':ObjectId(id)})
             # v2 result = get_db()[self.collection].find_and_modify({'_id':ObjectId(id)}, remove=True)
             if result.deleted_count:
                 response = dict( status='ok', msg='%s deleted' % self.name )

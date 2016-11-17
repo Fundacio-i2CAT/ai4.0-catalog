@@ -9,14 +9,15 @@ from anella.model.instance import Instance
 
 from anella.orch import Orchestrator
 from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api, item_to_json
+from anella import configuration as _cfg
 
 def services_to_json(sprojects):
     sitems=[]
     for service_id in sprojects:
-        sproject = get_db()['sprojects'].find_one({'_id':service_id})
+        sproject = get_db(_cfg.database__database_name)['sprojects'].find_one({'_id':service_id})
         sitem = item_to_json(sproject, ['_id', 'context_type', 'status', 'provider', 'created_at' ])
-        service = get_db()['services'].find_one({'_id':sproject['service']})
-        provider = get_db()['partners'].find_one({'_id':service['provider']})
+        service = get_db(_cfg.database__database_name)['services'].find_one({'_id':sproject['service']})
+        provider = get_db(_cfg.database__database_name)['partners'].find_one({'_id':service['provider']})
 
         sitem['provider'] = item_to_json(provider, ['_id', 'name'])
         # sitem['service'] = item_to_json(service, ['_id', 'name'])
@@ -35,11 +36,11 @@ def sprojects_to_json(sprojects):
     return sitems
 
 def sproject_to_json(sproject, context=False):
-    project = get_db()['projects'].find_one({'_id':sproject['project']})
+    project = get_db(_cfg.database__database_name)['projects'].find_one({'_id':sproject['project']})
     sitem = item_to_json(sproject, ['_id', 'status', 'created_at' ])
-    service = get_db()['services'].find_one({'_id':sproject['service']})
-    provider = get_db()['partners'].find_one({'_id':service['provider']})
-    client = get_db()['partners'].find_one({'_id':project['client']})
+    service = get_db(_cfg.database__database_name)['services'].find_one({'_id':sproject['service']})
+    provider = get_db(_cfg.database__database_name)['partners'].find_one({'_id':service['provider']})
+    client = get_db(_cfg.database__database_name)['partners'].find_one({'_id':project['client']})
 
     sitem['project'] = item_to_json(project, ['_id', 'name'])
     sitem['client'] = item_to_json(client, ['_id', 'name'])
@@ -121,7 +122,7 @@ class ProjectStateRes(ProjectRes):
          self.spres = SProjectRes()
 
     def _find_instance(self, id):
-        instance = get_db()['instances'].find_one({'sproject':ObjectId(id)})
+        instance = get_db(_cfg.database__database_name)['instances'].find_one({'sproject':ObjectId(id)})
         return instance
 
     def _set_state(self, services, state):
@@ -259,7 +260,7 @@ class ClientProjectsRes(ProjectsRes):
         # status = int(values and values.pop('status', 0)) or None
         filter = self._filter_from_inputs(values)
         filter['client'] = ObjectId(self.client_id)
-        cursor = get_db()['projects'].find(filter, skip=skip, limit=limit )
+        cursor = get_db(_cfg.database__database_name)['projects'].find(filter, skip=skip, limit=limit )
         items = []
         for item in cursor:
             project = self._find_obj(item['_id'])
@@ -326,7 +327,7 @@ class ProjectServicesRes(ColRes):
         
 
     def get(self, id):
-        project = get_db()['projects'].find_one({'_id':ObjectId(id)})
+        project = get_db(_cfg.database__database_name)['projects'].find_one({'_id':ObjectId(id)})
         result = services_to_json(project['services'])
         response = dict( status='ok', result=result )
         return respond_json( response, status=200)
@@ -397,7 +398,7 @@ class ProviderSProjectsRes(SProjectsRes):
         # status = int(values and values.pop('status', 0)) or None
         filter = self._filter_from_inputs(values)
         filter['provider'] = ObjectId(self.provider_id)
-        cursor = get_db()['sprojects'].find(filter, skip=skip, limit=limit )
+        cursor = get_db(_cfg.database__database_name)['sprojects'].find(filter, skip=skip, limit=limit )
         return [item for item in cursor ]
 
     def _items_to_json(self, items):
@@ -481,7 +482,7 @@ def update_project(project, item, is_new=False):
     
                 if not context:
                     if context_type:
-                        scontext = get_db()['scontexts'].find_one({'context_type':context_type})
+                        scontext = get_db(_cfg.database__database_name)['scontexts'].find_one({'context_type':context_type})
                         context=scontext['context']
                     else:
                         context={}

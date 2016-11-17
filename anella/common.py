@@ -30,9 +30,10 @@ def get_mongo():
 
     return _mongo
 
-def get_db():
+
+def get_db(database_name):
     mongo = get_mongo()
-    return mongo[_cfg.database__database_name]
+    return mongo[database_name]
 
 def reset_db():
     """
@@ -107,7 +108,7 @@ def get_user():
 
     user_id = get_session().get('user')
     if user_id:
-        get_db()
+        get_db(_cfg.database__database_name)
         user = User.objects.get(id=user_id)
         if user:
             return user
