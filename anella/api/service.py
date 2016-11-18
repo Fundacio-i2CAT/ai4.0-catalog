@@ -8,6 +8,7 @@ from anella.common import *
 from anella.model.service import get_service_type, get_service_cls, get_service_types
 from anella.model.service import AppService, ISService
 from anella import configuration as _cfg
+from anella.model.service import create_service
 
 from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId
 
@@ -17,6 +18,10 @@ class ServicesRes(ColRes):
     name= 'Services'
     fields = '_id,name,summary,service_type,provider,sectors,created_at,updated_at'.split(',')
     filter_fields = 'name,keywords,sectors'.split(',')
+
+    def post(self):
+        item = get_json()
+        return create_service(item)
 
     def _item_from_json(self, data):
         service_cls = get_service_cls( data.get('service_type') )

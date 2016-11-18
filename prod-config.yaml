@@ -37,3 +37,7 @@ anella:
 
     repository:
         path: /home/david/tmp/
+
+    tenor:
+      host: localhost
+      port: 4000

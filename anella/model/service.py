@@ -4,6 +4,10 @@ from mongoengine import *
 
 from base import Base
 from partner import Partner, Provider, Client, ANELLA_SECTORS
+from gridfs import GridFS
+from anella import configuration as _cfg
+from anella.common import get_db
+from bson.objectid import ObjectId
 
 # TODO: Service types should be dynamic and use as options to validate field
 
@@ -35,18 +39,33 @@ class ServiceDescription(Document, Base):
     description = StringField()
     service_type = StringField(default='app')
 
-    provider = ReferenceField(Partner)
-    reference = StringField(max_length=50)
+    provider = ObjectIdField()
+    # reference = StringField(max_length=50)
     keywords = ListField(StringField(max_length=40))
     sectors = ListField(StringField(choices=ANELLA_SECTORS))
-
+    vm_image = ObjectIdField()
     link = URLField()
-    logo = ImageField()
+    #logo = VMImage()
 
-    properties = DictField()
+    context = DictField()
 
-#     images = EmbeddedDocumentListField(EmbeddedDocument)
-#     bootstrap_script = StringField()
+    def set_name(self, name):
+        self.name = name
+
+    def set_summary(self, summary):
+        self.summary = summary
+
+    def set_description(self, description):
+        self.description = description
+
+    def set_service_type(self, service_type):
+        self.service_type = service_type
+
+    def set_provider(self, provider):
+        self.provider = ObjectId(provider)
+
+    def set_vm_image(self, vm_image):
+        self.vm_image = ObjectId(vm_image)
 
 
 class AppService(ServiceDescription):
@@ -63,6 +82,76 @@ register_service_type('app', AppService, 'App')
 register_service_type('iss', ISService, 'Infraestructura')
 
 
+class VMImage(Document, Base):
+    type_name = 'vm_image'
+
+    url = StringField()
+    id = StringField()
+    path_image = StringField()
+    name_image = StringField()
+
+    def __init__(self):
+        self.grid_fs = GridFS(get_db(_cfg.database__database_repository))
+
+    def set_id(self, id):
+        self.id = id
+
+    def set_path_image(self, path_image):
+        self.path_image = path_image
+
+    def set_name_image(self, name_image):
+        self.name_image = name_image
+
+    def get_image(self):
+        return_data = 0
+        try:
+            grid_fs_file = self.grid_fs.find_one({'_id': ObjectId(self.id)})
+            image_file = open(_cfg.repository__path + grid_fs_file.name, 'w')
+            image_file.write(grid_fs_file.read())
+            image_file.close()
+        except:
+            return_data = -1
+        return return_data
+
+    def save_image(self):
+        file_id = self.get_file_id()
+        grid_fs_file = self.grid_fs.find_one(file_id)
+        data = str(grid_fs_file._id)
+        grid_fs_file.close()
+        return data
+
+    def delete_image(self):
+        file_id = self.get_file_id()
+        self.grid_fs.delete(file_id)
+
+    def get_file_id(self):
+        image_file = open(self.path_image, 'r')
+        return self.grid_fs.put(image_file.read(), filename=self.name_image)
+
+
+def create_service(item):
+    service = set_service(item)
+    service.save()
+
+def set_service(data):
+    service = ServiceDescription()
+    service.set_name(data.pop('name'))
+    service.set_summary(data.pop('summary'))
+    service.set_description(data.pop('description'))
+    service.set_service_type(data.pop('service_type'))
+    service.set_provider(data.pop('provider'))
+    service.set_vm_image(set_vm_image(data))
+    return service
+
+
+def set_vm_image(data):
+    vm_image = VMImage()
+    vm_image.set_name_image(data.pop('name_image'))
+    vm_image.set_path_image(data.pop('url_image'))
+    vm_image.set_id(vm_image.save_image())
+    return vm_image.id
+
+'''
 class Image(EmbeddedDocument):
     """
     """
@@ -76,14 +165,9 @@ class Image(EmbeddedDocument):
     name = StringField(max_length=40, required=True, unique=True)
     public = BooleanField( default=True )
 
-class VMImage(Image):
-    type_name = 'vm_image'  
-
-    url = URLField()
-
 class DockerImage(Image):
     """
     Considering a public image in Docker hub for now.
     """
     type_name = 'Dockerfile'  
-
+'''

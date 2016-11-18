@@ -98,6 +98,9 @@ def load_config(configfile, clear_db_config=False):
 
         cfg.repository__path = yaml_config['anella']['repository']['path']
 
+        cfg.tenor__host = yaml_config['anella']['tenor']['host']
+        cfg.tenor__port = yaml_config['anella']['tenor']['port']
+
     except Exception, err:
         print "Exception loading config file [{0}]: ({1})".format(
             configfile,
