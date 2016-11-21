@@ -43,12 +43,9 @@ class ServiceDescription(Document, Base):
     service_type = StringField(default='app')
 
     provider = ObjectIdField()
-    # reference = StringField(max_length=50)
     keywords = ListField(StringField(max_length=40))
     sectors = ListField(StringField(choices=ANELLA_SECTORS))
     link = URLField()
-    #logo = VMImage()
-
     context = DictField()
 
     def set_name(self, name):
@@ -129,18 +126,20 @@ class VMImage:
 def create_service(item):
     service = set_service(item)
     if service is not None:
-        service.save()
-        response = dict(status='ok', id=unicode(service.pk), msg="Service created.")
-        return respond_json(response, status=201)
-    else:
-        response = dict(status='nok', msg="Error create service")
-        return respond_json(response, status=400)
+        try:
+            service.save()
+            response = dict(status='ok', id=unicode(service.pk), msg="Service created.")
+            return respond_json(response, status=201)
+        except Exception as e:
+            print e
+            delete_image_vm(service.context['vm_image'])
+    response = dict(status='nok', msg="Error create service")
+    return respond_json(response, status=400)
 
 
 def set_service(data):
     service = ServiceDescription()
     item = None
-
     try:
         service.set_name(data.pop('name'))
         service.set_summary(data.pop('summary'))
@@ -152,11 +151,15 @@ def set_service(data):
     except Exception as e:
         print e
         if item is not None:
-            vm_image = VMImage()
-            vm_image.id = item.get('vm_image')
-            vm_image.delete_image()
+            delete_image_vm(item.get('vm_image'))
         service = None
     return service
+
+
+def delete_image_vm(vm_image_id):
+    vm_image = VMImage()
+    vm_image.id = vm_image_id
+    vm_image.delete_image()
 
 
 def set_vm_image(data):
@@ -169,7 +172,7 @@ def set_vm_image(data):
 
 
 def create_context(data):
-    context = dict(vm_image=data.pop("vm_image"), flavour=data.pop("flavour"),
+    context = dict(vm_image=data.get("vm_image"), flavour=data.pop("flavour"),
                    consumer_params=data.pop("consumer_params"), runtime_params=data.pop("runtime_params"),
                    tenor_url=tenor_url, name_image=data.pop("name_image"),
                    vm_image_format=data.pop("vm_image_format"))

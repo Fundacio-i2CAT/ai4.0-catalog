@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="38e258d1-94b7-472a-979a-a2f1717192ed" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/anella/model/service.py" afterPath="$PROJECT_DIR$/anella/model/service.py" />
     </list>
     <ignored path="catalog.iws" />
@@ -58,8 +57,8 @@
       <file leaf-file-name="service.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/anella/model/service.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2377">
-              <caret line="171" column="0" selection-start-line="171" selection-start-column="0" selection-end-line="172" selection-end-column="38" />
+            <state relative-caret-position="-1269">
+              <caret line="45" column="0" selection-start-line="45" selection-start-column="0" selection-end-line="45" selection-end-column="0" />
               <folding>
                 <element signature="e#25#50#0" expanded="true" />
               </folding>
@@ -939,8 +938,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/anella/model/service.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2377">
-          <caret line="171" column="0" selection-start-line="171" selection-start-column="0" selection-end-line="172" selection-end-column="38" />
+        <state relative-caret-position="-1269">
+          <caret line="45" column="0" selection-start-line="45" selection-start-column="0" selection-end-line="45" selection-end-column="0" />
           <folding>
             <element signature="e#25#50#0" expanded="true" />
           </folding>
