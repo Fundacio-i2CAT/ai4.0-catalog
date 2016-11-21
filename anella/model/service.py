@@ -178,23 +178,3 @@ def create_context(data):
                    vm_image_format=data.pop("vm_image_format"))
 
     return context
-'''
-class Image(EmbeddedDocument):
-    """
-    """
-    # meta = {'allow_inheritance': True, 'collection': 'images'}
-    meta = {'allow_inheritance': True}
-
-    type_name = 'Generic'  # A type name to use in UI
-    scheme = 'resource-scheme.json'
-
-    # Collection fields
-    name = StringField(max_length=40, required=True, unique=True)
-    public = BooleanField( default=True )
-
-class DockerImage(Image):
-    """
-    Considering a public image in Docker hub for now.
-    """
-    type_name = 'Dockerfile'  
-'''
