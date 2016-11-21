@@ -8,10 +8,13 @@ from gridfs import GridFS
 from anella import configuration as _cfg
 from anella.common import get_db
 from bson.objectid import ObjectId
-
+from anella.api.utils import respond_json
+import sys
 # TODO: Service types should be dynamic and use as options to validate field
 
 _service_types = {}
+
+tenor_url = "http://%s:%s" % (_cfg.tenor__host, _cfg.tenor__port)
 
 def register_service_type(name,cls, des):
     _service_types[name]=(cls,des)
@@ -43,7 +46,6 @@ class ServiceDescription(Document, Base):
     # reference = StringField(max_length=50)
     keywords = ListField(StringField(max_length=40))
     sectors = ListField(StringField(choices=ANELLA_SECTORS))
-    vm_image = ObjectIdField()
     link = URLField()
     #logo = VMImage()
 
@@ -64,13 +66,14 @@ class ServiceDescription(Document, Base):
     def set_provider(self, provider):
         self.provider = ObjectId(provider)
 
-    def set_vm_image(self, vm_image):
-        self.vm_image = ObjectId(vm_image)
+    def set_context(self, data):
+        self.context = create_context(data)
 
 
 class AppService(ServiceDescription):
     type_name = 'App'  # A type name to use in UI
     scheme = 'service-scheme.json'
+
 
 class ISService(ServiceDescription):
     type_name = 'Infrastructure'  # A type name to use in UI
@@ -82,19 +85,19 @@ register_service_type('app', AppService, 'App')
 register_service_type('iss', ISService, 'Infraestructura')
 
 
-class VMImage(Document, Base):
+class VMImage:
     type_name = 'vm_image'
 
-    url = StringField()
-    id = StringField()
-    path_image = StringField()
-    name_image = StringField()
+    url = None
+    id = ObjectIdField()
+    path_image = None
+    name_image = None
 
     def __init__(self):
         self.grid_fs = GridFS(get_db(_cfg.database__database_repository))
 
-    def set_id(self, id):
-        self.id = id
+    def set_id(self, id_image):
+        self.id = ObjectId(id_image)
 
     def set_path_image(self, path_image):
         self.path_image = path_image
@@ -103,15 +106,10 @@ class VMImage(Document, Base):
         self.name_image = name_image
 
     def get_image(self):
-        return_data = 0
-        try:
-            grid_fs_file = self.grid_fs.find_one({'_id': ObjectId(self.id)})
-            image_file = open(_cfg.repository__path + grid_fs_file.name, 'w')
-            image_file.write(grid_fs_file.read())
-            image_file.close()
-        except:
-            return_data = -1
-        return return_data
+        grid_fs_file = self.grid_fs.find_one({'_id': ObjectId(self.id)})
+        image_file = open(_cfg.repository__path + grid_fs_file.name, 'w')
+        image_file.write(grid_fs_file.read())
+        image_file.close()
 
     def save_image(self):
         file_id = self.get_file_id()
@@ -121,8 +119,7 @@ class VMImage(Document, Base):
         return data
 
     def delete_image(self):
-        file_id = self.get_file_id()
-        self.grid_fs.delete(file_id)
+        self.grid_fs.delete(self.id)
 
     def get_file_id(self):
         image_file = open(self.path_image, 'r')
@@ -131,26 +128,53 @@ class VMImage(Document, Base):
 
 def create_service(item):
     service = set_service(item)
-    service.save()
+    if service is not None:
+        service.save()
+        response = dict(status='ok', id=unicode(service.pk), msg="Service created.")
+        return respond_json(response, status=201)
+    else:
+        response = dict(status='nok', msg="Error create service")
+        return respond_json(response, status=400)
+
 
 def set_service(data):
     service = ServiceDescription()
-    service.set_name(data.pop('name'))
-    service.set_summary(data.pop('summary'))
-    service.set_description(data.pop('description'))
-    service.set_service_type(data.pop('service_type'))
-    service.set_provider(data.pop('provider'))
-    service.set_vm_image(set_vm_image(data))
+    item = None
+
+    try:
+        service.set_name(data.pop('name'))
+        service.set_summary(data.pop('summary'))
+        service.set_description(data.pop('description'))
+        service.set_service_type(data.pop('service_type'))
+        service.set_provider(data.pop('provider'))
+        item = set_vm_image(data)
+        service.set_context(item)
+    except Exception as e:
+        print e
+        if item is not None:
+            vm_image = VMImage()
+            vm_image.id = item.get('vm_image')
+            vm_image.delete_image()
+        service = None
     return service
 
 
 def set_vm_image(data):
     vm_image = VMImage()
-    vm_image.set_name_image(data.pop('name_image'))
+    vm_image.set_name_image(data.get('name_image'))
     vm_image.set_path_image(data.pop('url_image'))
     vm_image.set_id(vm_image.save_image())
-    return vm_image.id
+    data['vm_image'] = vm_image.id
+    return data
 
+
+def create_context(data):
+    context = dict(vm_image=data.pop("vm_image"), flavour=data.pop("flavour"),
+                   consumer_params=data.pop("consumer_params"), runtime_params=data.pop("runtime_params"),
+                   tenor_url=tenor_url, name_image=data.pop("name_image"),
+                   vm_image_format=data.pop("vm_image_format"))
+
+    return context
 '''
 class Image(EmbeddedDocument):
     """
