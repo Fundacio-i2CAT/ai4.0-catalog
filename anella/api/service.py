@@ -74,7 +74,7 @@ class VMImageRes(Resource):
             response = dict(vm_image=unicode(data), name_image=_file.filename,
                             vm_image_format=extension_file[1:])
             return respond_json(response, status=200)
-        except:
-            response = dict(status='nok', msg="Error")
+        except Exception as e:
+            response = dict(status='nok', msg="Error %s %s" % (e, e.message))
             return respond_json(response, status=400)
 
