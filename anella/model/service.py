@@ -89,9 +89,12 @@ class VMImage:
     id = ObjectIdField()
     path_image = None
     name_image = None
+    image_file = None
 
-    def __init__(self):
+    def __init__(self, name_image, image_file):
         self.grid_fs = GridFS(get_db(_cfg.database__database_repository))
+        self.name_image = name_image
+        self.image_file = image_file
 
     def set_id(self, id_image):
         self.id = ObjectId(id_image)
@@ -119,8 +122,8 @@ class VMImage:
         self.grid_fs.delete(self.id)
 
     def get_file_id(self):
-        image_file = open(self.path_image, 'r')
-        return self.grid_fs.put(image_file.read(), filename=self.name_image)
+        #image_file = open(self.path_image, 'r')
+        return self.grid_fs.put(self.image_file.read(), filename=self.name_image)
 
 
 def create_service(item):
@@ -132,7 +135,7 @@ def create_service(item):
             return respond_json(response, status=201)
         except Exception as e:
             print e
-            delete_image_vm(service.context['vm_image'])
+            #delete_image_vm(service.context['vm_image'])
     response = dict(status='nok', msg="Error create service")
     return respond_json(response, status=400)
 
@@ -146,16 +149,18 @@ def set_service(data):
         service.set_description(data.pop('description'))
         service.set_service_type(data.pop('service_type'))
         service.set_provider(data.pop('provider'))
-        item = set_vm_image(data)
-        service.set_context(item)
+        #item = set_vm_image(data)
+        service.set_context(data)
     except Exception as e:
         print e
+        '''
         if item is not None:
-            delete_image_vm(item.get('vm_image'))
+             delete_image_vm(item.get('vm_image'))
+        '''
         service = None
     return service
 
-
+'''
 def delete_image_vm(vm_image_id):
     vm_image = VMImage()
     vm_image.id = vm_image_id
@@ -169,10 +174,10 @@ def set_vm_image(data):
     vm_image.set_id(vm_image.save_image())
     data['vm_image'] = vm_image.id
     return data
-
+'''
 
 def create_context(data):
-    context = dict(vm_image=data.get("vm_image"), flavour=data.pop("flavour"),
+    context = dict(vm_image=data.get("vm_image"), flavor=data.pop("flavor"),
                    consumer_params=data.pop("consumer_params"), runtime_params=data.pop("runtime_params"),
                    tenor_url=tenor_url, name_image=data.pop("name_image"),
                    vm_image_format=data.pop("vm_image_format"))

@@ -50,11 +50,12 @@ def add_resources(api):
     api.add_resource(PartnerTypesRes, '/api/clients/types', methods=['GET'])
     api.add_resource(ClientRes, '/api/clients/<id>')
 
-    from anella.api.service import ServicesRes, ServiceRes, ServiceTypesRes
+    from anella.api.service import ServicesRes, ServiceRes, ServiceTypesRes, VMImageRes
 
     api.add_resource(ServicesRes, '/api/services')
     api.add_resource(ServiceTypesRes, '/api/services/types', methods=['GET'])
     api.add_resource(ServiceRes, '/api/services/<id>')
+    api.add_resource(VMImageRes, '/api/services/vmimage')
 
 
     from anella.api.project import ProjectsRes, ProjectRes, ProjectServicesRes

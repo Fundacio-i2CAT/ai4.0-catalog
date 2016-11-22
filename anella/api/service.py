@@ -3,12 +3,15 @@
 import json
 import os
 import time
+import re
 
 from anella.common import *
+from anella.api.utils import respond_json
 from anella.model.service import get_service_type, get_service_cls, get_service_types
-from anella.model.service import AppService, ISService
+from anella.model.service import AppService, ISService, VMImage
 from anella import configuration as _cfg
 from anella.model.service import create_service
+from flask import request
 
 from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId
 
@@ -59,4 +62,19 @@ class ServiceTypesRes(Resource):
 
     def get(self):
         return [ dict(name=st[0], description=st[1][1]) for st in get_service_types()]
+
+
+class VMImageRes(Resource):
+    def post(self):
+        try:
+            _file = request.files['file']
+            vm_image = VMImage(_file.filename, _file)
+            extension_file = os.path.splitext(_file.filename)[1]
+            data = vm_image.save_image()
+            response = dict(vm_image=unicode(data), name_image=_file.filename,
+                            vm_image_format=extension_file[1:])
+            return respond_json(response, status=200)
+        except:
+            response = dict(status='nok', msg="Error")
+            return respond_json(response, status=400)
 
