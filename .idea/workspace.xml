@@ -25,11 +25,9 @@
       <file leaf-file-name="service.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/anella/api/service.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="455">
-              <caret line="69" column="39" selection-start-line="69" selection-start-column="39" selection-end-line="69" selection-end-column="39" />
-              <folding>
-                <element signature="e#25#36#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="189">
+              <caret line="7" column="45" selection-start-line="7" selection-start-column="45" selection-end-line="7" selection-end-column="45" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -865,11 +863,9 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/anella/api/service.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="455">
-          <caret line="69" column="39" selection-start-line="69" selection-start-column="39" selection-end-line="69" selection-end-column="39" />
-          <folding>
-            <element signature="e#25#36#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="189">
+          <caret line="7" column="45" selection-start-line="7" selection-start-column="45" selection-end-line="7" selection-end-column="45" />
+          <folding />
         </state>
       </provider>
     </entry>

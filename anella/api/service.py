@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import json
 import os
-import time
-import re
 
 from anella.common import *
 from anella.api.utils import respond_json
-from anella.model.service import get_service_type, get_service_cls, get_service_types
-from anella.model.service import AppService, ISService, VMImage
+from anella.model.service import get_service_cls, get_service_types
+from anella.model.service import AppService, VMImage
 from anella import configuration as _cfg
 from anella.model.service import create_service
 from flask import request
