@@ -479,7 +479,6 @@ def update_project(project, item, is_new=False):
                 sproject = SProject(service=service['_id'],
                                     project=project,
                                     provider=provider,
-                                    context=service['context'],
                                     status=SAVED )
                 sproject.save()
                 project.services.append(sproject)
