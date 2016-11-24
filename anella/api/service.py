@@ -75,3 +75,17 @@ class VMImageRes(Resource):
             response = dict(status='nok', msg="Error %s %s" % (e, e.message))
             return respond_json(response, status=400)
 
+
+class ServiceConsumerParamsRes(ColRes):
+    def get(self, id):
+        service = get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(id)})
+        if service is None:
+            response = dict(status="nok", msg="Service not found: %s" % id)
+            return respond_json(response, status=404)
+        
+        data = {}
+        if 'consumer_params' in service['context']:
+            data = service['context']['consumer_params']
+        response = dict(data=data)
+        return respond_json(response, status=200)
+

@@ -66,7 +66,6 @@ class ServiceDescription(Document, Base):
     def set_context(self, data):
         self.context = create_context(data)
 
-
 class AppService(ServiceDescription):
     type_name = 'App'  # A type name to use in UI
     scheme = 'service-scheme.json'
@@ -125,7 +124,6 @@ class VMImage:
         #image_file = open(self.path_image, 'r')
         return self.grid_fs.put(self.image_file.read(), filename=self.name_image)
 
-
 def create_service(item):
     service = set_service(item)
     if service is not None:
@@ -142,14 +140,12 @@ def create_service(item):
 
 def set_service(data):
     service = ServiceDescription()
-    item = None
     try:
         service.set_name(data.pop('name'))
         service.set_summary(data.pop('summary'))
         service.set_description(data.pop('description'))
         service.set_service_type(data.pop('service_type'))
         service.set_provider(data.pop('provider'))
-        #item = set_vm_image(data)
         service.set_context(data)
     except Exception as e:
         print e
