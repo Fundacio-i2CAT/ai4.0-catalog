@@ -464,7 +464,9 @@ def update_project(project, item, is_new=False):
             return error_api("No services.", status=400)
         for sitem in sitems:
             service_id = sitem['service']
-            service = ServiceDescription.objects.get(id=service_id)
+            #service = ServiceDescription.objects.get(id=service_id)
+            service = get_db(_cfg.database__database_name)['services'].\
+                find_one({'_id': ObjectId(service_id)})
             if service is None:
                 return error_api("Service '%s' doesn't exist." % service_id, status=400)
             services.append(service)
@@ -472,28 +474,13 @@ def update_project(project, item, is_new=False):
 
         try:
             for sitem,service in zip(sitems,services):
-                context_type=sitem.get('context_type', '')
-                context=sitem.get('context',{})
-    
-                if not context_type:
-                    context_type= service.properties.get('context_type', '')
-                    # if not context_type:
-                    #     return error_api("Context_type not defined.", status=400)
-    
-                if not context:
-                    if context_type:
-                        scontext = get_db(_cfg.database__database_name)['scontexts'].find_one({'context_type':context_type})
-                        context=scontext['context']
-                    else:
-                        context={}
-    
-                sproject = SProject(service=service,
+                #context_type=sitem.get('context_type', '')
+                provider = service['provider']
+                sproject = SProject(service=service['_id'],
                                     project=project,
-                                    provider=service.provider,
-                                    context_type=context_type,
-                                    context=context,
+                                    provider=provider,
+                                    context=service['context'],
                                     status=SAVED )
-    
                 sproject.save()
                 project.services.append(sproject)
         except Exception,err:
