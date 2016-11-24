@@ -82,7 +82,7 @@ class ServiceConsumerParamsRes(ColRes):
         if service is None:
             response = dict(status="nok", msg="Service not found: %s" % id)
             return respond_json(response, status=404)
-        
+
         data = {}
         if 'consumer_params' in service['context']:
             data = service['context']['consumer_params']
