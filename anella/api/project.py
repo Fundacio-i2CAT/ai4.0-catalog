@@ -6,6 +6,7 @@ from bson import ObjectId
 from anella.common import *
 from anella.model.project import Project, SProject, SAVED, DISABLED, CONFIRMED, STATES, STATUS, Client, ServiceDescription
 from anella.model.instance import Instance
+from anella.model.service import VMImage
 
 from anella.orch import Orchestrator
 from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api, item_to_json
@@ -52,6 +53,10 @@ def sproject_to_json(sproject, context=False):
         sitem.update( item_to_json(sproject, ['context_type', 'context']) )
 
     return sitem
+
+
+def get_service(id_service):
+    return get_db(_cfg.database__database_name)['services'].find_one({'_id': id_service})
 
 class ProjectStatesRes(Resource):
     def get(self):
@@ -118,8 +123,9 @@ class ProjectRes(ItemRes):
 class ProjectStateRes(ProjectRes):
 
     def __init__(self):
-         self.orch = Orchestrator(debug=True)
-         self.spres = SProjectRes()
+        self.orch = Orchestrator(debug=True)
+        self.spres = SProjectRes()
+        self.consumer_params = None
 
     def _find_instance(self, id):
         instance = get_db(_cfg.database__database_name)['instances'].find_one({'sproject':ObjectId(id)})
@@ -129,12 +135,13 @@ class ProjectStateRes(ProjectRes):
         # Services are items (not obj)
         # import pdb;pdb.set_trace()
         for sproject in services:
-            service_id = unicode(sproject.pk)
             item = self.spres._find_item(unicode(sproject.pk))
+            #Save consumer params in SProjects
+            sproject.consumer_params = dict(consumer_params=self.consumer_params)
+            sproject.save()
             instance = self._find_instance(unicode(item['_id']))
             if instance:
-#                 if self.orch:
-                if state=='DISABLED':
+                if state == 'DISABLED':
                     ok = self.orch.instance_delete(instance['instance_id'])
                     if not ok:
                         return "Error instance '%s' delete." % instance['instance_id']
@@ -146,20 +153,22 @@ class ProjectStateRes(ProjectRes):
                 elif not self.orch.instance_set_state(instance['instance_id'], state):
                     return "Error instance '%s' set_state." % instance['instance_id']
 
-            elif state!='DISABLED': 
-                service = sproject_to_json(item, context=True)
-                del service['_id']
-                del service['status']
-                del service['created_at']
-                instance_id = self.orch.instance_create(service)
+            elif state!='DISABLED':
+                #context para el orquestrador
+                service = get_service(item['service'])
+                context = service['context']
+                # antes de llamar al orquestrador. GUardamos la imagen en local
+                context['vm_image'] = save_image_to_local(context['vm_image'], context['name_image'])
+                #guardada la imagen. Seguimos
+                context['consumer_params'] = self.consumer_params
+                context = dict(context=context)
+                instance_id = self.orch.instance_create(context)
                 if instance_id:
                     instance = Instance(sproject=sproject, instance_id=instance_id)
                     instance.save()
                 else:
                     return "Error instance create."
 
-        # 20160719: Cache status in db
-        sleep(2)
         status,error = self._get_state(services)
         if self.orch.req.status_code not in (200,201):
             return "Error instance create."
@@ -220,7 +229,6 @@ class ProjectStateRes(ProjectRes):
             response = dict( state='CONFIRMED', status=3 )
             return respond_json( response, status=200)
 #             return error_api( msg="Error: Getting state.", status=400 )
-
         
     def put(self, id):
         # import pdb;pdb.set_trace()
@@ -238,8 +246,8 @@ class ProjectStateRes(ProjectRes):
         state = STATES[status]
         if state not in  STATES:
             return error_api( msg='Error: wrong status in request.', status=400 )
-
         # In any case ensure instances exist
+        self.consumer_params = data.get('consumer_params')
         error = self._set_state(self.project.services, state )
 
         if error:
@@ -507,3 +515,9 @@ def create_project(item):
     project = Project()
     return update_project(project, item, is_new=True)
 
+
+def save_image_to_local(vm_image, vm_name):
+    image = VMImage(vm_name,'')
+    image.id = ObjectId(vm_image)
+    image.get_image()
+    return _cfg.repository__ip + vm_name

@@ -33,6 +33,7 @@ mail__subject = None
 mail__body = None
 
 repository__path = None
+repository__ip = None
 
 tenor__host = None
 tenor__port = None

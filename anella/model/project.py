@@ -50,10 +50,10 @@ class SProject(Document, Base):
     service = ReferenceField(ServiceDescription)
     project = ReferenceField('Project')
     provider = ReferenceField('Partner')
-    #context_type = StringField()
-    #context = DictField() # ReferenceField(SContext)
     status = IntField(choices=STATUS, default=CREATED)
-    
+    consumer_params = DictField()
+    runtime_param = DictField()
+
     def get_client(self):
         return self.project.client
 
@@ -79,6 +79,9 @@ class SProject(Document, Base):
         if self.status==CREATED:
             self.status=SAVED
         return super(SProject,self).save(*args, **kwargs)
+
+    def set_consumer_params(self, consumer_params):
+        self.consumer_params['consumer_params'] = consumer_params
 
 
 class Project(Document, Base):
