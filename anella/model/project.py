@@ -50,8 +50,8 @@ class SProject(Document, Base):
     service = ReferenceField(ServiceDescription)
     project = ReferenceField('Project')
     provider = ReferenceField('Partner')
-    context_type = StringField()
-    context = DictField() # ReferenceField(SContext)
+    #context_type = StringField()
+    #context = DictField() # ReferenceField(SContext)
     status = IntField(choices=STATUS, default=CREATED)
     
     def get_client(self):
@@ -59,10 +59,8 @@ class SProject(Document, Base):
 
     client = property(get_client)
 
-    def __init__(self, project=None, service=None, context_type='', context=None, status=CREATED, **kwargs):
-        super(SProject, self).__init__( project=project, service=service, 
-                                context_type=context_type, context=context, status=status, **kwargs)
-        self.provider=self.service.provider
+    def __init__(self, project=None, service=None, status=CREATED, **kwargs):
+        super(SProject, self).__init__( project=project, service=service, status=status, **kwargs)
 
     def ask_confirm(self):
         assert self.status==SAVED
