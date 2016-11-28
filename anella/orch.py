@@ -51,9 +51,7 @@ class Orchestrator(object):
             print_resp(self.req)
 
         if self.req.status_code in (200,201):
-            data = json.loads(self.req.text)
-            state = data['state']
-            return state
+            return json.loads(self.req.text)
  
     def instance_set_state(self, id, state):
         # import pdb;pdb.set_trace()

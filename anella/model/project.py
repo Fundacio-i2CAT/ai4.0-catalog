@@ -52,7 +52,7 @@ class SProject(Document, Base):
     provider = ReferenceField('Partner')
     status = IntField(choices=STATUS, default=CREATED)
     consumer_params = DictField()
-    runtime_param = DictField()
+    runtime_params = DictField()
 
     def get_client(self):
         return self.project.client

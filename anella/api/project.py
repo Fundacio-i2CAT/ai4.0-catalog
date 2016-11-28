@@ -185,7 +185,8 @@ class ProjectStateRes(ProjectRes):
                 project_status=DISABLED
                 break
             if instance:
-                state = self.orch.instance_get_state(instance['instance_id'])
+                data = self.orch.instance_get_state(instance['instance_id'])
+                state = data['state']
                 if self.orch.req.status_code not in (200,201):
                     return '','Error in get project status.'
 
@@ -193,6 +194,7 @@ class ProjectStateRes(ProjectRes):
                     status = STATES.index(state)
                     # 20160719 Cache status in db
                     sproject.status = status
+                    sproject.runtime_params = dict(runtime_params=data['runtime_params'])
                     sproject.save()
                     if project_status is None or status < project_status:
                         project_status = status
@@ -205,7 +207,7 @@ class ProjectStateRes(ProjectRes):
         if project_status is None:
             return '',''
         else:
-            return STATES[project_status],''
+            return dict(state=STATES[project_status], runtime_params=data['runtime_params']),''
             
 
     def get(self, id):
@@ -222,9 +224,9 @@ class ProjectStateRes(ProjectRes):
         if error:
             return error_api( msg=error, status=400 )
         if state:
-            status = STATES.index(state)
-            response = dict( state=state, status=status )
-            return respond_json( response, status=200)
+            #status = STATES.index(state)
+            response = dict(state, status=status )
+            return respond_json(response, status=200)
         else:
             response = dict( state='CONFIRMED', status=3 )
             return respond_json( response, status=200)

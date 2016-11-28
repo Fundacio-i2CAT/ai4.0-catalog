@@ -23,7 +23,7 @@ anella:
         port: 9763
 
     orch: # Orchestrator service manager
-        host: 192.168.10.165
+        host: 127.0.0.1
         port: 8082
 
     mail:
@@ -37,7 +37,7 @@ anella:
 
     repository:
         path: /var/www/html/
-        ip: http://dev.anella.i2cat.net/
+        ip: http://10.8.0.10/
 
     tenor:
       host: localhost
