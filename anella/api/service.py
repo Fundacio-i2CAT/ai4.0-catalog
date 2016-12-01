@@ -9,6 +9,9 @@ from anella.model.service import AppService, VMImage
 from anella import configuration as _cfg
 from anella.model.service import create_service
 from flask import request
+from werkzeug.utils import secure_filename
+import glob
+import hashlib
 
 from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId
 
@@ -89,3 +92,48 @@ class ServiceConsumerParamsRes(ColRes):
         response = dict(data=data)
         return respond_json(response, status=200)
 
+
+class VMImageResourceRes(Resource):
+    def post(self):
+        _file = request.files['file']
+        filename = secure_filename(_file.filename)
+        _file.save(os.path.join(_cfg.repository__download, filename))
+
+
+class VMImageUnchunkedRes(Resource):
+    def post(self):
+        data = get_json()
+        print data
+        try:
+            outfile = open(_cfg.repository__download + data['filename'], "w")
+            for line in sorted(glob.glob(_cfg.repository__download + data['uuid'] + "*")):
+                print line
+                f = open(line)
+                f_read = f.read()
+                f.close()
+                outfile.write(f_read)
+            outfile.close()
+            md5sum = hashlib.md5(open(_cfg.repository__download + data['filename'], 'rb').read()).hexdigest()
+            print md5sum
+            if data['md5sum'] == md5sum:
+                #Guardamos en BBDD
+                #vm_image = VMImage(data['filename'], open(_cfg.repository__download + data['filename']))
+                #data_vm = vm_image.save_image()
+                response = dict(md5="ok", name_image=data['filename'])
+                return respond_json(response, status=200)
+            else:
+                #Devolvemos 409
+                response = dict(status="nok", msg="Error to upload file. MD5 not equal: %s" %data['filename'])
+                return respond_json(response, status=409)
+        except Exception as e:
+            response = dict(status="nok", msg="Error to upload file: %s" %e)
+            return respond_json(response, status=500)
+
+
+class VMImageUploadBDRes(Resource):
+    def post(self):
+        data = get_json()
+        vm_image = VMImage(data['filename'], open(_cfg.repository__download + data['filename']))
+        data_vm = vm_image.save_image()
+        response = dict(vm_image=unicode(data_vm), name_image=data['filename'])
+        return respond_json(response, status=200)

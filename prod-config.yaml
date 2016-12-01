@@ -38,6 +38,7 @@ anella:
     repository:
         path: /var/www/html/
         ip: http://10.8.0.10/
+        download: /home/ubuntu/tmp/
 
     tenor:
       host: localhost

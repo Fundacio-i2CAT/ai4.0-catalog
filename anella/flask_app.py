@@ -50,13 +50,17 @@ def add_resources(api):
     api.add_resource(PartnerTypesRes, '/api/clients/types', methods=['GET'])
     api.add_resource(ClientRes, '/api/clients/<id>')
 
-    from anella.api.service import ServicesRes, ServiceRes, ServiceTypesRes, VMImageRes, ServiceConsumerParamsRes
+    from anella.api.service import ServicesRes, ServiceRes, ServiceTypesRes, VMImageRes, \
+        ServiceConsumerParamsRes, VMImageResourceRes, VMImageUnchunkedRes, VMImageUploadBDRes
 
     api.add_resource(ServicesRes, '/api/services')
     api.add_resource(ServiceTypesRes, '/api/services/types', methods=['GET'])
     api.add_resource(ServiceRes, '/api/services/<id>')
     api.add_resource(VMImageRes, '/api/services/vmimage')
     api.add_resource(ServiceConsumerParamsRes, '/api/services/consumer/params/<id>')
+    api.add_resource(VMImageResourceRes, '/api/services/vmimage/chunked')
+    api.add_resource(VMImageUnchunkedRes, '/api/services/vmimage/unchunked')
+    api.add_resource(VMImageUploadBDRes, '/api/services/vmimage/upload')
 
     from anella.api.project import ProjectsRes, ProjectRes, ProjectServicesRes
     from anella.api.project import  ClientProjectsRes, ProviderSProjectsRes
@@ -140,6 +144,8 @@ def create_app(cfg_file='prod-config.yaml', testing=False, debug=False):
     app.config['TESTING'] = True
     app.config['SECRET_KEY'] = 'flask+mongoengine=<3'
     app.config['SESSION_COOKIE_NAME'] = 'anella'
+
+    #app.config['MAX_CONTENT_LENGTH'] = 4096 * 1024 * 1024
 
     if options.debug:
         from flask_debugtoolbar import DebugToolbarExtension

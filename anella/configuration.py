@@ -34,6 +34,7 @@ mail__body = None
 
 repository__path = None
 repository__ip = None
+repository__download = None
 
 tenor__host = None
 tenor__port = None
