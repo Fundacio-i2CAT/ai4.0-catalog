@@ -9,6 +9,7 @@ from anella import configuration as _cfg
 from anella.common import get_db
 from bson.objectid import ObjectId
 from anella.api.utils import respond_json
+import os
 import sys
 # TODO: Service types should be dynamic and use as options to validate field
 
@@ -90,10 +91,10 @@ class VMImage:
     name_image = None
     image_file = None
 
-    def __init__(self, name_image, image_file):
+    def __init__(self, name_image):
         self.grid_fs = GridFS(get_db(_cfg.database__database_repository))
         self.name_image = name_image
-        self.image_file = image_file
+        #self.image_file = image_file
 
     def set_id(self, id_image):
         self.id = ObjectId(id_image)
@@ -117,12 +118,37 @@ class VMImage:
         grid_fs_file.close()
         return data
 
+    def save_image_2(self):
+        image_file = self.grid_fs.new_file()
+        image_file.filename = self.name_image
+        file_path = '{0}{1}'.format(_cfg.repository__download, self.name_image)
+        with open(file_path) as file_:
+            file_size = os.path.getsize(file_path)
+            for chunk_start, chunk_size in self.get_chunks(file_size):
+                file_chunk = file_.read(chunk_size)
+                image_file.write(file_chunk)
+        image_file.close()
+        grid_fs_file = self.grid_fs.find_one(image_file._id)
+        data = str(grid_fs_file._id)
+        grid_fs_file.close()
+        return data
+
+    def get_chunks(self, file_size):
+        chunk_start = 0
+        chunk_size = 0x20000  # 131072 bytes, default max ssl buffer size
+        while chunk_start + chunk_size < file_size:
+            yield (chunk_start, chunk_size)
+            chunk_start += chunk_size
+        final_chunk_size = file_size - chunk_start
+        yield (chunk_start, final_chunk_size)
+
     def delete_image(self):
         self.grid_fs.delete(self.id)
 
+
     def get_file_id(self):
         #image_file = open(self.path_image, 'r')
-        return self.grid_fs.put(self.image_file.read(), filename=self.name_image)
+        return self.grid_fs.put(self.image_file, filename=self.name_image)
 
 def create_service(item):
     service = set_service(item)
