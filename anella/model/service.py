@@ -139,6 +139,7 @@ class VMImage:
         while chunk_start + chunk_size < file_size:
             yield (chunk_start, chunk_size)
             chunk_start += chunk_size
+            print file_size % chunk_start
         final_chunk_size = file_size - chunk_start
         yield (chunk_start, final_chunk_size)
 

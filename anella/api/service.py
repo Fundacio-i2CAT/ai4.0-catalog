@@ -114,14 +114,12 @@ class VMImageUnchunkedRes(Resource):
                 outfile.write(f_read)
                 os.remove(line)
             outfile.close()
-            md5sum = hashlib.md5(open(_cfg.repository__download + data['filename'], 'rb').read()).hexdigest()
+            filename = '{0}{1}'.format(_cfg.repository__download, data['filename'])
+            md5sum = self.checksum_md5(filename)
             print '------------------------------------------------'
             print md5sum
             print '------------------------------------------------'
             if data['md5sum'] == md5sum:
-                #Guardamos en BBDD
-                #vm_image = VMImage(data['filename'], open(_cfg.repository__download + data['filename']))
-                #data_vm = vm_image.save_image()
                 response = dict(md5="ok", name_image=data['filename'])
                 return respond_json(response, status=200)
             else:
@@ -131,6 +129,13 @@ class VMImageUnchunkedRes(Resource):
         except Exception as e:
             response = dict(status="nok", msg="Error to upload file: %s" %e)
             return respond_json(response, status=500)
+
+    def checksum_md5(self, filename):
+        md5 = hashlib.md5()
+        with open(filename, 'rb') as f:
+            for chunk in iter(lambda: f.read(128 * md5.block_size), b''):
+                md5.update(chunk)
+        return md5.hexdigest()
 
 
 class VMImageUploadBDRes(Resource):
