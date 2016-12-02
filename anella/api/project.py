@@ -181,7 +181,7 @@ class ProjectStateRes(ProjectRes):
             service_id = unicode(sproject.pk)
             item = self.spres._find_item(unicode(service_id))
             instance = self._find_instance(unicode(item['_id']))
-            if sproject.status== DISABLED:
+            if sproject.status == DISABLED:
                 project_status=DISABLED
                 break
             if instance:
@@ -519,7 +519,7 @@ def create_project(item):
 
 
 def save_image_to_local(vm_image, vm_name):
-    image = VMImage(vm_name,'')
+    image = VMImage(vm_name)
     image.id = ObjectId(vm_image)
     image.get_image()
     return _cfg.repository__ip + vm_name
