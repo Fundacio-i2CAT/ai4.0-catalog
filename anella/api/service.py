@@ -12,6 +12,7 @@ from flask import request
 from werkzeug.utils import secure_filename
 import glob
 import hashlib
+import os.path as path
 
 from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId
 
@@ -103,22 +104,18 @@ class VMImageResourceRes(Resource):
 class VMImageUnchunkedRes(Resource):
     def post(self):
         data = get_json()
-        print data
+        filename = '{0}{1}'.format(_cfg.repository__download, data['filename'])
+        path_repository = '{0}{1}{2}'.format(_cfg.repository__download, data['uuid'], "*")
         try:
-            outfile = open(_cfg.repository__download + data['filename'], "w")
-            for line in sorted(glob.glob(_cfg.repository__download + data['uuid'] + "*")):
-                print line
+            outfile = open(filename, "w")
+            for line in sorted(glob.glob(path_repository)):
                 f = open(line)
                 f_read = f.read()
                 f.close()
                 outfile.write(f_read)
                 os.remove(line)
             outfile.close()
-            filename = '{0}{1}'.format(_cfg.repository__download, data['filename'])
             md5sum = self.checksum_md5(filename)
-            print '------------------------------------------------'
-            print md5sum
-            print '------------------------------------------------'
             if data['md5sum'] == md5sum:
                 response = dict(md5="ok", name_image=data['filename'])
                 return respond_json(response, status=200)
@@ -127,6 +124,7 @@ class VMImageUnchunkedRes(Resource):
                 response = dict(status="nok", msg="Error to upload file. MD5 not equal: %s" %data['filename'])
                 return respond_json(response, status=409)
         except Exception as e:
+            self.delete_files_tmp(path_repository, filename)
             response = dict(status="nok", msg="Error to upload file: %s" %e)
             return respond_json(response, status=500)
 
@@ -137,6 +135,11 @@ class VMImageUnchunkedRes(Resource):
                 md5.update(chunk)
         return md5.hexdigest()
 
+    def delete_files_tmp(self, path_repository, filename):
+        for line in sorted(glob.glob(path_repository)):
+            os.remove(line)
+        if os.path.exists(filename):
+            os.remove(filename)
 
 class VMImageUploadBDRes(Resource):
     def post(self):
