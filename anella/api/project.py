@@ -167,8 +167,8 @@ class ProjectStateRes(ProjectRes):
                     instance = Instance(sproject=sproject, instance_id=instance_id)
                     instance.save()
                     # delete local image
-                    path_file = "{0}{1}".format(_cfg.repository__path, name_image)
-                    os.remove(path_file)
+                    #path_file = "{0}{1}".format(_cfg.repository__path, name_image)
+                    #os.remove(path_file)
                 else:
                     return "Error instance create."
 
