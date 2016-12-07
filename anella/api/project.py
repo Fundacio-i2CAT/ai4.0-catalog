@@ -156,6 +156,8 @@ class ProjectStateRes(ProjectRes):
                 #context para el orquestrador
                 service = get_service(item['service'])
                 context = service['context']
+                name_image = context['name_image']
+                print name_image
                 # antes de llamar al orquestrador. GUardamos la imagen en local
                 context['vm_image'] = save_image_to_local(context['vm_image'], context['name_image'])
                 #guardada la imagen. Seguimos
@@ -166,7 +168,7 @@ class ProjectStateRes(ProjectRes):
                     instance = Instance(sproject=sproject, instance_id=instance_id)
                     instance.save()
                     # delete local image
-                    path_file = "{0}{1}".format(_cfg.repository__path, context['name_image'])
+                    path_file = "{0}{1}".format(_cfg.repository__path, name_image)
                     os.remove(path_file)
                 else:
                     return "Error instance create."
