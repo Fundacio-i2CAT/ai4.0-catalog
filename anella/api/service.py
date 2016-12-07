@@ -12,7 +12,6 @@ from flask import request
 from werkzeug.utils import secure_filename
 import glob
 import hashlib
-import os.path as path
 
 from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId
 

@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from time import sleep
 from bson import ObjectId
-
+import os
 from anella.common import *
 from anella.model.project import Project, SProject, SAVED, DISABLED, CONFIRMED, STATES, STATUS, Client, ServiceDescription
 from anella.model.instance import Instance
@@ -166,12 +165,17 @@ class ProjectStateRes(ProjectRes):
                 if instance_id:
                     instance = Instance(sproject=sproject, instance_id=instance_id)
                     instance.save()
+                    # delete local image
+                    path_file = "{0}{1}".format(_cfg.repository__path, context['name_image'])
+                    os.remove(path_file)
                 else:
                     return "Error instance create."
 
         status,error = self._get_state(services)
         if self.orch.req.status_code not in (200,201):
             return "Error instance create."
+
+
 
     def _get_state(self, services):
         # Services are items (not obj)
