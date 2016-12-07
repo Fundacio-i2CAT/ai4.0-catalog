@@ -106,7 +106,6 @@ class VMImage:
         self.name_image = name_image
 
     def get_image(self):
-        print self.id
         grid_fs_file = self.grid_fs.find_one({'_id': ObjectId(self.id)})
         file_path = '{0}{1}'.format(_cfg.repository__path, self.name_image)
         image_file = open(file_path, 'w')
@@ -142,7 +141,6 @@ class VMImage:
         while chunk_start + chunk_size < file_size:
             yield (chunk_start, chunk_size)
             chunk_start += chunk_size
-            print file_size % chunk_start
         final_chunk_size = file_size - chunk_start
         yield (chunk_start, final_chunk_size)
 

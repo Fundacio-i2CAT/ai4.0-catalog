@@ -157,7 +157,6 @@ class ProjectStateRes(ProjectRes):
                 service = get_service(item['service'])
                 context = service['context']
                 name_image = context['name_image']
-                print name_image
                 # antes de llamar al orquestrador. GUardamos la imagen en local
                 context['vm_image'] = save_image_to_local(context['vm_image'], context['name_image'])
                 #guardada la imagen. Seguimos
