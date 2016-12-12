@@ -17,4 +17,4 @@ def bootstrap_app():
   return app
 
 if __name__ == "__main__":
-    app.run(host=app.config['HOST'], port=app.config['PORT'], processes=3 )
+    app.run(host=app.config['HOST'], port=app.config['PORT'], threaded=True)
