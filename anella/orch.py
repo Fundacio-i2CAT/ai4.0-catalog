@@ -8,7 +8,7 @@ import os
 from random import randint
 from requests import get, put, post, delete, Session
 from pprint import pprint
-
+from anella.api.utils import respond_json
 from anella.common import *
 
 class Orchestrator(object):
@@ -74,6 +74,14 @@ class Orchestrator(object):
             print_resp(self.req)
 
         return bool(self.req.status_code == 204)
+
+    def get_flavors(self, pop_id):
+        path = 'http://%s:%s/orchestrator/api/v0.1/pop/%s/flavors' % (get_cfg('orch__host'), get_cfg('orch__port'), pop_id)
+        data = get(path)
+        if data.status_code in (200,201):
+            return json.loads(data.text)
+        else:
+            return respond_json(data.text, status=data.status_code)
 
 
 def print_resp(req, data=None):

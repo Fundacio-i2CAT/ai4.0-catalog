@@ -10,6 +10,7 @@ from anella.model.service import VMImage
 from anella.orch import Orchestrator
 from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api, item_to_json
 from anella import configuration as _cfg
+import json
 
 def services_to_json(sprojects):
     sitems=[]
@@ -122,7 +123,7 @@ class ProjectRes(ItemRes):
 class ProjectStateRes(ProjectRes):
 
     def __init__(self):
-        self.orch = Orchestrator(debug=True)
+        self.orch = Orchestrator(debug=False)
         self.spres = SProjectRes()
         self.consumer_params = None
 
@@ -508,14 +509,14 @@ def update_project(project, item, is_new=False):
 
         if is_new:
             response = dict( status='ok', id=unicode(project.pk), msg="Project created." )
-            return respond_json( response, status=201)
+            return respond_json(response, status=201)
         else:
             response = dict( status='ok', id=unicode(project.pk), msg="Project updated." )
-            return respond_json( response, status=200)
+            return respond_json(response, status=200)
 
     except Exception,e:
         response = dict( status='fail', msg=unicode(e) )
-        return respond_json( response, status=400)
+        return respond_json(response, status=400)
 
 
 def create_project(item):

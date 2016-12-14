@@ -34,7 +34,7 @@ def add_resources(api):
     api.add_resource(SessionRes, '/api/session', methods=['POST', 'DELETE'])
     api.add_resource(SessionUserRes, '/api/session/user', methods=['GET'])
 
-    from anella.api.provider import ProvidersRes, ProviderRes, ProviderServicesRes, ProviderServicePublishRes, ProviderPostServicePublishRes
+    from anella.api.provider import ProvidersRes, ProviderRes, ProviderServicesRes, ProviderServicePublishRes
     from anella.api.provider import  PartnerSectorsRes, PartnerTypesRes
     from anella.api.client import ClientsRes, ClientRes # , ClientServicesRes
 
@@ -44,14 +44,14 @@ def add_resources(api):
     api.add_resource(ProviderServicesRes, '/api/providers/<id>/services', 
                      methods=['GET'] )
     api.add_resource(ProviderServicePublishRes, '/api/providers/service/publish/<id>')
-    api.add_resource(ProviderPostServicePublishRes, '/api/providers/service/publish')
 
     api.add_resource(ClientsRes, '/api/clients')
     api.add_resource(PartnerTypesRes, '/api/clients/types', methods=['GET'])
     api.add_resource(ClientRes, '/api/clients/<id>')
 
     from anella.api.service import ServicesRes, ServiceRes, ServiceTypesRes, VMImageRes, \
-        ServiceConsumerParamsRes, VMImageResourceRes, VMImageUnchunkedRes, VMImageUploadBDRes
+        ServiceConsumerParamsRes, VMImageResourceRes, VMImageUnchunkedRes, VMImageUploadBDRes, \
+        Flavours
 
     api.add_resource(ServicesRes, '/api/services')
     api.add_resource(ServiceTypesRes, '/api/services/types', methods=['GET'])
@@ -61,11 +61,12 @@ def add_resources(api):
     api.add_resource(VMImageResourceRes, '/api/services/vmimage/chunked')
     api.add_resource(VMImageUnchunkedRes, '/api/services/vmimage/unchunked')
     api.add_resource(VMImageUploadBDRes, '/api/services/vmimage/upload')
+    api.add_resource(Flavours, '/api/services/flavors/<id>')
 
     from anella.api.project import ProjectsRes, ProjectRes, ProjectServicesRes
-    from anella.api.project import  ClientProjectsRes, ProviderSProjectsRes
-    from anella.api.project import  ProjectStateRes, ProjectStatesRes
-    api.add_resource(ProjectsRes, '/api/projects')
+    from anella.api.project import ClientProjectsRes, ProviderSProjectsRes
+    from anella.api.project import ProjectStateRes, ProjectStatesRes
+    api.add_resource(ProjectsRes, '/api/projects', methods=['GET', 'POST'])
     api.add_resource(ProjectStatesRes, '/api/projects/states')
     api.add_resource(ProjectRes, '/api/projects/<id>')
     api.add_resource(ProjectServicesRes, '/api/projects/<id>/services')

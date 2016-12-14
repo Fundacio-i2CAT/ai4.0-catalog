@@ -52,7 +52,7 @@ class ProviderServicePublishRes(ItemRes):
         file.write(grid_fs_file.read())
         file.close()
         return "ok"
-
+'''
 class ProviderPostServicePublishRes(ItemRes):
     def post(self):
         grid_fs = GridFS(get_db(_cfg.database__database_repository))
@@ -62,7 +62,7 @@ class ProviderPostServicePublishRes(ItemRes):
         data = {"id": str(grid_fs_file._id)}
         grid_fs_file.close()
         return data
-
+'''
 
 class PartnerSectorsRes(Resource):
     def get(self):

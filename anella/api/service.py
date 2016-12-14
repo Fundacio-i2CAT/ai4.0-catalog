@@ -12,6 +12,7 @@ from flask import request
 from werkzeug.utils import secure_filename
 import glob
 import hashlib
+from anella.orch import Orchestrator
 
 from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId
 
@@ -140,6 +141,7 @@ class VMImageUnchunkedRes(Resource):
         if os.path.exists(filename):
             os.remove(filename)
 
+
 class VMImageUploadBDRes(Resource):
     def post(self):
         data = get_json()
@@ -153,3 +155,9 @@ class VMImageUploadBDRes(Resource):
             os.remove(_cfg.repository__download + data['filename'])
             response = dict(status="nok", msg="Error to upload file: %s" % e)
             return respond_json(response, status=500)
+
+
+class Flavours(ItemRes):
+    def get(self, id):
+        orch = Orchestrator(debug=False)
+        return orch.get_flavors(id)
