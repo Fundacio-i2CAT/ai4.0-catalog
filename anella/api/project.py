@@ -127,9 +127,6 @@ class ProjectStateRes(ProjectRes):
         self.spres = SProjectRes()
         self.consumer_params = None
 
-    def _find_instance(self, id):
-        instance = get_db(_cfg.database__database_name)['instances'].find_one({'sproject':ObjectId(id)})
-        return instance
 
     def _set_state(self, services, state):
         # Services are items (not obj)
@@ -139,7 +136,7 @@ class ProjectStateRes(ProjectRes):
             #Save consumer params in SProjects
             sproject.consumer_params = dict(consumer_params=self.consumer_params)
             sproject.save()
-            instance = self._find_instance(unicode(item['_id']))
+            instance = find_instance(unicode(item['_id']))
             if instance:
                 if state == 'DISABLED':
                     ok = self.orch.instance_delete(instance['instance_id'])
@@ -264,6 +261,52 @@ class ProjectStateRes(ProjectRes):
             response = dict( status='ok', msg="Project state set to '%s'" % state )
             return respond_json( response, status=200)
 
+
+class ProjectUpdateStateRes(ProjectRes):
+    def __init__(self):
+        self.orch = Orchestrator(debug=False)
+        self.spres = SProjectRes()
+
+    def put(self, id):
+        # import pdb;pdb.set_trace()
+        self.project = self._find_obj(id)
+        if not self.project:
+            return error_api( msg='Error: wrong project id in request.', status=404)
+
+        data = get_json()
+        status = data.get('status')
+        if status not in range(len(STATES)):
+            return error_api( msg='Error: wrong status in request.', status=400 )
+        state = STATES[status]
+        if state not in  STATES:
+            return error_api( msg='Error: wrong status in request.', status=400 )
+        # In any case ensure instances exist
+        error = self._update_state(self.project.services, state)
+
+        if error:
+            return error_api( msg="Error: '%s' in request." % error, status=400 )
+        else:
+            response = dict( status='ok', msg="Project state set to '%s'" % state )
+            return respond_json( response, status=200)
+
+    def _update_state(self, services, state):
+        # Services are items (not obj)
+        # import pdb;pdb.set_trace()
+        for sproject in services:
+            item = self.spres._find_item(unicode(sproject.pk))
+            instance = find_instance(unicode(item['_id']))
+            if instance:
+                if state == 'DISABLED':
+                    ok = self.orch.instance_delete(instance['instance_id'])
+                    if not ok:
+                        return "Error instance '%s' delete." % instance['instance_id']
+                    else:
+                        sproject.instance_id = None
+                        sproject.status = DISABLED
+                        sproject.save()
+
+                elif not self.orch.instance_set_state(instance['instance_id'], state):
+                    return "Error instance '%s' set_state." % instance['instance_id']
 
 class ClientProjectsRes(ProjectsRes):
 
@@ -529,3 +572,8 @@ def save_image_to_local(vm_image, vm_name):
     image.id = ObjectId(vm_image)
     image.get_image()
     return _cfg.repository__ip + vm_name
+
+
+def find_instance(id):
+    instance = get_db(_cfg.database__database_name)['instances'].find_one({'sproject':ObjectId(id)})
+    return instance
