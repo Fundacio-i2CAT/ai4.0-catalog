@@ -183,7 +183,7 @@ class ProjectStateRes(ProjectRes):
         for sproject in services:
             service_id = unicode(sproject.pk)
             item = self.spres._find_item(unicode(service_id))
-            instance = self._find_instance(unicode(item['_id']))
+            instance = find_instance(unicode(item['_id']))
             if sproject.status == DISABLED:
                 project_status=DISABLED
                 break
