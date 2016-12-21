@@ -26,11 +26,11 @@ class Authenticator(object):
        self.path = None
 
     def user_login(self, email, password):
-        path = self.root_path + 'loginWithPassword?email=' + email + '&password=' + password
+        path = self.root_path + 'authenticateWithPassword?email=' + email + '&password=' + password
         req = self.session.get(path)
-        token = self.verify_auth_token('eyJhbGciOiJIUzI1NiIsImV4cCI6MTQ4MTEzMDE0MywiaWF0IjoxNDgxMTI5ODQzfQ.eyJpZCI6IjI1In0.m8wAxNP36N39WFR65at7w4qXVsJIr8-kyGXAgmvjiYI')
+        #token = self.verify_auth_token('eyJhbGciOiJIUzI1NiIsImV4cCI6MTQ4MTEzMDE0MywiaWF0IjoxNDgxMTI5ODQzfQ.eyJpZCI6IjI1In0.m8wAxNP36N39WFR65at7w4qXVsJIr8-kyGXAgmvjiYI')
         #token = self.generate_auth_token()
-        print token
+        #print token
         return req.status_code
 
         
