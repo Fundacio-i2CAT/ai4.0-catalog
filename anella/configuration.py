@@ -16,8 +16,7 @@ database__database_name = None
 database__database_repository = None
 
 # Authentication Service
-auth__host = None
-auth__port = None
+auth__url = None
 
 # Orchestrator Manager Service
 orch__host = None

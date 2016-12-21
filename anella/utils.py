@@ -82,8 +82,7 @@ def load_config(configfile, clear_db_config=False):
         cfg.database__collection_config = yaml_config['anella']['database']['collections']['config']
         cfg.database__collection_log = yaml_config['anella']['database']['collections']['log']
 
-        cfg.auth__host = yaml_config['anella']['auth']['host']
-        cfg.auth__port = yaml_config['anella']['auth']['port']
+        cfg.auth__url = yaml_config['anella']['auth']['url']
 
         cfg.orch__host = yaml_config['anella']['orch']['host']
         cfg.orch__port = yaml_config['anella']['orch']['port']

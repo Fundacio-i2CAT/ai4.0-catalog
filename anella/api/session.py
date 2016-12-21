@@ -11,7 +11,13 @@ class SessionRes(ItemRes):
 
     def post(self):
         item = get_json()
-        return respond_json('', status=self.auth.user_login(item['user_name'], item['password']))
+        status_code = self.auth.user_login(item['user_name'], item['password'])
+        if status_code == 200:
+            '''login correct'''
+            return respond_json(dict(msg='ok'), status=status_code)
+        else:
+            '''login Incorrect'''
+            return respond_json(dict(msg='nok'), status=status_code)
     
     def delete(self):
         try:

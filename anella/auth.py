@@ -19,7 +19,7 @@ LOGGER = logging.getLogger('stdout')
 class Authenticator(object):
 
     def __init__(self):
-       self.root_path='http://%s:%s/LmpApiI2cat/' % (get_cfg('auth__host'), get_cfg('auth__port'))
+       self.root_path = get_cfg('auth__url')
        self.session = Session()
        # For debugging purposes
        self.r_data = None
