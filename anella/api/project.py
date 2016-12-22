@@ -231,7 +231,7 @@ class ProjectStateRes(ProjectRes):
         else:
             response = dict( state='CONFIRMED', status=3 )
             return respond_json( response, status=200)
-        
+
     def put(self, id):
         # import pdb;pdb.set_trace()
         self.project = self._find_obj(id)
