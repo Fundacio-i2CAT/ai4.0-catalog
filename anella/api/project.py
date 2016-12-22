@@ -117,6 +117,13 @@ class ProjectRes(ItemRes):
         if not project:
             return error_api( msg='Error: wrong project id in request.', status=404 )
         status = project.get_status()
+        for sproject in project.services:
+            spres = SProjectRes()
+            orch = Orchestrator(debug=False)
+            item = spres._find_item(unicode(sproject.pk))
+            instance = find_instance(unicode(item['_id']))
+            if instance:
+                orch.instance_delete(instance['instance_id'])
         return delete_project(project)
 
 
