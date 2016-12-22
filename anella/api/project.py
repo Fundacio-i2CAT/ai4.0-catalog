@@ -210,7 +210,7 @@ class ProjectStateRes(ProjectRes):
         if project_status is None:
             return '',''
         else:
-            return dict(state=STATES[project_status], runtime_params=data['runtime_params']),''
+            return dict(status=project_status, state=STATES[project_status], runtime_params=data['runtime_params']),''
             
 
     def get(self, id):
@@ -227,14 +227,11 @@ class ProjectStateRes(ProjectRes):
         if error:
             return error_api( msg=error, status=400 )
         if state:
-            #status = STATES.index(state)
-            response = dict(state, status=status )
-            return respond_json(response, status=200)
+            return respond_json(state, status=200)
         else:
             response = dict( state='CONFIRMED', status=3 )
             return respond_json( response, status=200)
-#             return error_api( msg="Error: Getting state.", status=400 )
-        
+
     def put(self, id):
         # import pdb;pdb.set_trace()
         self.project = self._find_obj(id)
