@@ -470,6 +470,13 @@ class ProviderSProjectsRes(SProjectsRes):
     def _items_to_json(self, items):
         return sprojects_to_json(items)
 
+class ProjectOrchCallbackRes(ProjectsRes):
+
+    def post(self):
+        instance_info = get_json()
+        print instance_info
+        return respond_json(instance_info, status=200)
+        
 def delete_project(project):
     # import pdb;pdb.set_trace()
     try:
