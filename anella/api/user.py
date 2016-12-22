@@ -1,10 +1,31 @@
 # -*- coding: utf-8 -*-
 
-from anella.common import get_db
+from anella.common import get_db, get_json, get_response
 from anella.model.user import User
 
 from anella.api.utils import ColRes, ItemRes, item_to_json
 from anella import configuration as _cfg
+from requests import Session
+
+class UsersCrudRes(ColRes):
+    def __init__(self):
+        self.root_path = _cfg.auth__url + 'people'
+        self.session = Session()
+
+    def get(self):
+        req = self.session.get(self.root_path)
+        return get_response(req)
+
+class UserCrudRes(ColRes):
+    def __init__(self):
+        self.root_path = _cfg.auth__url + 'people/'
+        self.session = Session()
+
+    def patch(self, id):
+        data = get_json()
+        path = self.root_path + id
+        req = self.session.patch(path, headers={'Content-Type': 'application/json'}, json=data)
+        return get_response(req)
 
 class UsersRes(ColRes):
     collection = 'users'

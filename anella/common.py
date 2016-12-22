@@ -3,7 +3,7 @@ import json
 from pymongo import MongoClient
 from flask import request, session, Response
 
-import utils
+from anella.api.utils import respond_json
 import configuration as _cfg
 
 _mongo = None # Pymongo
@@ -112,4 +112,12 @@ def get_user():
         user = User.objects.get(id=user_id)
         if user:
             return user
+
+
+def get_response(req):
+    if req.status_code == 200:
+        data = respond_json(json.loads(req.text), status=req.status_code)
+    else:
+        data = respond_json(dict(msg='nok'), status=req.status_code)
+    return data
 

@@ -25,9 +25,11 @@ import output
 
 
 def add_resources(api):
-    from anella.api.user import UsersRes, UserRes
+    from anella.api.user import UsersRes, UserRes, UsersCrudRes, UserCrudRes
     from anella.api.session import SessionRes, SessionUserRes
 
+    api.add_resource(UsersCrudRes, '/api/crud/users', methods=['GET', 'POST'])
+    api.add_resource(UserCrudRes, '/api/crud/users/<id>', methods=['PUT', 'PATCH'])
     api.add_resource(UsersRes, '/api/users', methods=['GET', 'POST'])
     api.add_resource(UserRes, '/api/users/<id>', methods=['GET', 'PUT'])
 
