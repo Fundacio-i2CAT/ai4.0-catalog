@@ -475,6 +475,9 @@ class ProjectOrchCallbackRes(ProjectsRes):
     def post(self):
         instance_info = get_json()
         print instance_info
+        if 'created_image' in instance_info:
+            print instance_info['created_image']['vm_image']
+            print instance_info['created_image']['vm_image_format']
         return respond_json(instance_info, status=200)
         
 def delete_project(project):
