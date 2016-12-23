@@ -66,6 +66,7 @@ def add_resources(api):
     from anella.api.project import ProjectsRes, ProjectRes, ProjectServicesRes
     from anella.api.project import ClientProjectsRes, ProviderSProjectsRes
     from anella.api.project import ProjectStateRes, ProjectStatesRes, ProjectUpdateStateRes
+    from anella.api.project import ProjectOrchCallbackRes
     api.add_resource(ProjectsRes, '/api/projects', methods=['GET', 'POST'])
     api.add_resource(ProjectStatesRes, '/api/projects/states')
     api.add_resource(ProjectRes, '/api/projects/<id>')
@@ -74,6 +75,7 @@ def add_resources(api):
     api.add_resource(ProviderSProjectsRes, '/api/providers/<id>/projects')
     api.add_resource(ProjectStateRes, '/api/projects/<id>/state')
     api.add_resource(ProjectUpdateStateRes, '/api/project/<id>/state')
+    api.add_resource(ProjectOrchCallbackRes, '/api/projects/callback', methods=['POST'])
 
     from anella.api.project import SProjectRes, SProjectsRes
     api.add_resource(SProjectsRes, '/api/sprojects')

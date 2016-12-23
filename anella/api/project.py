@@ -117,6 +117,13 @@ class ProjectRes(ItemRes):
         if not project:
             return error_api( msg='Error: wrong project id in request.', status=404 )
         status = project.get_status()
+        for sproject in project.services:
+            spres = SProjectRes()
+            orch = Orchestrator(debug=False)
+            item = spres._find_item(unicode(sproject.pk))
+            instance = find_instance(unicode(item['_id']))
+            if instance:
+                orch.instance_delete(instance['instance_id'])
         return delete_project(project)
 
 
@@ -460,6 +467,16 @@ class ProviderSProjectsRes(SProjectsRes):
     def _items_to_json(self, items):
         return sprojects_to_json(items)
 
+class ProjectOrchCallbackRes(ProjectsRes):
+
+    def post(self):
+        instance_info = get_json()
+        print instance_info
+        if 'created_image' in instance_info:
+            print instance_info['created_image']['vm_image']
+            print instance_info['created_image']['vm_image_format']
+        return respond_json(instance_info, status=200)
+        
 def delete_project(project):
     # import pdb;pdb.set_trace()
     try:
