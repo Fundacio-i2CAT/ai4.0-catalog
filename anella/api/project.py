@@ -477,21 +477,19 @@ class ProjectOrchCallbackRes(ProjectsRes):
 
     def post(self):
         instance_info = get_json()
-        project = self.get()
-        pdata = json.loads(project.data)
-        for service in pdata['result'][0]['services']:
-            service_item = get_service_by_objectid(service['service']['_id'])
-            name_image = service_item['context']['name_image']
-            try:
-                file_to_remove = '{0}/{1}'.format(_cfg.repository__path,
-                                                  service_item['context']['name_image'])
-                print 'Trying to remove {0}'.format(file_to_remove)
-                os.remove(file_to_remove)
-            except:
-                pass
         if 'created_image' in instance_info:
+            print "IMAGE_ID:"
             print instance_info['created_image']['vm_image']
             print instance_info['created_image']['vm_image_format']
+        if 'image_path' in instance_info:
+            try:
+                file_to_remove = '{0}/{1}'.format(_cfg.repository__path,
+                                                  instance_info['image_path'])
+                print "FILE_TO_REMOVE:"
+                print file_to_remove
+                os.remove(file_to_remove)
+            except:
+                respond_json({'message': 'Error removing {0}'.format(file_to_remove)}, status=500)
         return respond_json(instance_info, status=200)
         
 def delete_project(project):
