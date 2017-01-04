@@ -28,6 +28,12 @@ class UserCrudRes(ColRes):
         req = self.session.patch(path, headers={'Content-Type': 'application/json'}, json=data)
         return get_response(req)
 
+    def delete(self, id):
+        data = get_json()
+        path = self.root_path + id
+        req = self.session.delete(path, headers={'Content-Type': 'application/json'}, json=data)
+        return get_response(req)
+
 class UsersRes(ColRes):
     collection = 'users'
     _cls = User
