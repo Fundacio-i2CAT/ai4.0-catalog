@@ -58,6 +58,9 @@ def sproject_to_json(sproject, context=False):
 def get_service(id_service):
     return get_db(_cfg.database__database_name)['services'].find_one({'_id': id_service})
 
+def get_service_by_objectid(id_service):
+    return get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(id_service)})
+
 class ProjectStatesRes(Resource):
     def get(self):
         return [ dict(status=st[0], name=st[1]) for st in STATUS]
@@ -474,7 +477,18 @@ class ProjectOrchCallbackRes(ProjectsRes):
 
     def post(self):
         instance_info = get_json()
-        print instance_info
+        project = self.get()
+        pdata = json.loads(project.data)
+        for service in pdata['result'][0]['services']:
+            service_item = get_service_by_objectid(service['service']['_id'])
+            name_image = service_item['context']['name_image']
+            try:
+                file_to_remove = '{0}/{1}'.format(_cfg.repository__path,
+                                                  service_item['context']['name_image'])
+                print 'Trying to remove {0}'.format(file_to_remove)
+                os.remove(file_to_remove)
+            except:
+                pass
         if 'created_image' in instance_info:
             print instance_info['created_image']['vm_image']
             print instance_info['created_image']['vm_image_format']
