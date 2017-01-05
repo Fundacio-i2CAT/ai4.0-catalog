@@ -9,6 +9,18 @@ IDIOMS = [
     (u'en', u'English'),
 ]
 
+
+class UserRole(object):
+    def __init__(self):
+        self.id = None
+        self.role = None
+        self.entity = None
+        self.email = None
+        self.user_name = None
+        self.provider = None
+        self.client = None
+
+
 class User(Document, Base):
     meta = {'allow_inheritance': True, 'collection': 'users'}
 
