@@ -22,6 +22,12 @@ class UserCrudRes(ColRes):
         self.root_path = '%s%s' % (_cfg.auth__eurecat, 'people/')
         self.session = Session()
 
+    def put(self, id):
+        data = get_json()
+        path = self.root_path + id
+        req = self.session.put(path, headers={'Content-Type': 'application/json'}, json=data)
+        return get_response(req)
+
     def patch(self, id):
         data = get_json()
         path = self.root_path + id

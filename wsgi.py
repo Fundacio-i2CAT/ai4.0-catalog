@@ -9,7 +9,11 @@ def after_request(response):
   """
   response.headers.add('Access-Control-Allow-Origin', '*')
   response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+<<<<<<< HEAD
   response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,PATCH,POST,DELETE')
+=======
+  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,PATCH,DELETE')
+>>>>>>> eurecat2
 #   response.headers.add('Access-Control-Allow-Credentials', 'true')
   return response
 
