@@ -39,7 +39,6 @@ anella:
         path: /var/www/html/
         ip: http://dev.anella.i2cat.net/
         download: /home/ubuntu/tmp/
-        prueba: /prueba
 
     tenor:
       host: localhost
