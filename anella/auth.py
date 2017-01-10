@@ -7,11 +7,17 @@ from urllib import quote_plus
 from requests import Session
 
 from anella.common import *
-from anella.model.user import UserRole
+from anella.model.user import UserRole, User, Administrator, Client, Provider
 from anella.api.utils import create_response
 
 LOGGER = logging.getLogger('stdout')
 
+
+cls_dict = {
+    "administrator": Administrator,
+    "client": Client,
+    "provider": Provider
+}
 
 class Authenticator(object):
 
@@ -34,11 +40,12 @@ class Authenticator(object):
             self.user.email = email
             data = self.user_find(self.user)
             self.user.user_name = data['name']
-            self.user.id = data['id']
+            self.user.auth_id = data['id']
             self.user.provider = data['providerRole']
             self.user.client = data['clientRole']
             try:
                 self.user.role = self.find_user_role(data['_links']['associations']['href'])
+                self.user.id = self.get_cls()
             except IndexError:
                 req.status_code = 500
                 self.item = dict(message="This user isn't associated any entity")
@@ -119,4 +126,23 @@ class Authenticator(object):
         self.req = self.session.post(self.path, json=self.r_data)
         return self.req.status_code==201
 
+    def get_cls(self):
+        #Primero miramos si existe en la BBDD
+        user = User()
+        item = user.get(self.user.auth_id)
+        if item is None:
+            _class = self.get_role_user()
+            admin = _class(user_name=self.user.email, auth_id=self.user.auth_id)
+            admin.save()
+            _id = str(str(admin.pk))
+        else:
+            _id = str(item['_id'])
+        return _id
 
+    def get_role_user(self):
+        _class = cls_dict['client']
+        if self.user.role == 'ADMINISTRATOR':
+            _class = cls_dict['administrator']
+        elif self.user.provider:
+            _class = cls_dict['provider']
+        return _class

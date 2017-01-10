@@ -2,6 +2,8 @@
 
 from mongoengine import *
 from base import Base
+from anella.common import get_db
+import anella.configuration as cfg
 
 IDIOMS = [
     (u'ca', u'Català'),
@@ -19,9 +21,23 @@ class UserRole(object):
         self.user_name = None
         self.provider = None
         self.client = None
+        self.auth_id = None
 
 
 class User(Document, Base):
+    meta = {'allow_inheritance': True, 'collection': 'users'}
+
+    user_name = StringField(required=True, unique=True)
+    auth_id = IntField()  # Id returned from Eurecat auth module
+
+    def save(self, *args, **kwargs):
+        return super(User, self).save(*args, **kwargs)
+
+    def get(self, auth_id):
+        return get_db(cfg.database__database_name).get_collection('users')\
+                                                .find_one({'auth_id': auth_id})
+
+    '''
     meta = {'allow_inheritance': True, 'collection': 'users'}
 
     email = EmailField(required=True, unique=True)
@@ -66,4 +82,16 @@ class User(Document, Base):
 
     def is_admin(self):
         return self.admin
+    '''
 
+
+class Provider(User):
+    _cls = "User.Provider"
+
+
+class Client(User):
+    _cls = "User.Client"
+
+
+class Administrator(User):
+    _cls = "User.Administrator"
