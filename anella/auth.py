@@ -29,6 +29,7 @@ class Authenticator(object):
         self.path = None
         self.user = None
         self.item = dict(message="User not found")
+        self.provider = None
 
     def user_login(self, email, password):
         path = self.root_path + 'authenticateWithPassword?email=' + email + '&password=' + password
@@ -41,8 +42,7 @@ class Authenticator(object):
             data = self.user_find(self.user)
             self.user.user_name = data['name']
             self.user.auth_id = data['id']
-            self.user.provider = data['providerRole']
-            self.user.client = data['clientRole']
+            self.provider = data['providerRole']
             try:
                 self.user.role = self.find_user_role(data['_links']['associations']['href'])
                 self.user.id = self.get_cls()
@@ -135,14 +135,17 @@ class Authenticator(object):
             admin = _class(user_name=self.user.email, auth_id=self.user.auth_id)
             admin.save()
             _id = str(str(admin.pk))
+            tmp = user.get(self.user.auth_id)
+            self.user.role = tmp['_cls']
         else:
             _id = str(item['_id'])
+            self.user.role = item['_cls']
         return _id
 
     def get_role_user(self):
         _class = cls_dict['client']
         if self.user.role == 'ADMINISTRATOR':
             _class = cls_dict['administrator']
-        elif self.user.provider:
+        elif self.provider:
             _class = cls_dict['provider']
         return _class
