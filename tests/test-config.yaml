@@ -1,0 +1,35 @@
+
+anella:
+    admin:
+        user: orambla
+        email: oscar.rambla@i2cat.net
+        sendmail: false
+
+    app: # Anella app
+        host: 127.0.0.1
+        port: 3010
+
+    database:
+        host: 127.0.0.1
+        port: 27017
+        database_name: anella-test
+        collections:
+            config: config
+            log: log
+
+    auth: # Authentication service
+        host: 127.0.0.1
+        port: 5672
+
+    orch: # Orchestrator service manager
+        host: 127.0.0.1
+        port: 8082
+
+    mail:
+        from: anella.suport@gmail.com
+        to: info@anellaindustrial.cat
+        pass: i2catAnellaNexusII
+        port: 587
+        smtp: smtp.gmail.com
+        subject: Registre de nou usuari
+        body: Nou registre
