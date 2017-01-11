@@ -165,8 +165,12 @@ class ProjectStateRes(ProjectRes):
                 service = get_service(item['service'])
                 context = service['context']
                 #name_image = context['name_image']
-                # antes de llamar al orquestrador. GUardamos la imagen en local
-                context['vm_image'] = save_image_to_local(context['vm_image'], context['name_image'])
+                # Primero miramos si está la imagen cacheada en el orquestrador
+                if self.exists_image(context):
+                    context['vm_image'] = _cfg.repository__ip + context['name_image']
+                else:
+                    # Si no lo está. GUardamos la imagen en local
+                    context['vm_image'] = save_image_to_local(context['vm_image'], context['name_image'])
                 #guardada la imagen. Seguimos
                 context['consumer_params'] = self.consumer_params
                 context = dict(context=context)
@@ -184,7 +188,16 @@ class ProjectStateRes(ProjectRes):
         if self.orch.req.status_code not in (200,201):
             return "Error instance create."
 
-
+    def exists_image(self, service):
+        context = dict(popid=1)
+        if 'popid' in service:
+            context['popid'] = service['popid']
+        context['vm_image'] = _cfg.repository__ip + service['name_image']
+        resp = self.orch.exists(context)
+        exists = False
+        if resp.status_code in (200, 201):
+            exists = True
+        return exists
 
     def _get_state(self, services):
         # Services are items (not obj)
@@ -474,12 +487,6 @@ class ProjectOrchCallbackRes(ProjectsRes):
 
     def post(self):
         instance_info = get_json()
-        '''
-        if 'created_image' in instance_info:
-            print "IMAGE_ID:"
-            print instance_info['created_image']['vm_image']
-            print instance_info['created_image']['vm_image_format']
-        '''
         if 'image_path' in instance_info:
             try:
                 file_to_remove = '{0}/{1}'.format(_cfg.repository__path,
