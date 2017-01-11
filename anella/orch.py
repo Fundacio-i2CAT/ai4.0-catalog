@@ -64,7 +64,7 @@ class Orchestrator(object):
         self.req = put(self.path, json=self.r_data)
         if self.debug:
             print_resp(self.req, self.r_data)
-
+        print 'prueba'
         return bool(self.req.status_code == 200)
  
     def instance_delete(self,id):
