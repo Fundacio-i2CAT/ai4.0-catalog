@@ -27,6 +27,7 @@ class User(Document, Base):
 
     user_name = StringField(required=True, unique=True)
     auth_id = IntField()  # Id returned from Eurecat auth module
+    activated = BooleanField(default=True)
 
     def save(self, *args, **kwargs):
         return super(User, self).save(*args, **kwargs)
