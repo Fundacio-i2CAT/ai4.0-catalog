@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from anella.common import get_db
-from anella.model.user import User
+from anella.model.user import User, Administrator
 
 from anella.api.utils import ColRes, ItemRes, item_to_json, respond_json, get_json
 from anella import configuration as _cfg
@@ -37,7 +37,10 @@ class UserCrudRes(ColRes):
     def delete(self, id):
         data = get_json()
         path = self.root_path + id
-        req = self.session.delete(path, headers={'Content-Type': 'application/json'}, json=data)
+        req = self.session.patch(path, headers={'Content-Type': 'application/json'}, json=data)
+        user = User()
+        item = dict(auth_id=int(id), info={'$set': {"activated": False}})
+        user.update(item)
         return get_response(req)
 
 class UsersRes(ColRes):

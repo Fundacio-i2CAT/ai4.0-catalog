@@ -32,8 +32,13 @@ class User(Document, Base):
         return super(User, self).save(*args, **kwargs)
 
     def get(self, auth_id):
-        return get_db(cfg.database__database_name).get_collection('users')\
-                                                .find_one({'auth_id': auth_id})
+        return get_db(cfg.database__database_name).get_collection('users') \
+            .find_one({'auth_id': auth_id})
+
+    def update(self, data):
+        get_db(cfg.database__database_name).get_collection('users'). \
+            update_one({'auth_id': data['auth_id']}, data['info'],
+                       upsert=False)
 
 
 class Provider(User):
