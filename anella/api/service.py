@@ -157,7 +157,13 @@ class VMImageUploadBDRes(Resource):
             return respond_json(response, status=500)
 
 
-class Flavours(ItemRes):
+class Flavors(ItemRes):
     def get(self, id):
         orch = Orchestrator(debug=False)
         return orch.get_flavors(id)
+
+
+class Pop(ItemRes):
+    def get(self):
+        orch = Orchestrator(debug=False)
+        return orch.get_pop()
