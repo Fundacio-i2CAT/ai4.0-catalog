@@ -1,74 +1,59 @@
-from mongoengine import *
-from base import Base
-from anella.api.utils import respond_json, error_api
+from anella.api.utils import respond_json
 from anella.common import get_db, get_cfg
 import smtplib
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 from anella import configuration as _cfg
+from requests import Session
+from anella.api.utils import create_response
 
 
-class Register(Document, Base):
+class RegisterEurecat(object):
+    def __init__(self):
+        self.name = None
+        self.surname = None
+        self.email = None
+        self.password = None
+        self.identifier = None
+        self.phone = None
+        self.company = None
+        self.address = None
+        self.postalCode = None
+        self.jobPosition = None
+        self.description = None
+        self.country = None
+        self.legal = False
+        self.clientRole = False
+        self.providerRole = False
+        self.activated = False
+
+class Register(object):
+    def __init__(self):
+        self.root_path = 'http://%s:%s/LmpApiI2cat/people' % (get_cfg('auth__host'), get_cfg('auth__port'))
+        self.session = Session()
+
+    def create(self, data):
+        user = self.create_dict(data)
+        resp = self.session.post(self.root_path, json=user.__dict__)
+        return create_response(resp.status_code, resp.text)
+
+    def create_dict(self, data):
+        user = RegisterEurecat()
+        user.name = data.get('name')
+        user.surname = data.get('surname')
+        user.email = data.get('email')
+        user.password = data.get('password')
+        user.identifier = data.get('identification_number')['value']
+        user.phone = data.get('comp_phone')
+        user.company = data.get('company')
+        user.address = data.get('comp_address')
+        user.jobPosition = data.get('comp_position')
+        user.legal = data.get('legal')
+        user.clientRole = data.get('client_role')
+        user.providerRole = data.get('provider_role')
+        return user
     """
     """
-    meta = {'allow_inheritance': True, 'collection': 'register'}
-
-    # Collection fields
-    email = StringField()
-    name = StringField()
-    surname = StringField()
-
-    company = StringField()
-    comp_position = StringField()
-    legal = BooleanField()
-    comp_address = StringField()
-    comp_phone = StringField()
-    password = StringField()
-    client_role = BooleanField()
-    provider_role = BooleanField()
-    nif_cif = StringField()
-    company = StringField()
-
-    def set_email(self, email):
-        self.email = email
-
-    def set_name(self, name):
-        self.name = name
-
-    def set_surname(self, surname):
-        self.surname = surname
-
-    def set_company(self, company):
-        self.company = company
-
-    def set_comp_position(self, comp_position):
-        self.comp_position = comp_position
-
-    def set_legal(self, legal):
-        self.legal = legal
-
-    def set_com_address(self, comp_address):
-        self.comp_address = comp_address
-
-    def set_comp_phone(self, comp_phone):
-        self.comp_phone = comp_phone
-
-    def set_password(self, password):
-        self.password = password
-
-    def set_client_role(self, client_role):
-        self.client_role = client_role
-
-    def set_provider_role(self, provider_role):
-        self.provider_role = provider_role
-
-    def set_nif_cif(self, identification):
-        self.nif_cif = identification
-
-    def set_company(self, company):
-        self.company = company
-
-
 def create_register(item):
     try:
         if exists_register(item) > 0:
@@ -90,13 +75,13 @@ def set_register(item):
     register.set_name(item.get('name'))
     register.set_surname(item.get('surname'))
     register.set_company(item.pop('company'))
-    register.set_comp_position(item.pop('comp_position'))
+    register.set_comp_position(item.pop('comp_position')) #company
     register.set_legal(item.pop('legal'))
-    register.set_com_address(item.pop('comp_address'))
-    register.set_comp_phone(item.pop('comp_phone'))
+    register.set_com_address(item.pop('comp_address')) #address
+    register.set_comp_phone(item.pop('comp_phone')) #phone
     register.set_password(item.pop('password'))
-    register.set_client_role(item.pop('client_role'))
-    register.set_provider_role(item.pop('provider_role'))
+    register.set_client_role(item.pop('client_role')) #clientRole
+    register.set_provider_role(item.pop('provider_role')) #providerRole
 
     idn = item.pop('identification_number')
     register.set_nif_cif(idn['value'])
