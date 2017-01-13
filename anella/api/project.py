@@ -18,9 +18,9 @@ def services_to_json(sprojects):
         sproject = get_db(_cfg.database__database_name)['sprojects'].find_one({'_id':service_id})
         sitem = item_to_json(sproject, ['_id', 'context_type', 'status', 'provider', 'created_at' ])
         service = get_db(_cfg.database__database_name)['services'].find_one({'_id':sproject['service']})
-        provider = get_db(_cfg.database__database_name)['partners'].find_one({'_id':service['provider']})
+        provider = get_db(_cfg.database__database_name)['users'].find_one({'_id':service['provider']})
 
-        sitem['provider'] = item_to_json(provider, ['_id', 'name'])
+        sitem['provider'] = item_to_json(provider, ['_id', 'user_name'])
         # sitem['service'] = item_to_json(service, ['_id', 'name'])
         sitem['service'] = item_to_json(service, ['_id', 'name'])
         sitems.append(sitem)
