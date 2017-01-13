@@ -54,8 +54,8 @@ class ServiceRes(ItemRes):
         sitem = ItemRes._item_to_json(self, item)
         provider_id = sitem['provider']
         if provider_id:
-            provider = get_db(_cfg.database__database_name)['partners'].find_one({'_id':ObjectId(provider_id)})
-            sitem['provider'] = item_to_json(provider, ['_id', 'name'])
+            provider = get_db(_cfg.database__database_name)['users'].find_one({'_id':ObjectId(provider_id)})
+            sitem['provider'] = item_to_json(provider, ['_id', 'user_name'])
         return sitem
 
 
