@@ -265,13 +265,17 @@ def not_found_api():
     from flask import abort
     abort(405)
 
-def create_response(data):
-    if data.status_code in (200, 201):
-        return json.loads(data.text)
-    else:
-        return respond_json(data.text, status=data.status_code)
-
 
 def error_api(msg, status=400):
     response = dict( status='fail', msg=msg)
     return respond_json( response, status=status)
+
+
+def create_response(status_code, data):
+    return respond_json(data, status=status_code)
+
+def create_response_data(data):
+    if data.status_code in (200, 201):
+        return json.loads(data.text)
+    else:
+        return respond_json(data.text, status=data.status_code)

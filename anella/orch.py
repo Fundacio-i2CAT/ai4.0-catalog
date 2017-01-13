@@ -9,7 +9,7 @@ from random import randint
 from requests import get, put, post, delete, Session
 from pprint import pprint
 from anella.common import *
-from anella.api.utils import respond_json, create_response
+from anella.api.utils import create_response_data
 
 class Orchestrator(object):
 
@@ -78,12 +78,12 @@ class Orchestrator(object):
     def get_flavors(self, pop_id):
         path = 'http://%s:%s/orchestrator/api/v0.1/pop/%s/flavors' % (get_cfg('orch__host'), get_cfg('orch__port'), pop_id)
         data = get(path)
-        return create_response(data)
+        return create_response_data(data)
 
     def get_pop(self):
         path = 'http://%s:%s/orchestrator/api/v0.1/pop' % (get_cfg('orch__host'), get_cfg('orch__port'))
         data = get(path)
-        return create_response(data)
+        return create_response_data(data)
 
     def exists(self, data):
         path = 'http://%s:%s/orchestrator/api/v0.1/iscached/%s' % (get_cfg('orch__host'), get_cfg('orch__port'), data['popid'])
