@@ -40,12 +40,12 @@ def sproject_to_json(sproject, context=False):
     project = get_db(_cfg.database__database_name)['projects'].find_one({'_id':sproject['project']})
     sitem = item_to_json(sproject, ['_id', 'status', 'created_at' ])
     service = get_db(_cfg.database__database_name)['services'].find_one({'_id':sproject['service']})
-    provider = get_db(_cfg.database__database_name)['partners'].find_one({'_id':service['provider']})
-    client = get_db(_cfg.database__database_name)['partners'].find_one({'_id':project['client']})
+    provider = get_db(_cfg.database__database_name)['users'].find_one({'_id':service['provider']})
+    client = get_db(_cfg.database__database_name)['users'].find_one({'_id':project['client']})
 
     sitem['project'] = item_to_json(project, ['_id', 'name'])
-    sitem['client'] = item_to_json(client, ['_id', 'name'])
-    sitem['provider'] = item_to_json(provider, ['_id', 'name'])
+    sitem['client'] = item_to_json(client, ['_id', 'user_name'])
+    sitem['provider'] = item_to_json(provider, ['_id', 'user_name'])
     # sitem['service'] = item_to_json(service, ['_id', 'name'])
     sitem['service'] = item_to_json(service, ['_id', 'name'])
 
