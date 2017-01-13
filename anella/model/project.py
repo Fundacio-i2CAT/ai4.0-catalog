@@ -3,9 +3,9 @@
 from mongoengine import *
 
 from base import Base
-from partner import Partner, Provider, Client, ANELLA_SECTORS
+from partner import ANELLA_SECTORS
+from user import User, Provider, Client
 from service import ServiceDescription
-from scontext import SContext
 
 CREATED=0
 SAVED=1

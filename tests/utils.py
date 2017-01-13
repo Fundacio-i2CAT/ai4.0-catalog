@@ -281,7 +281,7 @@ class AnellaTestCase(unittest.TestCase, DocLoader):
 
     def setUp(self):
         utils.load_config('test-config.yaml', True)
-        reset_database()
+        #reset_database()
 
     def tearDown(self):
         connection._connection_settings = {}

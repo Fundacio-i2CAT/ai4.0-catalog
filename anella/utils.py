@@ -84,6 +84,7 @@ def load_config(configfile, clear_db_config=False):
 
         cfg.auth__host = yaml_config['anella']['auth']['host']
         cfg.auth__port = yaml_config['anella']['auth']['port']
+        cfg.auth__eurecat = yaml_config['anella']['auth']['eurecat']
 
         cfg.orch__host = yaml_config['anella']['orch']['host']
         cfg.orch__port = yaml_config['anella']['orch']['port']

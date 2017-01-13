@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import sys
-import datetime
 import unittest
-import uuid
 
 from mongoengine import NotUniqueError
 from utils import AnellaTestCase
@@ -17,7 +14,7 @@ __all__ = ('UserTest', )
 class UserTest(AnellaTestCase):
 
     def test_user_save(self):
-        user = User(email='pepe@i2cat.net')
+        user = User(email='pepe@i2cat.net', auth_id=23)
         user.save()
         self.assertIsNotNone(user.pk)
 
