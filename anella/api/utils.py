@@ -246,7 +246,7 @@ def respond_json(data, status=200, **kwargs):
     headers={
             'Cache-Control': 'no-cache',
 #             'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
             }
     if 'headers' in kwargs:
         for k,v in kwargs['headers']:
@@ -264,7 +264,6 @@ def respond_json(data, status=200, **kwargs):
 def not_found_api():
     from flask import abort
     abort(405)
-
 
 def create_response(data):
     if data.status_code in (200, 201):
