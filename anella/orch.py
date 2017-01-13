@@ -35,10 +35,11 @@ class Orchestrator(object):
         if self.debug:
             print_resp(self.req, self.r_data)
 
-        if self.req.status_code in (200,201):
-            data = json.loads(self.req.text)
-            id = data['service_instance_id']
-            return id
+        #if self.req.status_code in (200,201):
+        data = json.loads(self.req.text)
+        print data
+        id = data['service_instance_id']
+        return id
     
     def instance_get_state(self, id):
         # import pdb;pdb.set_trace()
