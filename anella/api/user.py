@@ -25,7 +25,8 @@ class UserCrudRes(ColRes):
     def put(self, id):
         data = get_json()
         path = self.root_path + id
-        req = self.session.put(path, headers={'Content-Type': 'application/json'}, json=data)
+        # PROVISIONAL CAMBIAMOS POR PATCH
+        req = self.session.patch(path, headers={'Content-Type': 'application/json'}, json=data)
         return get_response(req)
 
     def patch(self, id):
