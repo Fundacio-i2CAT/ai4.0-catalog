@@ -6,6 +6,7 @@ from email.MIMEText import MIMEText
 from requests import Session
 from anella.api.utils import create_response
 
+import json
 
 class RegisterEurecat(object):
     def __init__(self):
@@ -29,13 +30,27 @@ class RegisterEurecat(object):
 class Register(object):
     def __init__(self):
         self.root_path = 'http://%s:%s/LmpApiI2cat/people' % (get_cfg('auth__host'), get_cfg('auth__port'))
+        self.entity_association_path = 'http://%s:%s/LmpApiI2cat/personEntityRelationships' % (get_cfg('auth__host'), get_cfg('auth__port'))
+        self.default_entity_path = 'http://%s:%s/LmpApiI2cat/entities/4' % (get_cfg('auth__host'), get_cfg('auth__port'))
         self.session = Session()
         self.user = RegisterEurecat()
 
     def create(self, data):
         self.create_dict(data)
         resp = self.session.post(self.root_path, json=self.user.__dict__)
-        if resp.status_code in (200, 201):
+        # ASOCIAMOS CON ENTIDAD DEFAULT ID=4 (PROVISIONAL)
+        if not resp.status_code in (200, 201):
+            return create_response(resp.status_code, resp.text)
+        resp_data = json.loads(resp.text)
+        user_id = resp_data['id']
+        entity_association = {
+            "state": "REQUESTED_FROM_USER",
+            "organization": self.default_entity_path,
+            "person": "{0}/{1}".format(self.root_path, user_id)
+        }
+        resp_association = self.session.post(self.entity_association_path,
+                                             json=entity_association)
+        if resp_association.status_code in (200, 201):
             self.send_email()
         return create_response(resp.status_code, resp.text)
 
