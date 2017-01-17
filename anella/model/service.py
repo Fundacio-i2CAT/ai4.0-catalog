@@ -203,6 +203,7 @@ def set_vm_image(data):
 
 def create_context(data):
     context = dict(vm_image=ObjectId(data.get("vm_image")), flavor=data.pop("flavor"),
+                   pop_id=data.pop("pop_id"),
                    consumer_params=data.pop("consumer_params"), runtime_params=data.pop("runtime_params"),
                    tenor_url=tenor_url, name_image=data.pop("name_image"),
                    vm_image_format=data.pop("vm_image_format"))
