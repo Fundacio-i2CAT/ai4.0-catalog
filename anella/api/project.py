@@ -243,16 +243,16 @@ class ProjectStateRes(ProjectRes):
             return error_api( msg='Error: wrong project id in request.', status=404 )
         status = self.project.get_status()
         if status < CONFIRMED:
-            response = dict( state= STATES[status], status=status )
+            response = dict(state= STATES[status], status=status, project_id=id)
             return respond_json( response, status=200)
 
         state,error = self._get_state(self.project.services)
         if error:
             return error_api( msg=error, status=400 )
         if state:
-            return respond_json(state, status=200)
+            return respond_json({"state": state, "project_id": id}, status=200)
         else:
-            response = dict( state='CONFIRMED', status=3 )
+            response = dict( state='CONFIRMED', status=3, project_id=id)
             return respond_json( response, status=200)
 
     def put(self, id):
