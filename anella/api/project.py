@@ -203,6 +203,7 @@ class ProjectStateRes(ProjectRes):
         # Services are items (not obj)
         # import pdb;pdb.set_trace()
         project_status = None
+        data = None
         for sproject in services:
             service_id = unicode(sproject.pk)
             item = self.spres._find_item(unicode(service_id))
@@ -230,7 +231,7 @@ class ProjectStateRes(ProjectRes):
             # some error
             break
 
-        if project_status is None:
+        if (project_status is None) or (data is None):
             return '',''
         else:
             return dict(status=project_status, state=STATES[project_status], runtime_params=data['runtime_params']),''
