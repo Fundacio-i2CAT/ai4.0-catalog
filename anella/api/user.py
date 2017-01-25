@@ -15,6 +15,7 @@ def get_num_page(page):
         _page = int(page) - 1
     return str(_page)
 
+
 class UsersCrudRes(ColRes):
     def __init__(self):
         self.root_path = '%s%s' % (_cfg.auth__eurecat, 'people')
@@ -25,8 +26,6 @@ class UsersCrudRes(ColRes):
         path = self.root_path + '?page=' + get_num_page(page)
         req = self.session.get(path)
         return get_response(req)
-
-
 
 
 class UserCrudRes(ColRes):
