@@ -38,7 +38,7 @@ anella:
 
     repository:
         path: /var/www/html/
-        ip: http://dev.anella.i2cat.net/
+        ip: http://dev.anella.i2cat.net:81/
         download: /home/ubuntu/tmp/
 
     tenor:

@@ -86,7 +86,7 @@ class Orchestrator(object):
         return create_response_data(data)
 
     def exists(self, data):
-        path = 'http://%s:%s/orchestrator/api/v0.1/iscached/%s' % (get_cfg('orch__host'), get_cfg('orch__port'), data['popid'])
+        path = 'http://%s:%s/orchestrator/api/v0.1/iscached/%s' % (get_cfg('orch__host'), get_cfg('orch__port'), data['pop_id'])
         resp = post(path, json=data)
         return resp
 

@@ -189,9 +189,9 @@ class ProjectStateRes(ProjectRes):
             return "Error instance create."
 
     def exists_image(self, service):
-        context = dict(popid=1)
-        if 'popid' in service:
-            context['popid'] = service['popid']
+        context = dict(pop_id=1)
+        if 'pop_id' in service:
+            context['pop_id'] = service['pop_id']
         context['vm_image'] = _cfg.repository__ip + service['name_image']
         resp = self.orch.exists(context)
         exists = False
