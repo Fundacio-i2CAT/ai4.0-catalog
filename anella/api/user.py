@@ -3,10 +3,17 @@
 from anella.common import get_db
 from anella.model.user import User, Administrator
 
-from anella.api.utils import ColRes, ItemRes, item_to_json, respond_json, get_json
+from anella.api.utils import ColRes, ItemRes, item_to_json, respond_json, get_json, get_arg
 from anella import configuration as _cfg
 from requests import Session
 import json
+
+
+def get_num_page(page):
+    _page = 0
+    if page is not None:
+        _page = int(page) - 1
+    return str(_page)
 
 class UsersCrudRes(ColRes):
     def __init__(self):
@@ -14,8 +21,13 @@ class UsersCrudRes(ColRes):
         self.session = Session()
 
     def get(self):
-        req = self.session.get(self.root_path)
+        page = get_arg('page')
+        path = self.root_path + '?page=' + get_num_page(page)
+        req = self.session.get(path)
         return get_response(req)
+
+
+
 
 class UserCrudRes(ColRes):
     def __init__(self):
