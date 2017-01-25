@@ -8,7 +8,7 @@ from anella.model.instance import Instance
 from anella.model.service import VMImage
 
 from anella.orch import Orchestrator
-from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api, item_to_json
+from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api, item_to_json, create_message_error
 from anella import configuration as _cfg
 import json
 
@@ -158,7 +158,7 @@ class ProjectStateRes(ProjectRes):
                         sproject.save()
 
                 elif not self.orch.instance_set_state(instance['instance_id'], state):
-                    return "Error instance '%s' set_state." % instance['instance_id']
+                    return create_message_error(404, 'ORQUESTRATOR_STATE')
 
             elif state!='DISABLED':
                 #context para el orquestrador
@@ -174,19 +174,21 @@ class ProjectStateRes(ProjectRes):
                 #guardada la imagen. Seguimos
                 context['consumer_params'] = self.consumer_params
                 context = dict(context=context)
-                instance_id = self.orch.instance_create(context)
-                if instance_id:
+                resp = self.orch.instance_create(context)
+                if resp.status_code in (200, 201):
+                    data = json.loads(resp.text)
+                    instance_id = data['service_instance_id']
                     instance = Instance(sproject=sproject, instance_id=instance_id)
                     instance.save()
                     # delete local image
                     #path_file = "{0}{1}".format(_cfg.repository__path, name_image)
                     #os.remove(path_file)
                 else:
-                    return "Error instance create."
+                    return create_message_error(resp.status_code, json.loads(resp.text)['code'])
 
         status,error = self._get_state(services)
         if self.orch.req.status_code not in (200,201):
-            return "Error instance create."
+            return create_message_error(self.orch.req.status_code, json.loads(self.orch.req.text)['code'])
 
     def exists_image(self, service):
         context = dict(pop_id=1)
@@ -213,10 +215,9 @@ class ProjectStateRes(ProjectRes):
                 break
             if instance:
                 data = self.orch.instance_get_state(instance['instance_id'])
-                state = data['state']
                 if self.orch.req.status_code not in (200,201):
                     return '','Error in get project status.'
-
+                state = data['state']
                 if state:
                     status = STATES.index(state)
                     # 20160719 Cache status in db
@@ -277,7 +278,7 @@ class ProjectStateRes(ProjectRes):
         error = self._set_state(self.project.services, state )
 
         if error:
-            return error_api( msg="Error: '%s' in request." % error, status=400 )
+            return respond_json(error, status=error['status_code'])
         else:
             response = dict( status='ok', msg="Project state set to '%s'" % state )
             return respond_json( response, status=200)
