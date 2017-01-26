@@ -184,10 +184,14 @@ class ProjectStateRes(ProjectRes):
                     #path_file = "{0}{1}".format(_cfg.repository__path, name_image)
                     #os.remove(path_file)
                 else:
-                    return create_message_error(resp.status_code, json.loads(resp.text)['code'])
+                    resp_text = ''
+                    json_load = json.loads(resp.text)
+                    if 'code' in json_load:
+                        resp_text = json_load['code']
+                    return create_message_error(resp.status_code, resp_text)
 
-        status,error = self._get_state(services)
-        if self.orch.req.status_code not in (200,201):
+        error = self._get_state(services)
+        if error['status_code'] not in (200,201):
             return create_message_error(self.orch.req.status_code, json.loads(self.orch.req.text)['code'])
 
     def exists_image(self, service):
@@ -216,7 +220,7 @@ class ProjectStateRes(ProjectRes):
             if instance:
                 data = self.orch.instance_get_state(instance['instance_id'])
                 if self.orch.req.status_code not in (200,201):
-                    return '','Error in get project status.'
+                    return create_message_error(self.orch.req.status_code, json.loads(self.orch.req.text)['code'])
                 state = data['state']
                 if state:
                     status = STATES.index(state)
@@ -228,15 +232,14 @@ class ProjectStateRes(ProjectRes):
                         project_status = status
                     continue
                 else:
-                    return '',''
-            # some error
-            break
+                    return create_message_error(404, _cfg.errors__orchestrator_state)
+                    # some error
+                    #break
 
         if (project_status is None) or (data is None):
-            return '',''
+            return create_message_error(404, '')
         else:
             return dict(status=project_status, state=STATES[project_status], runtime_params=data['runtime_params']),''
-            
 
     def get(self, id):
         # import pdb;pdb.set_trace()
@@ -248,14 +251,14 @@ class ProjectStateRes(ProjectRes):
             response = dict(state= STATES[status], status=status, project_id=id)
             return respond_json( response, status=200)
 
-        state,error = self._get_state(self.project.services)
-        if error:
-            return error_api( msg=error, status=400 )
-        if state:
-            return respond_json({"state": state, "project_id": id}, status=200)
+        resp = self._get_state(self.project.services)
+        if resp['status_code'] not in (200, 201):
+            return respond_json(resp, status=resp['status_code'])
+        if resp['state']:
+            return respond_json({"state": resp['state'], "project_id": id}, status=200)
         else:
             response = dict( state='CONFIRMED', status=3, project_id=id)
-            return respond_json( response, status=200)
+            return respond_json(response, status=200)
 
     def put(self, id):
         # import pdb;pdb.set_trace()
