@@ -49,6 +49,8 @@ class ServiceDescription(Document, Base):
     sectors = ListField(StringField(choices=ANELLA_SECTORS))
     link = URLField()
     context = DictField()
+    price_initial = FloatField()
+    price_x_hour = FloatField()
 
     def set_name(self, name):
         self.name = name
@@ -67,6 +69,13 @@ class ServiceDescription(Document, Base):
 
     def set_context(self, data):
         self.context = create_context(data)
+
+    def set_price_initial(self, price_initial):
+        self.price_initial = price_initial
+
+    def set_price_x_hour(self, price_x_hour):
+        self.price_x_hour = price_x_hour
+
 
 class AppService(ServiceDescription):
     type_name = 'App'  # A type name to use in UI
@@ -175,6 +184,8 @@ def set_service(data):
         service.set_description(data.pop('description'))
         service.set_service_type(data.pop('service_type'))
         service.set_provider(data.pop('provider'))
+        service.set_price_initial(data.pop('price_initial'))
+        service.set_price_x_hour(data.pop('price_x_hour'))
         service.set_context(data)
     except Exception as e:
         print e
