@@ -22,11 +22,9 @@ anella:
         host: 84.88.76.5
         port: 9763
         eurecat: http://84.88.76.5:9763/LmpApiI2cat/
-
     orch: # Orchestrator service manager
         host: 127.0.0.1
         port: 8082
-
     mail:
         from: anella.suport@gmail.com
         to: info@anellaindustrial.cat
@@ -35,12 +33,12 @@ anella:
         smtp: smtp.gmail.com
         subject: Registre de nou usuari
         body: Nou registre
-
     repository:
         path: /var/www/html/
         ip: http://dev.anella.i2cat.net:81/
         download: /home/ubuntu/tmp/
-
     tenor:
-      host: localhost
-      port: 4000
+        host: localhost
+        port: 4000
+    errors:
+        orchestrator_state: ORCHESTRATOR_GET_STATE

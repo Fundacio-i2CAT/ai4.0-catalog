@@ -8,7 +8,7 @@ from anella.model.instance import Instance
 from anella.model.service import VMImage
 
 from anella.orch import Orchestrator
-from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api, item_to_json
+from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api, item_to_json, create_message_error
 from anella import configuration as _cfg
 import json
 
@@ -69,7 +69,7 @@ class ProjectsRes(ColRes):
     collection= 'projects'
     _cls = Project
     name= 'Projects'
-    fields = '_id,name,summary,client,status,services,created_at,updated_at'.split(',')
+    fields = '_id,name,summary,client,status,services,created_at,updated_at,runtime_params'.split(',')
     filter_fields = 'name,status'.split(',')
 
     def _item_to_json(self, item):
@@ -158,7 +158,7 @@ class ProjectStateRes(ProjectRes):
                         sproject.save()
 
                 elif not self.orch.instance_set_state(instance['instance_id'], state):
-                    return "Error instance '%s' set_state." % instance['instance_id']
+                    return create_message_error(404, 'ORQUESTRATOR_STATE')
 
             elif state!='DISABLED':
                 #context para el orquestrador
@@ -174,19 +174,25 @@ class ProjectStateRes(ProjectRes):
                 #guardada la imagen. Seguimos
                 context['consumer_params'] = self.consumer_params
                 context = dict(context=context)
-                instance_id = self.orch.instance_create(context)
-                if instance_id:
+                resp = self.orch.instance_create(context)
+                if resp.status_code in (200, 201):
+                    data = json.loads(resp.text)
+                    instance_id = data['service_instance_id']
                     instance = Instance(sproject=sproject, instance_id=instance_id)
                     instance.save()
                     # delete local image
                     #path_file = "{0}{1}".format(_cfg.repository__path, name_image)
                     #os.remove(path_file)
                 else:
-                    return "Error instance create."
+                    resp_text = ''
+                    json_load = json.loads(resp.text)
+                    if 'code' in json_load:
+                        resp_text = json_load['code']
+                    return create_message_error(resp.status_code, resp_text)
 
-        status,error = self._get_state(services)
-        if self.orch.req.status_code not in (200,201):
-            return "Error instance create."
+        error = self._get_state(services)
+        if error['status_code'] not in (200,201):
+            return create_message_error(self.orch.req.status_code, json.loads(self.orch.req.text)['code'])
 
     def exists_image(self, service):
         context = dict(pop_id=1)
@@ -213,10 +219,9 @@ class ProjectStateRes(ProjectRes):
                 break
             if instance:
                 data = self.orch.instance_get_state(instance['instance_id'])
-                state = data['state']
                 if self.orch.req.status_code not in (200,201):
-                    return '','Error in get project status.'
-
+                    return create_message_error(self.orch.req.status_code, json.loads(self.orch.req.text)['code'])
+                state = data['state']
                 if state:
                     status = STATES.index(state)
                     # 20160719 Cache status in db
@@ -227,15 +232,14 @@ class ProjectStateRes(ProjectRes):
                         project_status = status
                     continue
                 else:
-                    return '',''
-            # some error
-            break
+                    return create_message_error(404, _cfg.errors__orchestrator_state)
+                    # some error
+                    #break
 
         if (project_status is None) or (data is None):
-            return '',''
+            return create_message_error(404, '')
         else:
             return dict(status=project_status, state=STATES[project_status], runtime_params=data['runtime_params']),''
-            
 
     def get(self, id):
         # import pdb;pdb.set_trace()
@@ -247,14 +251,14 @@ class ProjectStateRes(ProjectRes):
             response = dict(state= STATES[status], status=status, project_id=id)
             return respond_json( response, status=200)
 
-        state,error = self._get_state(self.project.services)
-        if error:
-            return error_api( msg=error, status=400 )
-        if state:
-            return respond_json({"state": state, "project_id": id}, status=200)
+        resp = self._get_state(self.project.services)
+        if resp['status_code'] not in (200, 201):
+            return respond_json(resp, status=resp['status_code'])
+        if resp['state']:
+            return respond_json({"state": resp['state'], "project_id": id}, status=200)
         else:
             response = dict( state='CONFIRMED', status=3, project_id=id)
-            return respond_json( response, status=200)
+            return respond_json(response, status=200)
 
     def put(self, id):
         # import pdb;pdb.set_trace()
@@ -277,7 +281,7 @@ class ProjectStateRes(ProjectRes):
         error = self._set_state(self.project.services, state )
 
         if error:
-            return error_api( msg="Error: '%s' in request." % error, status=400 )
+            return respond_json(error, status=error['status_code'])
         else:
             response = dict( status='ok', msg="Project state set to '%s'" % state )
             return respond_json( response, status=200)
@@ -358,8 +362,13 @@ class ClientProjectsRes(ProjectsRes):
     def _item_to_json(self, item):
         services = item.get('services')
         project = self._find_obj(item['_id'])
+        sproject = get_db(_cfg.database__database_name)['sprojects'].find_one({'project': ObjectId(item['_id'])})
         item['status'] = project.get_status()
         item['services'] = services_to_json(services)
+        if 'runtime_params' in sproject['runtime_params']:
+            item['runtime_params'] = sproject['runtime_params']['runtime_params']
+        else:
+            item['runtime_params'] = sproject['runtime_params']
         return item_to_json(item, self.fields)
 
 

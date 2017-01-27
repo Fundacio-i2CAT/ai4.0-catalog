@@ -39,3 +39,5 @@ repository__download = None
 
 tenor__host = None
 tenor__port = None
+
+errors__orchestrator_state = None
