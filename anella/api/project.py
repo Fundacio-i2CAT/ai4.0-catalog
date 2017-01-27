@@ -365,7 +365,10 @@ class ClientProjectsRes(ProjectsRes):
         sproject = get_db(_cfg.database__database_name)['sprojects'].find_one({'project': ObjectId(item['_id'])})
         item['status'] = project.get_status()
         item['services'] = services_to_json(services)
-        item['runtime_params'] = sproject['runtime_params']['runtime_params']
+        if 'runtime_params' in sproject['runtime_params']:
+            item['runtime_params'] = sproject['runtime_params']['runtime_params']
+        else:
+            item['runtime_params'] = sproject['runtime_params']
         return item_to_json(item, self.fields)
 
 
