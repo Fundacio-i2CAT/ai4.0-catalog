@@ -69,7 +69,7 @@ class ProjectsRes(ColRes):
     collection= 'projects'
     _cls = Project
     name= 'Projects'
-    fields = '_id,name,summary,client,status,services,created_at,updated_at'.split(',')
+    fields = '_id,name,summary,client,status,services,created_at,updated_at,runtime_params'.split(',')
     filter_fields = 'name,status'.split(',')
 
     def _item_to_json(self, item):
@@ -362,8 +362,10 @@ class ClientProjectsRes(ProjectsRes):
     def _item_to_json(self, item):
         services = item.get('services')
         project = self._find_obj(item['_id'])
+        sproject = get_db(_cfg.database__database_name)['sprojects'].find_one({'project': ObjectId(item['_id'])})
         item['status'] = project.get_status()
         item['services'] = services_to_json(services)
+        item['runtime_params'] = sproject['runtime_params']['runtime_params']
         return item_to_json(item, self.fields)
 
 
