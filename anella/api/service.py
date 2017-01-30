@@ -20,7 +20,7 @@ class ServicesRes(ColRes):
     collection= 'services'
     _cls = AppService
     name= 'Services'
-    fields = '_id,name,summary,service_type,provider,sectors,created_at,updated_at'.split(',')
+    fields = '_id,name,summary,service_type,provider,sectors,created_at,updated_at,price_initial,price_x_hour'.split(',')
     filter_fields = 'name,keywords,sectors'.split(',')
 
     def post(self):
