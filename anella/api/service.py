@@ -48,7 +48,8 @@ class ServiceRes(ItemRes):
     collection= 'services'
     _cls = AppService
     name= 'Service'
-    fields = '_id,name,summary,description,service_type,provider,sectors,keywords,link,created_at,created_by,updated_at,updated_by'.split(',')
+    fields = '_id,name,summary,description,service_type,provider,sectors,keywords,link,' \
+             'created_at,created_by,updated_at,updated_by,price_initial,price_x_hour'.split(',')
 
     def _item_to_json(self, item):
         sitem = ItemRes._item_to_json(self, item)
