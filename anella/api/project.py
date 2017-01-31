@@ -241,20 +241,20 @@ class ProjectStateRes(ProjectRes):
                         error_code = response['code']
                     return create_message_error(self.orch.req.status_code,
                                                 error_code, code)
-                state = data['state']
-                if state:
-                    status = STATES.index(state)
-                    # 20160719 Cache status in db
-                    sproject.status = status
-                    sproject.runtime_params = dict(runtime_params=data['runtime_params'])
-                    sproject.save()
-                    if project_status is None or status < project_status:
-                        project_status = status
-                    continue
-                else:
-                    return create_message_error(404, _cfg.errors__orchestrator_state)
-                    # some error
-                    #break
+            state = data['state']
+            if state:
+                status = STATES.index(state)
+                # 20160719 Cache status in db
+                sproject.status = status
+                sproject.runtime_params = dict(runtime_params=data['runtime_params'])
+                sproject.save()
+                if project_status is None or status < project_status:
+                    project_status = status
+                continue
+            else:
+                return create_message_error(404, _cfg.errors__orchestrator_state)
+                # some error
+                #break
 
         if (project_status is None) or (data is None):
             return create_message_error(404, _cfg.errors__orchestrator_state)
