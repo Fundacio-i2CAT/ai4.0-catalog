@@ -276,7 +276,7 @@ class ProjectStateRes(ProjectRes):
         if resp['status_code'] not in (200, 201):
             return respond_json(resp, status=resp['status_code'])
         if resp['state']:
-            return respond_json({"state": resp['state'], "project_id": id}, status=200)
+            return respond_json({"status": resp["status"], "state": resp['state'], "project_id": id}, status=200)
         else:
             response = dict( state='CONFIRMED', status=3, project_id=id)
             return respond_json(response, status=200)
