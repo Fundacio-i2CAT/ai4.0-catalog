@@ -166,8 +166,11 @@ class ProjectStateRes(ProjectRes):
                 context = service['context']
                 #name_image = context['name_image']
                 # Primero miramos si está la imagen cacheada en el orquestrador
-                if self.exists_image(context):
-                    context['vm_image'] = _cfg.repository__ip + context['name_image']
+                if (context['vm_image_format'] == 'openstack_id') or (self.exists_image(context)):
+                    if context['vm_image_format'] == 'openstack_id':
+                        context['vm_image'] = context['name_image']
+                    else:
+                        context['vm_image'] = _cfg.repository__ip + context['name_image']
                 else:
                     # Si no lo está. GUardamos la imagen en local
                     context['vm_image'] = save_image_to_local(context['vm_image'], context['name_image'])
