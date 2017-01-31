@@ -203,7 +203,8 @@ class ProjectStateRes(ProjectRes):
 
         error = self._get_state(services)
         if error['status_code'] not in (200,201):
-            return create_message_error(self.orch.req.status_code, json.loads(self.orch.req.text)['code'])
+            print 'AQUI'
+            return error
 
     def exists_image(self, service):
         context = dict(pop_id=1)
