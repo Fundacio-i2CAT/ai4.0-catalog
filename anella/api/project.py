@@ -199,12 +199,12 @@ class ProjectStateRes(ProjectRes):
                     json_load = json.loads(resp.text)
                     if 'code' in json_load:
                         resp_text = json_load['code']
-                    return create_message_error(resp.status_code, resp_text, get_status('FAILED'))
+                    return create_message_error(resp.status_code, resp_text, '')
 
         error = self._get_state(services)
         if error['status_code'] not in (200,201):
             return create_message_error(self.orch.req.status_code,
-                                        json.loads(self.orch.req.text)['code'], get_status('FAILED'))
+                                        json.loads(self.orch.req.text)['code'], '')
 
     def exists_image(self, service):
         context = dict(pop_id=1)
@@ -260,7 +260,7 @@ class ProjectStateRes(ProjectRes):
                     #break
 
         if (project_status is None) or (data is None):
-            return create_message_error(404, _cfg.errors__orchestrator_state, get_status('FAILED'))
+            return create_message_error(404, _cfg.errors__orchestrator_state,'')
         else:
             return dict(status_code=self.orch.req.status_code, status=project_status,
                         state=STATES[project_status], runtime_params=data['runtime_params'])
