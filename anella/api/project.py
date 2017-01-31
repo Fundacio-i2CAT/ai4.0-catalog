@@ -8,9 +8,10 @@ from anella.model.instance import Instance
 from anella.model.service import VMImage
 
 from anella.orch import Orchestrator
-from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api, item_to_json, create_message_error
+from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api, item_to_json, create_message_error,update_status_project
 from anella import configuration as _cfg
 import json
+from anella.model.project import STATUS
 
 def services_to_json(sprojects):
     sitems=[]
@@ -157,10 +158,20 @@ class ProjectStateRes(ProjectRes):
                         sproject.status = DISABLED
                         sproject.save()
 
-                elif not self.orch.instance_set_state(instance['instance_id'], state):
-                    return create_message_error(404, 'ORQUESTRATOR_STATE')
+                else:
+                    response = self.orch.instance_set_state(instance['instance_id'], state)
+                    code = None
+                    if 'state' in response['response']:
+                        code = get_status(response['response']['state'])
+                        update_status_project(sproject.id, code)
+                    if response['status_code'] not in (200, 201):
+                        error_code = 'ORQUESTRATOR_STATE'
+                        if 'code' in response['response']:
+                            error_code = response['response']['code']
+                        return create_message_error(response['status_code'],
+                                                    error_code, code)
 
-            elif state!='DISABLED':
+            else:
                 #context para el orquestrador
                 service = get_service(item['service'])
                 context = service['context']
@@ -220,7 +231,16 @@ class ProjectStateRes(ProjectRes):
             if instance:
                 data = self.orch.instance_get_state(instance['instance_id'])
                 if self.orch.req.status_code not in (200,201):
-                    return create_message_error(self.orch.req.status_code, json.loads(self.orch.req.text)['code'])
+                    code = None
+                    response = json.loads(self.orch.req.text)
+                    if 'state' in response:
+                        code = get_status(response['state'])
+                        update_status_project(sproject.pk, code)
+                        error_code = 'ORQUESTRATOR_STATE'
+                    if 'code' in response:
+                        error_code = response['code']
+                    return create_message_error(self.orch.req.status_code,
+                                                error_code, code)
                 state = data['state']
                 if state:
                     status = STATES.index(state)
@@ -237,9 +257,10 @@ class ProjectStateRes(ProjectRes):
                     #break
 
         if (project_status is None) or (data is None):
-            return create_message_error(404, '')
+            return create_message_error(404, _cfg.errors__orchestrator_state)
         else:
-            return dict(status=project_status, state=STATES[project_status], runtime_params=data['runtime_params']),''
+            return dict(status_code=self.orch.req.status_code, status=project_status,
+                        state=STATES[project_status], runtime_params=data['runtime_params'])
 
     def get(self, id):
         # import pdb;pdb.set_trace()
@@ -330,8 +351,18 @@ class ProjectUpdateStateRes(ProjectRes):
                         sproject.status = DISABLED
                         sproject.save()
 
-                elif not self.orch.instance_set_state(instance['instance_id'], state):
-                    return "Error instance '%s' set_state." % instance['instance_id']
+                else:
+                    response = self.orch.instance_set_state(instance['instance_id'], state)
+                    code = None
+                    if 'state' in response['response']:
+                        code = get_status(response['response']['state'])
+                        update_status_project(sproject.id, code)
+                    if response['status_code'] not in (200, 201):
+                        error_code = 'ORQUESTRATOR_STATE'
+                        if 'code' in response['response']:
+                            error_code = response['response']['code']
+                        return create_message_error(response['status_code'],
+                                                    error_code, code)
 
 class ClientProjectsRes(ProjectsRes):
 
@@ -620,3 +651,8 @@ def save_image_to_local(vm_image, vm_name):
 def find_instance(id):
     instance = get_db(_cfg.database__database_name)['instances'].find_one({'sproject':ObjectId(id)})
     return instance
+
+
+def get_status(state):
+    _status = dict(STATUS)
+    return list(_status.keys())[list(_status.values()).index(state)]
