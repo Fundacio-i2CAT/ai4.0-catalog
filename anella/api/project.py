@@ -591,9 +591,9 @@ def update_project(project, item, is_new=False):
     except Exception, e:
         if is_new:
             try:
-                project.delete()
-                for sproject in project.services:
+                for sproject in list(project.services):
                     sproject.delete()
+                project.delete()
             except Exception, es:
                 print es
         response = dict( status='fail', msg=unicode(e))
