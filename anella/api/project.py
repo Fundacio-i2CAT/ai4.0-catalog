@@ -596,7 +596,7 @@ def update_project(project, item, is_new=False):
             if name in item:
                 setattr(project, name, item[name])
 
-
+        project.save()
         services=[]
         if not sitems:
             return error_api("No services.", status=400)
@@ -609,16 +609,24 @@ def update_project(project, item, is_new=False):
                 return error_api("Service '%s' doesn't exist." % service_id, status=400)
             services.append(service)
 
-        project.save()
-        for sitem,service in zip(sitems,services):
-            #context_type=sitem.get('context_type', '')
-            provider = service['provider']
-            sproject = SProject(service=service['_id'],
-                                project=project,
-                                provider=provider,
-                                status=SAVED )
-            sproject.save()
-            project.services.append(sproject)
+        try:
+            for sitem, service in zip(sitems, services):
+                # context_type=sitem.get('context_type', '')
+                provider = service['provider']
+                sproject = SProject(service=service['_id'],
+                                    project=project,
+                                    provider=provider,
+                                    status=SAVED)
+                sproject.save()
+                project.services.append(sproject)
+        except Exception, err:
+            if project.services:
+                for sproject in project.services:
+                    sproject.delete()
+                project.delete()
+                return error_api(msg="Error: updating project '%s'." % err, status=400)
+        else:
+            project.save()
         if is_new:
             response = dict( status='ok', id=unicode(project.pk), msg="Project created." )
             return respond_json(response, status=201)
@@ -626,14 +634,7 @@ def update_project(project, item, is_new=False):
             response = dict( status='ok', id=unicode(project.pk), msg="Project updated." )
             return respond_json(response, status=200)
     except Exception, e:
-        if is_new:
-            try:
-                for sproject in list(project.services):
-                    sproject.delete()
-                project.delete()
-            except Exception, es:
-                print es
-        response = dict( status='fail', msg=unicode(e))
+        response = dict(status='fail', msg=unicode(e))
         return respond_json(response, status=400)
 
 
