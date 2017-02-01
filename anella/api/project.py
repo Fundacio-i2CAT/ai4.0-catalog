@@ -600,15 +600,18 @@ def update_project(project, item, is_new=False):
         services=[]
         if not sitems:
             return error_api("No services.", status=400)
-        for sitem in sitems:
-            service_id = sitem['service']
-            #service = ServiceDescription.objects.get(id=service_id)
-            service = get_db(_cfg.database__database_name)['services'].\
-                find_one({'_id': ObjectId(service_id)})
-            if service is None:
-                return error_api("Service '%s' doesn't exist." % service_id, status=400)
-            services.append(service)
-
+        try:
+            for sitem in sitems:
+                service_id = sitem['service']
+                #service = ServiceDescription.objects.get(id=service_id)
+                service = get_db(_cfg.database__database_name)['services'].\
+                    find_one({'_id': ObjectId(service_id)})
+                if service is None:
+                    return error_api("Service '%s' doesn't exist." % service_id, status=400)
+                services.append(service)
+        except Exception, err:
+            project.delete()
+            return error_api(msg="Error in project '%s'." % err, status=400)
         try:
             for sitem, service in zip(sitems, services):
                 # context_type=sitem.get('context_type', '')
@@ -619,14 +622,13 @@ def update_project(project, item, is_new=False):
                                     status=SAVED)
                 sproject.save()
                 project.services.append(sproject)
+            project.save()
         except Exception, err:
             if project.services:
                 for sproject in project.services:
                     sproject.delete()
                 project.delete()
                 return error_api(msg="Error: updating project '%s'." % err, status=400)
-        else:
-            project.save()
         if is_new:
             response = dict( status='ok', id=unicode(project.pk), msg="Project created." )
             return respond_json(response, status=201)
