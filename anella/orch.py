@@ -62,7 +62,7 @@ class Orchestrator(object):
         if self.debug:
             print_resp(self.req, self.r_data)
 
-        return bool(self.req.status_code == 200)
+        return dict(status_code= self.req.status_code, response=json.loads(self.req.text))
  
     def instance_delete(self,id):
         self.path = self.root_path+'/%s' % id
