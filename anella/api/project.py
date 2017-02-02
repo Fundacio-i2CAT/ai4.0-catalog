@@ -599,6 +599,7 @@ def update_project(project, item, is_new=False):
         project.save()
         services=[]
         if not sitems:
+            project.delete()
             return error_api("No services.", status=400)
         try:
             for sitem in sitems:
