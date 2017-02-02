@@ -22,6 +22,8 @@ from session import MongoSessionInterface
 
 from common import *
 import output
+from functools import wraps
+from flask import make_response
 
 
 def add_resources(api):
@@ -92,6 +94,13 @@ def add_rules(app):
     """
     app.add_url_rule('/', 'root', lambda: app.send_static_file('index.html'))
 
+def foobar(fn):
+    @wraps(fn)
+    def decorated_view(*args, **kwargs):
+        req = get_request()
+        print req.headers
+        return fn(*args, **kwargs)
+    return decorated_view
 
 def create_app(cfg_file='prod-config.yaml', testing=False, debug=False):
     usage = "usage: %prog"
@@ -195,7 +204,6 @@ def create_app(cfg_file='prod-config.yaml', testing=False, debug=False):
                                                   host=app.config['MONGO_HOST'],
                                                   port=app.config['MONGO_PORT']
                                                  )
-
 #     db = MongoEngine(app)
 #     set_db(db)
 
