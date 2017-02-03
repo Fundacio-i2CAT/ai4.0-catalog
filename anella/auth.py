@@ -9,6 +9,8 @@ from requests import Session
 from anella.common import *
 from anella.model.user import UserRole, User, Administrator, Client, Provider
 from anella.api.utils import create_response
+import jwt
+from datetime import datetime, timedelta
 
 LOGGER = logging.getLogger('stdout')
 
@@ -46,6 +48,7 @@ class Authenticator(object):
             try:
                 self.user.role = self.find_user_role(data['_links']['associations']['href'])
                 self.user.id = self.get_cls()
+                self.create_token()
             except IndexError:
                 req.status_code = 500
                 self.item = dict(message="This user isn't associated any entity")
@@ -149,3 +152,12 @@ class Authenticator(object):
         elif self.provider:
             _class = cls_dict['provider']
         return _class
+
+    def create_token(self):
+        payload = {
+            'user_id': self.user.id,
+            'exp': datetime.utcnow() + timedelta(seconds=60)
+        }
+        jwt_token = jwt.encode(payload, 'secret', 'HS256')
+        print jwt_token
+        self.user.token = jwt_token

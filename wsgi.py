@@ -1,10 +1,10 @@
 from anella.flask_app import create_app
-from anella.flask_app import foobar
+from anella.flask_app import authorizate
 
 app = create_app()
 
 @app.after_request
-@foobar
+@authorizate
 def after_request(response):
     """
     Suport for CORS at Flask app

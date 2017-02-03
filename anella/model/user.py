@@ -20,6 +20,7 @@ class UserRole(object):
         self.email = None
         self.user_name = None
         self.auth_id = None
+        self.token = None
 
 
 class User(Document, Base):

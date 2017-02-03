@@ -1,30 +1,36 @@
 # -*- coding: utf-8 -*-
 
-import sys
-import os
-import time
-import json
 import optparse
-import logging
 from pprint import pformat
-
-from flask import Flask, Response, request
+from flask import Flask
 from flask.ext.pymongo import PyMongo
-# from flask.ext.mongoengine import MongoEngine
-from flask_restful import reqparse, abort, Api, Resource
-
+from flask_restful import Api
 from mongoengine import connect
-
 from utils import load_config, std_logging
-LOGGER = std_logging()
-
 from session import MongoSessionInterface
-
 from common import *
 import output
 from functools import wraps
-from flask import make_response
+import jwt
+from anella.api.utils import respond_json
 
+LOGGER = std_logging()
+
+app = None
+
+
+def authorizate(fn):
+    @wraps(fn)
+    def decorated_view(*args, **kwargs):
+        jwt_token = get_request().headers.get('authorization', None)
+        if jwt_token:
+            try:
+                jwt.decode(jwt_token, 'secret',
+                                     algorithms=['HS256'])
+            except (jwt.DecodeError, jwt.ExpiredSignatureError):
+                return respond_json(dict(message='TOKEN_EXPIRED'), status=403)
+        return fn(*args, **kwargs)
+    return decorated_view
 
 def add_resources(api):
     from anella.api.user import UsersRes, UserRes, UsersCrudRes, UserCrudRes
@@ -93,14 +99,6 @@ def add_rules(app):
     """
     """
     app.add_url_rule('/', 'root', lambda: app.send_static_file('index.html'))
-
-def foobar(fn):
-    @wraps(fn)
-    def decorated_view(*args, **kwargs):
-        req = get_request()
-        print req.headers
-        return fn(*args, **kwargs)
-    return decorated_view
 
 def create_app(cfg_file='prod-config.yaml', testing=False, debug=False):
     usage = "usage: %prog"
