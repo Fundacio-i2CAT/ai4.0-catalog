@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-
 from mongoengine import *
 from mongoengine import ValidationError, NotUniqueError
 from bson import ObjectId, DBRef
@@ -11,6 +10,7 @@ from flask_restful  import Resource
 
 from anella.common import *
 from anella import configuration as _cfg
+
 
 class AnellaRes(Resource):
     _cls=None
@@ -241,6 +241,12 @@ def obj_from_json(data, cls, obj=None):
 
     return obj
 
+
+def update_status_project(id, status):
+    get_db(_cfg.database__database_name)['sprojects'].\
+                    update_one({'_id': ObjectId(id)},
+                                {'$set': {'status': status}}, upsert=False)
+
 def respond_json(data, status=200, **kwargs):
 
     headers={
@@ -274,8 +280,18 @@ def error_api(msg, status=400):
 def create_response(status_code, data):
     return respond_json(data, status=status_code)
 
+
 def create_response_data(data):
     if data.status_code in (200, 201):
         return json.loads(data.text)
     else:
         return respond_json(data.text, status=data.status_code)
+
+
+def create_message_error(status_code, code, status):
+    data = get_db(_cfg.database__database_name)['errors'].find_one({'code': code})
+    if data is None:
+        data = {"i18n": {"ca": "S'ha produït un error inesperat",
+                          "es": "Se ha producido un error inesperado"}}
+    response = dict(status_code=status_code, code=code, message=data['i18n'], status=status)
+    return response

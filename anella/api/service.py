@@ -20,7 +20,7 @@ class ServicesRes(ColRes):
     collection= 'services'
     _cls = AppService
     name= 'Services'
-    fields = '_id,name,summary,service_type,provider,sectors,created_at,updated_at'.split(',')
+    fields = '_id,name,summary,service_type,provider,sectors,created_at,updated_at,price_initial,price_x_hour'.split(',')
     filter_fields = 'name,keywords,sectors'.split(',')
 
     def post(self):
@@ -48,7 +48,8 @@ class ServiceRes(ItemRes):
     collection= 'services'
     _cls = AppService
     name= 'Service'
-    fields = '_id,name,summary,description,service_type,provider,sectors,keywords,link,created_at,created_by,updated_at,updated_by'.split(',')
+    fields = '_id,name,summary,description,service_type,provider,sectors,keywords,link,' \
+             'created_at,created_by,updated_at,updated_by,price_initial,price_x_hour'.split(',')
 
     def _item_to_json(self, item):
         sitem = ItemRes._item_to_json(self, item)

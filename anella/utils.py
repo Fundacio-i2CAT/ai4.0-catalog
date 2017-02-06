@@ -104,6 +104,8 @@ def load_config(configfile, clear_db_config=False):
         cfg.tenor__host = yaml_config['anella']['tenor']['host']
         cfg.tenor__port = yaml_config['anella']['tenor']['port']
 
+        cfg.errors__orchestrator_state = yaml_config['anella']['errors']['orchestrator_state']
+
     except Exception, err:
         print "Exception loading config file [{0}]: ({1})".format(
             configfile,

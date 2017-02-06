@@ -34,11 +34,8 @@ class Orchestrator(object):
         self.req = post(self.path, json=self.r_data)
         if self.debug:
             print_resp(self.req, self.r_data)
-
-        if self.req.status_code in (200,201):
-            data = json.loads(self.req.text)
-            id = data['service_instance_id']
-            return id
+        print self.req
+        return self.req
     
     def instance_get_state(self, id):
         # import pdb;pdb.set_trace()
@@ -65,7 +62,7 @@ class Orchestrator(object):
         if self.debug:
             print_resp(self.req, self.r_data)
 
-        return bool(self.req.status_code == 200)
+        return dict(status_code= self.req.status_code, response=json.loads(self.req.text))
  
     def instance_delete(self,id):
         self.path = self.root_path+'/%s' % id
