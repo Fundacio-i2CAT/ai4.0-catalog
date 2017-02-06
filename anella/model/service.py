@@ -51,6 +51,7 @@ class ServiceDescription(Document, Base):
     context = DictField()
     price_initial = FloatField()
     price_x_hour = FloatField()
+    activated = BooleanField()
 
     def set_name(self, name):
         self.name = name
@@ -75,6 +76,9 @@ class ServiceDescription(Document, Base):
 
     def set_price_x_hour(self, price_x_hour):
         self.price_x_hour = price_x_hour
+
+    def set_activated(self, activated):
+        self.activated = activated
 
 
 class AppService(ServiceDescription):
@@ -187,6 +191,7 @@ def set_service(data):
         service.set_price_initial(data.pop('price_initial'))
         service.set_price_x_hour(data.pop('price_x_hour'))
         service.set_context(data)
+        service.set_activated(False)
     except Exception as e:
         print e
         '''
