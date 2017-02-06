@@ -67,7 +67,6 @@ class ColRes(AnellaRes):
         for name,value in values.items():
             if name not in self.filter_fields:
                 raise KeyError("Parameter '%s' not in filters." % name)
-
             field = self._cls._fields.get(name)
             if isinstance(field, (ReferenceField, GenericReferenceField)):
                 filter[name] = ObjectId(value)
@@ -78,7 +77,7 @@ class ColRes(AnellaRes):
 
             else:
                 filter[name] = value
-
+        print filter
         return filter
 
     def post(self):
@@ -100,8 +99,7 @@ class ColRes(AnellaRes):
         except Exception,e:
             return error_api( msg=str(e) )
 
-    def _get_items(self, skip=0, limit=1000):
-        values = get_args().copy() # args are inmutable
+    def _get_items(self, skip=0, limit=1000, values={}):
         filter = self._filter_from_inputs(values)
         cursor = get_db(_cfg.database__database_name)[self.collection].find( filter, skip=skip, limit=limit )
         return [item for item in cursor ]

@@ -21,7 +21,7 @@ class ServicesRes(ColRes):
     _cls = AppService
     name= 'Services'
     fields = '_id,name,summary,service_type,provider,sectors,created_at,updated_at,price_initial,price_x_hour'.split(',')
-    filter_fields = 'name,keywords,sectors'.split(',')
+    filter_fields = 'name,keywords,sectors,activated'.split(',')
 
     def post(self):
         item = get_json()
@@ -43,6 +43,9 @@ class ServicesRes(ColRes):
             provider = get_db(_cfg.database__database_name)['users'].find_one({'_id':ObjectId(provider_id)})
             sitem['provider'] = item_to_json(provider, ['_id', 'user_name'])
         return sitem
+
+    def _get_items(self, skip=0, limit=1000, **values):
+        return super(ServicesRes, self)._get_items(skip, limit, dict(activated=True))
 
 class ServiceRes(ItemRes):
     collection= 'services'
