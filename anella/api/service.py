@@ -3,7 +3,7 @@
 import os
 
 from anella.common import *
-from anella.api.utils import respond_json
+from anella.api.utils import respond_json, count_collection, get_int
 from anella.model.service import get_service_cls, get_service_types
 from anella.model.service import AppService, VMImage
 from anella import configuration as _cfg
@@ -13,14 +13,16 @@ from werkzeug.utils import secure_filename
 import glob
 import hashlib
 from anella.orch import Orchestrator
-
+from datetime import datetime
 from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId
 
+
 class ServicesRes(ColRes):
-    collection= 'services'
+    collection = 'services'
     _cls = AppService
-    name= 'Services'
-    fields = '_id,name,summary,service_type,provider,sectors,created_at,updated_at,price_initial,price_x_hour'.split(',')
+    name = 'Services'
+    fields = '_id,name,summary,service_type,provider,sectors,created_at,updated_at,price_initial,price_x_hour'.split(
+        ',')
     filter_fields = 'name,keywords,sectors,activated'.split(',')
 
     def post(self):
@@ -28,7 +30,7 @@ class ServicesRes(ColRes):
         return create_service(item)
 
     def _item_from_json(self, data):
-        service_cls = get_service_cls( data.get('service_type') )
+        service_cls = get_service_cls(data.get('service_type'))
         if service_cls:
             self._cls = service_cls
         item = ColRes.item_from_json(self, data)
@@ -40,17 +42,63 @@ class ServicesRes(ColRes):
         sitem = ColRes._item_to_json(self, item)
         provider_id = sitem['provider']
         if provider_id:
-            provider = get_db(_cfg.database__database_name)['users'].find_one({'_id':ObjectId(provider_id)})
+            provider = get_db(_cfg.database__database_name)['users'].find_one({'_id': ObjectId(provider_id)})
             sitem['provider'] = item_to_json(provider, ['_id', 'user_name'])
         return sitem
 
     def _get_items(self, skip=0, limit=1000, **values):
         return super(ServicesRes, self)._get_items(skip, limit, dict(activated=True))
 
-class ServiceRes(ItemRes):
-    collection= 'services'
+
+class ServicesProviderRes(ItemRes):
+    collection = 'services'
     _cls = AppService
-    name= 'Service'
+    name = 'Services'
+    fields = '_id,name,summary,service_type,provider,context,sectors,price_initial,price_x_hour,activated'.split(
+        ',')
+
+    def get(self, id):
+        limit = get_int(get_arg('limit'))
+        skip = get_int(get_arg('skip'))
+        _filter = dict(provider=ObjectId(id))
+        result = super(ServicesProviderRes, self)._get_items(skip=skip * limit, limit=limit, values=_filter)
+        js_items = [self.item_to_json(item) for item in result]
+        response = dict(count=count_collection(self.collection, _filter), skip=skip, limit=limit,
+                        result=js_items)
+        return respond_json(response, status=200)
+
+    def item_to_json(self, item):
+        js_item = {}
+        for field in self.fields:
+            data = item.get(field)
+
+            if isinstance(data, ObjectId):
+                js_data = unicode(data)
+
+            elif isinstance(data, datetime):
+                # js_data = str(data)
+                js_data = data.isoformat()
+            elif isinstance(data, dict):
+                js_data = None
+                js_sub_data = {}
+                for i in data:
+                    if isinstance(data[i], ObjectId):
+                        js_sub_data[i] = str(data[i])
+                    else:
+                        js_sub_data[i] = data[i]
+
+                js_item[field] = js_sub_data
+            else:
+                js_data = data
+            if js_data is not None:
+                js_item[field] = js_data
+        return js_item
+
+
+class ServiceRes(ItemRes):
+    collection = 'services'
+    _cls = AppService
+    name = 'Service'
     fields = '_id,name,summary,description,service_type,provider,sectors,keywords,link,' \
              'created_at,created_by,updated_at,updated_by,price_initial,price_x_hour'.split(',')
 
@@ -58,15 +106,14 @@ class ServiceRes(ItemRes):
         sitem = ItemRes._item_to_json(self, item)
         provider_id = sitem['provider']
         if provider_id:
-            provider = get_db(_cfg.database__database_name)['users'].find_one({'_id':ObjectId(provider_id)})
+            provider = get_db(_cfg.database__database_name)['users'].find_one({'_id': ObjectId(provider_id)})
             sitem['provider'] = item_to_json(provider, ['_id', 'user_name'])
         return sitem
 
 
 class ServiceTypesRes(Resource):
-
     def get(self):
-        return [ dict(name=st[0], description=st[1][1]) for st in get_service_types()]
+        return [dict(name=st[0], description=st[1][1]) for st in get_service_types()]
 
 
 class VMImageRes(Resource):
@@ -124,12 +171,12 @@ class VMImageUnchunkedRes(Resource):
                 response = dict(md5="ok", name_image=data['filename'])
                 return respond_json(response, status=200)
             else:
-                #Devolvemos 409
-                response = dict(status="nok", msg="Error to upload file. MD5 not equal: %s" %data['filename'])
+                # Devolvemos 409
+                response = dict(status="nok", msg="Error to upload file. MD5 not equal: %s" % data['filename'])
                 return respond_json(response, status=409)
         except Exception as e:
             self.delete_files_tmp(path_repository, filename)
-            response = dict(status="nok", msg="Error to upload file: %s" %e)
+            response = dict(status="nok", msg="Error to upload file: %s" % e)
             return respond_json(response, status=500)
 
     def checksum_md5(self, filename):
