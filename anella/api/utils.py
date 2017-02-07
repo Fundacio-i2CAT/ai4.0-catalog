@@ -77,7 +77,6 @@ class ColRes(AnellaRes):
 
             else:
                 filter[name] = value
-        print filter
         return filter
 
     def post(self):
@@ -170,6 +169,12 @@ class ItemRes(AnellaRes):
         data = self._item_to_json(item)
         return data
 
+    def _get_items(self, skip=0, limit=1000, values={}, order_by="created_at"):
+        cursor = get_db(_cfg.database__database_name)[self.collection].find(values, skip=skip, limit=limit )\
+                            .sort(order_by, -1)
+        return [item for item in cursor]
+
+
 def item_to_json(item, fields):
     js_item = {}
     for field in fields:
@@ -181,12 +186,10 @@ def item_to_json(item, fields):
        elif isinstance(data, datetime):
            # js_data = str(data)
            js_data = data.isoformat()
-
        else:
            js_data = data
 
        js_item[field]= js_data
-
     return js_item
 
 def item_from_json(data, cls, fields=None):
@@ -285,6 +288,15 @@ def create_response_data(data):
     else:
         return respond_json(data.text, status=data.status_code)
 
+
+def count_collection(collection, values):
+    return get_db(_cfg.database__database_name)[collection].find(values).count()
+
+
+def get_int(variable):
+    _i = 0
+    if variable is not None: _i = int(variable)
+    return _i
 
 def create_message_error(status_code, code, status):
     data = get_db(_cfg.database__database_name)['errors'].find_one({'code': code})
