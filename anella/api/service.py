@@ -110,6 +110,17 @@ class ServiceRes(ItemRes):
             sitem['provider'] = item_to_json(provider, ['_id', 'user_name'])
         return sitem
 
+    def put(self, id):
+        data = dict(get_json())
+        item = get_db(_cfg.database__database_name)[self.collection].\
+                        update_one({'_id': ObjectId(id)},
+                                {'$set': data}, upsert=False)
+        if item.matched_count == 1:
+            response = respond_json(dict(id=id, message="Updated correctly"))
+        else:
+            response = respond_json(dict(id=id, message="Not updated"), status=404)
+        return response
+
 
 class ServiceTypesRes(Resource):
     def get(self):
