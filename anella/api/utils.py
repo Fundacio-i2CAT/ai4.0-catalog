@@ -137,29 +137,18 @@ class ItemRes(AnellaRes):
            
     def put(self, id):
         try:
-            data = get_json()
-            # item = self._item_from_json(data)
-            # result = get_db()[self.collection].update_one({'_id':ObjectId(id)}, 
-            #                                               {'$set' :item } )
-            # # v2 get_db()[self.collection].update({'_id':ObjectId(id)}, {'$set': item } )
-            # if not result.matched_count:
-            #     response = dict( status='fail', msg='%s not updated' % self.name,)
-            #     return respond_json( response, status=400)
-
-            # ME Validation
-            obj = self._find_obj(id)
-            obj = self._obj_from_json(data, obj)
-            valid_error = self._validate(obj)
-            if valid_error:
-                return error_api( msg='%s: %s' % (self.name,valid_error))
-
-            obj.save()
-
-            response = dict( status='ok', msg='%s updated' % self.name )
-            return respond_json( response, status=200)
+            data = dict(get_json())
+            item = get_db(_cfg.database__database_name)[self.collection]. \
+                update_one({'_id': ObjectId(id)},
+                           {'$set': data}, upsert=False)
+            if item.matched_count == 1:
+                response = respond_json(dict(id=id, message="Updated correctly"))
+            else:
+                response = respond_json(dict(id=id, message="Not updated"), status=404)
+            return response
 
         except Exception,e:
-            return error_api( msg=str(e) )
+            return respond_json(dict(id=id, message=str(e)), status=404)
     
     def get(self, id):
         item = self._find_item(id)
