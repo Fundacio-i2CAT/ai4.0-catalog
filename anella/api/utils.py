@@ -10,6 +10,7 @@ from flask_restful  import Resource
 
 from anella.common import *
 from anella import configuration as _cfg
+import re
 
 
 class AnellaRes(Resource):
@@ -138,6 +139,8 @@ class ItemRes(AnellaRes):
     def put(self, id):
         try:
             data = dict(get_json())
+            resp = regex_name(data)
+            if resp is not None: return resp
             item = get_db(_cfg.database__database_name)[self.collection]. \
                 update_one({'_id': ObjectId(id)},
                            {'$set': data}, upsert=False)
@@ -287,10 +290,21 @@ def get_int(variable):
     if variable is not None: _i = int(variable)
     return _i
 
-def create_message_error(status_code, code, status):
+
+def create_message_error(status_code, code, status=""):
     data = get_db(_cfg.database__database_name)['errors'].find_one({'code': code})
     if data is None:
         data = {"i18n": {"ca": "S'ha produït un error inesperat",
                           "es": "Se ha producido un error inesperado"}}
     response = dict(status_code=status_code, code=code, message=data['i18n'], status=status)
     return response
+
+
+def regex_name(item):
+    response = None
+    if 'name' in item:
+        if re.search('[¿?<>º"!·$%&/()=]', item['name']):
+            msg = create_message_error(400, 'NAME_INVALID')
+            response = respond_json(msg, status=400)
+    return response
+

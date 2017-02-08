@@ -12,6 +12,7 @@ from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api,
 from anella import configuration as _cfg
 import json
 from anella.model.project import STATUS
+from anella.api.utils import regex_name
 
 def services_to_json(sprojects):
     sitems=[]
@@ -530,6 +531,7 @@ class ProviderSProjectsRes(SProjectsRes):
     def _items_to_json(self, items):
         return sprojects_to_json(items)
 
+
 class ProjectOrchCallbackRes(ProjectsRes):
 
     def post(self):
@@ -542,7 +544,8 @@ class ProjectOrchCallbackRes(ProjectsRes):
             except:
                 respond_json({'message': 'Error removing {0}'.format(file_to_remove)}, status=500)
         return respond_json(instance_info, status=200)
-        
+
+
 def delete_project(project):
     # import pdb;pdb.set_trace()
     try:
@@ -567,11 +570,12 @@ def delete_project(project):
         response = dict( status='fail', msg=unicode(e) )
         return respond_json( response, status=400)
 
-                
 
 def update_project(project, item, is_new=False):
     # import pdb;pdb.set_trace()
     try:
+        resp = regex_name(item)
+        if resp is not None: return resp
         client = None
         client_id = item.pop('client',None)
         if client_id:

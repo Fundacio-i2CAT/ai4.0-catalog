@@ -12,6 +12,7 @@ from bson.objectid import ObjectId
 from anella.api.utils import respond_json
 import os
 import sys
+from anella.api.utils import regex_name
 # TODO: Service types should be dynamic and use as options to validate field
 
 _service_types = {}
@@ -161,13 +162,15 @@ class VMImage:
     def delete_image(self):
         self.grid_fs.delete(self.id)
 
-
     def get_file_id(self):
         #image_file = open(self.path_image, 'r')
         return self.grid_fs.put(self.image_file, filename=self.name_image)
 
+
 def create_service(item):
     service = set_service(item)
+    resp = regex_name(service)
+    if resp is not None: return resp
     if service is not None:
         try:
             service.save()
@@ -201,21 +204,6 @@ def set_service(data):
         service = None
     return service
 
-'''
-def delete_image_vm(vm_image_id):
-    vm_image = VMImage()
-    vm_image.id = vm_image_id
-    vm_image.delete_image()
-
-
-def set_vm_image(data):
-    vm_image = VMImage()
-    vm_image.set_name_image(data.get('name_image'))
-    vm_image.set_path_image(data.pop('url_image'))
-    vm_image.set_id(vm_image.save_image())
-    data['vm_image'] = vm_image.id
-    return data
-'''
 
 def create_context(data):
     context = dict(vm_image=ObjectId(data.get("vm_image")), flavor=data.pop("flavor"),
