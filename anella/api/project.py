@@ -3,7 +3,7 @@
 from bson import ObjectId
 import os
 from anella.common import *
-from anella.model.project import Project, SProject, SAVED, DISABLED, CONFIRMED, STATES, STATUS, Client, ServiceDescription
+from anella.model.project import Project, SProject, SAVED, DISABLED, CONFIRMED, STATES, STATUS, Client, ServiceDescription, Provider
 from anella.model.instance import Instance
 from anella.model.service import VMImage
 
@@ -13,6 +13,7 @@ from anella import configuration as _cfg
 import json
 from anella.model.project import STATUS
 from anella.api.utils import regex_name
+from datetime import datetime
 
 def services_to_json(sprojects):
     sitems=[]
@@ -573,13 +574,18 @@ def delete_project(project):
 
 def update_project(project, item, is_new=False):
     # import pdb;pdb.set_trace()
+    _status = SAVED
     try:
         resp = regex_name(item)
         if resp is not None: return resp
+        if 'name' not in item:
+            item['name'] = datetime.utcnow().strftime('%Y%m%d%H%M%S%f')
         client = None
-        client_id = item.pop('client',None)
+        client_id = item.pop('client', None)
         if client_id:
-            client = Client.objects.get(id=client_id)
+            is_provider = get_type_user(client_id)
+            if is_provider: client = Provider.objects.get(id=client_id); _status = CONFIRMED
+            else: client = Client.objects.get(id=client_id)
         if project.client:
             if client and project.client!=client:
                 return error_api( msg='Error: Client project can not be changed.', status=400 )
@@ -624,7 +630,7 @@ def update_project(project, item, is_new=False):
                 sproject = SProject(service=service['_id'],
                                     project=project,
                                     provider=provider,
-                                    status=SAVED)
+                                    status=_status)
                 sproject.save()
                 project.services.append(sproject)
             project.save()
@@ -665,3 +671,10 @@ def find_instance(id):
 def get_status(state):
     _status = dict(STATUS)
     return list(_status.keys())[list(_status.values()).index(state)]
+
+def get_type_user(id):
+    cursor = get_db(_cfg.database__database_name)['users'].find_one({'_id':ObjectId(id)})
+    if cursor['_cls'] == 'User.Provider':
+        return True
+    return False
+
