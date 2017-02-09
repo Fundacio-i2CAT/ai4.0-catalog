@@ -574,19 +574,17 @@ def delete_project(project):
 
 def update_project(project, item, is_new=False):
     # import pdb;pdb.set_trace()
-    is_provider = False
     _status = SAVED
     try:
         resp = regex_name(item)
         if resp is not None: return resp
         if 'name' not in item:
             item['name'] = datetime.utcnow().strftime('%Y%m%d%H%M%S%f')
-            is_provider = True
-            _status = CONFIRMED
         client = None
         client_id = item.pop('client', None)
         if client_id:
-            if is_provider: client = Provider.objects.get(id=client_id)
+            is_provider = get_type_user(client_id)
+            if is_provider: client = Provider.objects.get(id=client_id); _status = CONFIRMED
             else: client = Client.objects.get(id=client_id)
         if project.client:
             if client and project.client!=client:
@@ -673,3 +671,10 @@ def find_instance(id):
 def get_status(state):
     _status = dict(STATUS)
     return list(_status.keys())[list(_status.values()).index(state)]
+
+def get_type_user(id):
+    cursor = get_db(_cfg.database__database_name)['users'].find_one({'_id':ObjectId(id)})
+    if cursor['_cls'] == 'User.Provider':
+        return True
+    return False
+
