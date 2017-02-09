@@ -618,6 +618,7 @@ def update_project(project, item, is_new=False):
                 service = get_db(_cfg.database__database_name)['services'].\
                     find_one({'_id': ObjectId(service_id)})
                 if service is None:
+                    project.delete()
                     return error_api("Service '%s' doesn't exist." % service_id, status=400)
                 services.append(service)
         except Exception, err:
