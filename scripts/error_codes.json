@@ -68,5 +68,12 @@
 	    "ca" : "El nom introduït no es vàlid",
 	    "es" : "El nombre introducido no es válido"
 	}
+    },
+    {
+	"code" : "CONFIGURATION_FAILED",
+	"i18n" : {
+	    "ca" : "S'ha produït un error a l'hora de configurar un servei",
+	    "es" : "Se ha producido un error de configuración de un servicio"
+	}
     }
 ]
