@@ -54,7 +54,7 @@ class ServicesProviderRes(ItemRes):
     collection = 'services'
     _cls = AppService
     name = 'Services'
-    fields = '_id,name,summary,service_type,provider,context,sectors,price_initial,price_x_hour,activated'.split(
+    fields = '_id,created_at,name,summary,service_type,provider,context,sectors,price_initial,price_x_hour,activated'.split(
         ',')
 
     def get(self, id):
