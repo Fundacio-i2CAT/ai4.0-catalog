@@ -49,6 +49,15 @@ def get_permission(model):
     return security
 
 
+def after_function(fn):
+    @wraps(fn)
+    def post_function(*args, **kwargs):
+        r = fn(*args, **kwargs)
+        print 'lalalala'
+        return r
+    return post_function
+
+
 def get_authorize(a, b):
     if a == b:
         return 200

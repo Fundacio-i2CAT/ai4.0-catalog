@@ -511,6 +511,7 @@ class SProjectRes(ItemRes):
 class ProviderSProjectsRes(SProjectsRes):
     filter_fields = 'provider,status'.split(',')
 
+    @get_permission(Provider)
     def get(self, id):
         # import pdb;pdb.set_trace()
         self.provider_id=id

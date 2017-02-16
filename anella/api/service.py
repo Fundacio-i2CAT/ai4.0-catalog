@@ -15,6 +15,8 @@ import hashlib
 from anella.orch import Orchestrator
 from datetime import datetime
 from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId
+from anella.security.auhorize import get_permission, after_function
+from anella.model.user import Provider
 
 
 class ServicesRes(ColRes):
@@ -57,6 +59,7 @@ class ServicesProviderRes(ItemRes):
     fields = '_id,created_at,name,summary,service_type,provider,context,sectors,price_initial,price_x_hour,activated'.split(
         ',')
 
+    @get_permission(Provider)
     def get(self, id):
         limit = get_int(get_arg('limit'))
         skip = get_int(get_arg('skip'))
@@ -132,6 +135,7 @@ class VMImageRes(Resource):
 
 
 class ServiceConsumerParamsRes(ColRes):
+    @after_function
     def get(self, id):
         service = get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(id)})
         if service is None:

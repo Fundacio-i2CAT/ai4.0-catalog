@@ -11,7 +11,7 @@ from anella.model.partner import Provider, ANELLA_SECTORS, PARTNER_TYPES
 from anella.api.utils import ColRes, ItemRes
 from anella.api.service import ServicesRes, AppService
 from bson.objectid import ObjectId
-
+'''
 class ProvidersRes(ColRes):
     collection= 'partners'
     _cls = Provider
@@ -52,7 +52,7 @@ class ProviderServicePublishRes(ItemRes):
         file.write(grid_fs_file.read())
         file.close()
         return "ok"
-'''
+
 class ProviderPostServicePublishRes(ItemRes):
     def post(self):
         grid_fs = GridFS(get_db(_cfg.database__database_repository))
