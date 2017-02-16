@@ -3,7 +3,7 @@
 from bson import ObjectId
 import os
 from anella.common import *
-from anella.model.project import Project, SProject, SAVED, DISABLED, CONFIRMED, STATES, STATUS, Client, ServiceDescription
+from anella.model.project import Project, SProject, SAVED, DISABLED, CONFIRMED, STATES, STATUS, Client, ServiceDescription, Provider
 from anella.model.instance import Instance
 from anella.model.service import VMImage
 
@@ -13,6 +13,8 @@ from anella import configuration as _cfg
 import json
 from anella.model.project import STATUS
 from anella.security.auhorize import get_permission
+from anella.api.utils import regex_name
+from datetime import datetime
 
 def services_to_json(sprojects):
     sitems=[]
@@ -532,6 +534,7 @@ class ProviderSProjectsRes(SProjectsRes):
     def _items_to_json(self, items):
         return sprojects_to_json(items)
 
+
 class ProjectOrchCallbackRes(ProjectsRes):
 
     def post(self):
@@ -544,7 +547,8 @@ class ProjectOrchCallbackRes(ProjectsRes):
             except:
                 respond_json({'message': 'Error removing {0}'.format(file_to_remove)}, status=500)
         return respond_json(instance_info, status=200)
-        
+
+
 def delete_project(project):
     # import pdb;pdb.set_trace()
     try:
@@ -569,15 +573,21 @@ def delete_project(project):
         response = dict( status='fail', msg=unicode(e) )
         return respond_json( response, status=400)
 
-                
 
 def update_project(project, item, is_new=False):
     # import pdb;pdb.set_trace()
+    _status = SAVED
     try:
+        resp = regex_name(item)
+        if resp is not None: return resp
+        if 'name' not in item:
+            item['name'] = datetime.utcnow().strftime('%Y%m%d%H%M%S%f')
         client = None
-        client_id = item.pop('client',None)
+        client_id = item.pop('client', None)
         if client_id:
-            client = Client.objects.get(id=client_id)
+            is_provider = get_type_user(client_id)
+            if is_provider: client = Provider.objects.get(id=client_id); _status = CONFIRMED
+            else: client = Client.objects.get(id=client_id)
         if project.client:
             if client and project.client!=client:
                 return error_api( msg='Error: Client project can not be changed.', status=400 )
@@ -601,6 +611,7 @@ def update_project(project, item, is_new=False):
         project.save()
         services=[]
         if not sitems:
+            project.delete()
             return error_api("No services.", status=400)
         try:
             for sitem in sitems:
@@ -609,6 +620,7 @@ def update_project(project, item, is_new=False):
                 service = get_db(_cfg.database__database_name)['services'].\
                     find_one({'_id': ObjectId(service_id)})
                 if service is None:
+                    project.delete()
                     return error_api("Service '%s' doesn't exist." % service_id, status=400)
                 services.append(service)
         except Exception, err:
@@ -621,7 +633,7 @@ def update_project(project, item, is_new=False):
                 sproject = SProject(service=service['_id'],
                                     project=project,
                                     provider=provider,
-                                    status=SAVED)
+                                    status=_status)
                 sproject.save()
                 project.services.append(sproject)
             project.save()
@@ -662,3 +674,10 @@ def find_instance(id):
 def get_status(state):
     _status = dict(STATUS)
     return list(_status.keys())[list(_status.values()).index(state)]
+
+def get_type_user(id):
+    cursor = get_db(_cfg.database__database_name)['users'].find_one({'_id':ObjectId(id)})
+    if cursor['_cls'] == 'User.Provider':
+        return True
+    return False
+
