@@ -643,7 +643,7 @@ def update_project(project, item, is_new=False):
                     sproject.delete()
                 project.delete()
                 return error_api(msg="Error: updating project '%s'." % err, status=400)
-        response = dict(status='ok', id=unicode(project.pk), name=project.name,
+        response = dict(status=project.status, id=unicode(project.pk), name=project.name,
                         created=project.created_at)
         return respond_json(response, status=status_code)
     except Exception, e:
