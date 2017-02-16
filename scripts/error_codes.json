@@ -77,10 +77,10 @@
 	}
     },
     {
-	"code" : "NO_AUTORIZED",
-	"i18n" : {
-	    "ca" : "No està autoritzat a veure la informació que sol.licita",
-	    "es" : "No està autorizado a ver la información que solicita"
-	}
+        "code" : "NO_AUTORIZED",
+        "i18n" : {
+            "ca" : "No està autoritzat a veure la informació que sol.licita",
+            "es" : "No està autorizado a ver la información que solicita"
+        }
     }
 ]
