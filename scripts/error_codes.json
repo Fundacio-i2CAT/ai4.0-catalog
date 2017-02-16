@@ -1,0 +1,86 @@
+[
+    {
+        "code" : "RAM_QUOTA",
+        "i18n" : {
+            "ca" : "No hi ha prou RAM disponible per desplegar el seu servei. Si us plau contacti amb info@anellaindustrial.cat",
+            "es" : "No hay suficiente RAM disponible para desplegar su servicio. Por favor pongase en contacto con info@anellaindustrial.cat"
+        }
+    },
+    {
+        "code" : "CORE_QUOTA",
+        "i18n" : {
+            "ca" : "No hi ha prou processadors disponibles per desplegar el seu servei. Si us plau contacti amb info@anellaindustrial.cat",
+            "es" : "No hay suficientes procesadores disponibles para desplegar su servicio. Por favor pongase en contacto con info@anellaindustrial.cat"
+        }
+    },
+    {
+        "code" : "FLOATING_IP_QUOTA",
+        "i18n" : {
+            "ca" : "No hi ha prou IPs disponibles per desplegar el seu servei. Si us plau contacti amb info@anellaindustrial.cat",
+            "es" : "No hay suficientes Ips disponibles para desplegar su servicio. Por favor pongase en contacto con info@anellaindustrial.cat"
+        }
+    },
+    {
+        "code" : "ORQUESTRATOR_INSTANCE_ID",
+        "i18n" : {
+            "ca" : "Error al crear la instancia. Si us plau contacti amb info@anellaindustrial.cat",
+            "es" : "Error al crear la instancia. Por favor pongase en contacto con info@anellaindustrial.cat"
+        }
+    },
+    {
+        "code" : "ORCHESTRATOR_GET_STATE",
+        "i18n" : {
+            "ca" : "Error al obtenir l'estat de la instància. Si us plau contacti amb info@anellaindustrial.cat",
+            "es" : "Error al obtener el estado de la instancia. Por favor pongase en contacto con info@anellaindustrial.cat"
+        }
+    },
+    {
+        "code" : "SERVICE_INSTANCE_NOT_FOUND",
+        "i18n" : {
+            "ca" : "Error al obtenir la instància. Si us plau contacti amb info@anellaindustrial.cat",
+            "es" : "Error al obtener la instancia. Por favor pongase en contacto con info@anellaindustrial.cat"
+        }
+    },
+    {
+        "code" : "START_STOP_CONFLICT",
+        "i18n" : {
+            "ca" : "Conflicte: el servei ja es troba en l'estat consignat",
+            "es" : "Conflicto: el servicio ya se encuentra en el estado consignado"
+        }
+    },
+    {
+        "code" : "INSTANCE_OUT_OF_CONTROL",
+        "i18n" : {
+            "ca" : "Error: el servei es troba fora de control",
+            "es" : "Error: el servicio se encuentra fuera de control"
+        }
+    },
+    {
+        "code" : "FLAVOR_TOO_SMALL",
+        "i18n" : {
+            "ca" : "Error: el flavor triat no te capacitat per desplegar la imatge",
+            "es" : "Error: el flavor escogido no tiene capacidad para desplegar la imagen"
+        }
+    },
+    {
+	"code" : "NAME_INVALID",
+	"i18n" : {
+	    "ca" : "El nom introduït no es vàlid",
+	    "es" : "El nombre introducido no es válido"
+	}
+    },
+    {
+	"code" : "CONFIGURATION_FAILED",
+	"i18n" : {
+	    "ca" : "S'ha produït un error a l'hora de configurar un servei",
+	    "es" : "Se ha producido un error de configuración de un servicio"
+	}
+    },
+    {
+	"code" : "NO_AUTORIZED",
+	"i18n" : {
+	    "ca" : "No està autoritzat a veure la informació que sol.licita",
+	    "es" : "No està autorizado a ver la información que solicita"
+	}
+    }
+]

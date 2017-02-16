@@ -12,6 +12,7 @@ from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api,
 from anella import configuration as _cfg
 import json
 from anella.model.project import STATUS
+from anella.security.auhorize import get_permission
 
 def services_to_json(sprojects):
     sitems=[]
@@ -372,6 +373,7 @@ class ProjectUpdateStateRes(ProjectRes):
 
 class ClientProjectsRes(ProjectsRes):
 
+    @get_permission(None)
     def get(self, id):
         self.client_id=id
         return super(ClientProjectsRes, self).get()

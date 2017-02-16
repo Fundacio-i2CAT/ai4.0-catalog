@@ -16,8 +16,8 @@ class UserRole(object):
     def __init__(self):
         self.id = None
         self.role = None
-        self.entity = None
-        self.email = None
+        #self.entity = None
+        #self.email = None
         self.user_name = None
         self.auth_id = None
         self.token = None
@@ -33,9 +33,9 @@ class User(Document, Base):
     def save(self, *args, **kwargs):
         return super(User, self).save(*args, **kwargs)
 
-    def get(self, auth_id):
+    def get(self, filter):
         return get_db(cfg.database__database_name).get_collection('users') \
-            .find_one({'auth_id': auth_id})
+            .find_one(filter)
 
     def update(self, data):
         get_db(cfg.database__database_name).get_collection('users'). \

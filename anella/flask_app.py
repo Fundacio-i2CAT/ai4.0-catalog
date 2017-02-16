@@ -10,27 +10,10 @@ from utils import load_config, std_logging
 from session import MongoSessionInterface
 from common import *
 import output
-from functools import wraps
-import jwt
-from anella.api.utils import respond_json
-
+from anella.security.auhorize import get_permission
 LOGGER = std_logging()
 
 app = None
-
-
-def authorizate(fn):
-    @wraps(fn)
-    def decorated_view(*args, **kwargs):
-        jwt_token = get_request().headers.get('authorization', None)
-        if jwt_token:
-            try:
-                jwt.decode(jwt_token, 'secret',
-                                     algorithms=['HS256'])
-            except (jwt.DecodeError, jwt.ExpiredSignatureError):
-                return respond_json(dict(message='TOKEN_EXPIRED'), status=403)
-        return fn(*args, **kwargs)
-    return decorated_view
 
 def add_resources(api):
     from anella.api.user import UsersRes, UserRes, UsersCrudRes, UserCrudRes

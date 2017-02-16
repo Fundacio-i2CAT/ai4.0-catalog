@@ -32,6 +32,7 @@ class Authenticator(object):
         self.user = None
         self.item = dict(message="User not found")
         self.provider = None
+        self.email = None
 
     def user_login(self, email, password):
         path = self.root_path + 'authenticateWithPassword?email=' + email + '&password=' + password
@@ -40,7 +41,7 @@ class Authenticator(object):
         if req.status_code == 200:
             #Encontrado el usuario
             self.create_role_user()
-            self.user.email = email
+            self.email = email
             data = self.user_find(self.user)
             self.user.user_name = data['name']
             self.user.auth_id = data['id']
@@ -59,7 +60,7 @@ class Authenticator(object):
         self.item = self.user.__dict__
 
     def user_find(self, user):
-        self.path = self.root_path+'people/search/findFirstByEmail?email='+quote_plus(user.email)
+        self.path = self.root_path+'people/search/findFirstByEmail?email='+quote_plus(self.email)
         self.req = self.session.get(self.path)
         if self.req.status_code==200:
             return json.loads(self.req.text)
@@ -67,7 +68,8 @@ class Authenticator(object):
     def find_user_role(self, url):
         req = self.session.get(url)
         data = json.loads(req.text)
-        self.find_entity_user(data['_embedded']['personEntityRelationships'][0]['_links']['organization']['href'])
+        #Buscamos la entidad del usuario
+        #self.find_entity_user(data['_embedded']['personEntityRelationships'][0]['_links']['organization']['href'])
         return data['_embedded']['personEntityRelationships'][0]['state']
 
     def find_entity_user(self, url):
@@ -132,13 +134,13 @@ class Authenticator(object):
     def get_cls(self):
         #Primero miramos si existe en la BBDD
         user = User()
-        item = user.get(self.user.auth_id)
+        item = user.get(dict(auth_id=self.user.auth_id))
         if item is None:
             _class = self.get_role_user()
-            admin = _class(user_name=self.user.email, auth_id=self.user.auth_id)
+            admin = _class(user_name=self.email, auth_id=self.user.auth_id)
             admin.save()
             _id = str(str(admin.pk))
-            tmp = user.get(self.user.auth_id)
+            tmp = user.get(dict(auth_id=self.user.auth_id))
             self.user.role = tmp['_cls']
         else:
             _id = str(item['_id'])
@@ -156,8 +158,8 @@ class Authenticator(object):
     def create_token(self):
         payload = {
             'user_id': self.user.id,
-            'exp': datetime.utcnow() + timedelta(seconds=60)
+            'exp': datetime.utcnow() + timedelta(seconds=600),
+            'role': self.user.role
         }
         jwt_token = jwt.encode(payload, 'secret', 'HS256')
-        print jwt_token
         self.user.token = jwt_token

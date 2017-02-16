@@ -1,10 +1,10 @@
 from anella.flask_app import create_app
-from anella.flask_app import authorizate
+from anella.security.auhorize import authorizate, get_permission
 
 app = create_app()
 
+
 @app.after_request
-@authorizate
 def after_request(response):
     """
     Suport for CORS at Flask app
@@ -15,6 +15,12 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,PATCH,POST,DELETE')
     #   response.headers.add('Access-Control-Allow-Credentials', 'true')
     return response
+
+
+@app.before_request
+@authorizate
+def before_request():
+    pass
 
 
 def bootstrap_app():

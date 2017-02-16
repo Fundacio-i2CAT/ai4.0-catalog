@@ -288,7 +288,11 @@ def create_response_data(data):
         return respond_json(data.text, status=data.status_code)
 
 
-def create_message_error(status_code, code, status):
+def get_token():
+    return get_request().headers.get('authorization', None)
+
+
+def create_message_error(status_code, code, status=""):
     data = get_db(_cfg.database__database_name)['errors'].find_one({'code': code})
     if data is None:
         data = {"i18n": {"ca": "S'ha produït un error inesperat",
