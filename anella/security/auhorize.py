@@ -31,11 +31,7 @@ def get_permission(model):
         def decorated_url(*args, **kwargs):
             try:
                 decode_jwt = decode_token(get_token())
-                _model = model
-                if model is None:
-                    # Tiene acceso tanto cliente como Proveedor
-                    user = get_role_user(decode_jwt['user_id'])
-                    _model = role_user.get(user['_cls'])
+                _model = get_model(decode_jwt, model)
                 if get_authorize(_model, role_user.get(decode_jwt['role'])) == 401:
                     return respond_json(create_message_error(401, 'NO_AUTORIZED'), status=401)
                 if get_authorize(ObjectId(decode_jwt['user_id']), ObjectId(get_view_args())) == 401:
@@ -43,9 +39,26 @@ def get_permission(model):
                 return fn(*args, **kwargs)
             except Exception:
                 return respond_json(create_message_error(403, ''), status=403)
-
         return decorated_url
+    return security
 
+
+def after_get_permission(model):
+    def security(fn):
+        @wraps(fn)
+        def decorated_url(*args, **kwargs):
+            field = None
+            r = fn(*args, **kwargs)
+            decode_jwt = decode_token(get_token())
+            _model = get_model(decode_jwt, model)
+            if get_authorize(_model, role_user.get(decode_jwt['role'])) == 401:
+                return respond_json(create_message_error(401, 'NO_AUTORIZED'), status=401)
+            if _model == Client:
+                field = r['client']
+            elif _model == Provider:
+                field = r['provider']
+            return get_authorize_data(decode_jwt, field, r)
+        return decorated_url
     return security
 
 
@@ -77,7 +90,7 @@ def after_function(fn):
                 return respond_json(create_message_error(401, 'NO_AUTORIZED'), status=401)
         else:
             return respond_json(create_message_error(403, ''), status=403)
-        return r
+        return r['response']
     return post_function
 
 
@@ -91,3 +104,17 @@ def get_authorize(a, b):
 def get_role_user(user_id):
     u = User()
     return u.get(dict(_id=ObjectId(user_id)))
+
+
+def get_model(decode_jwt, model):
+    if model is None:
+        # Tiene acceso tanto cliente como Proveedor
+        user = get_role_user(decode_jwt['user_id'])
+        model = role_user.get(user['_cls'])
+    return model
+
+
+def get_authorize_data(decode_jwt, field, function):
+    if decode_jwt['user_id'] not in field:
+        return respond_json(create_message_error(401, 'NO_AUTORIZED'), status=401)
+    return function['response']

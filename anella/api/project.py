@@ -12,7 +12,7 @@ from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api,
 from anella import configuration as _cfg
 import json
 from anella.model.project import STATUS
-from anella.security.auhorize import get_permission
+from anella.security.auhorize import get_permission, after_get_permission
 from anella.api.utils import regex_name
 from datetime import datetime
 
@@ -95,6 +95,16 @@ class ProjectRes(ItemRes):
     _cls = Project
     name= 'Project'
     fields = '_id,name,summary,description,client,services,status,created_at,created_by,updated_at,updated_by'.split(',')
+
+    @after_get_permission(None)
+    def get(self, id):
+        data = ItemRes.get(self, id)
+        list_clients = []
+        list_providers = []
+        list_clients.append(data['client'])
+        for item in data['services']:
+            list_providers.append(item['provider']['_id'])
+        return dict(response=data, client=list_clients, provider=list_providers)
 
     def _item_to_json(self, item):
         project = self._find_obj(item['_id'])
@@ -455,12 +465,15 @@ class ProjectServicesRes(ColRes):
         except Exception,e:
             return error_api( msg=str(e) )
         
-
+    @after_get_permission(Provider)
     def get(self, id):
         project = get_db(_cfg.database__database_name)['projects'].find_one({'_id':ObjectId(id)})
         result = services_to_json(project['services'])
-        response = dict( status='ok', result=result )
-        return respond_json( response, status=200)
+        response = dict( status='ok', result=result)
+        list_providers=[]
+        for item in result:
+            list_providers.append(item['provider']['_id'])
+        return dict(response=response, status=200, provider=list_providers)
 
 class SProjectsRes(ColRes):
     collection= 'sprojects'
