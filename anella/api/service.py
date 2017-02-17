@@ -14,7 +14,7 @@ import glob
 import hashlib
 from anella.orch import Orchestrator
 from datetime import datetime
-from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId
+from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId, create_message_error
 from anella.security.auhorize import get_permission, after_function
 from anella.model.user import Provider
 
@@ -137,16 +137,20 @@ class VMImageRes(Resource):
 class ServiceConsumerParamsRes(ColRes):
     @after_function
     def get(self, id):
-        service = get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(id)})
-        if service is None:
-            response = dict(status="nok", msg="Service not found: %s" % id)
-            return respond_json(response, status=404)
+        try:
+            service = get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(id)})
+            if service is None:
+                response = dict(status="nok", msg="Service not found: %s" % id)
+                return dict(response=response, status=404)
 
-        data = {}
-        if 'consumer_params' in service['context']:
-            data = service['context']['consumer_params']
-        response = dict(data=data)
-        return respond_json(response, status=200)
+            data = {}
+            if 'consumer_params' in service['context']:
+                data = service['context']['consumer_params']
+            response = dict(data=data)
+            return dict(response=response, status=200, id=str(service['_id']), provider=str(service['provider']))
+        except Exception:
+            response = create_message_error(400)
+            return dict(response=response, status=400)
 
 
 class VMImageResourceRes(Resource):

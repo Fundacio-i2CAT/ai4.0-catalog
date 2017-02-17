@@ -11,6 +11,7 @@ from flask_restful  import Resource
 from anella.common import *
 from anella import configuration as _cfg
 import re
+import jwt
 
 
 class AnellaRes(Resource):
@@ -284,8 +285,17 @@ def create_response_data(data):
 def get_token():
     return get_request().headers.get('authorization', None)
 
+
+def decode_token(jwt_token):
+    return jwt.decode(jwt_token, 'secret')
+
+
 def count_collection(collection, values):
     return get_db(_cfg.database__database_name)[collection].find(values).count()
+
+
+def find_in_collection(collection, search_filter):
+    return get_db(_cfg.database__database_name)[collection].find(search_filter)
 
 
 def get_int(variable):
@@ -294,7 +304,7 @@ def get_int(variable):
     return _i
 
 
-def create_message_error(status_code, code, status=""):
+def create_message_error(status_code, code="", status=""):
     data = get_db(_cfg.database__database_name)['errors'].find_one({'code': code})
     if data is None:
         data = {"i18n": {"ca": "S'ha produït un error inesperat",

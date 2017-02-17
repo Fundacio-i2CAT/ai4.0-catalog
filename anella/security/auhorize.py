@@ -1,11 +1,10 @@
 from functools import wraps
 import jwt
 from anella.api.utils import respond_json, create_message_error
-from anella.common import get_path, get_view_args
-from anella.api.utils import get_token
+from anella.common import get_view_args
+from anella.api.utils import get_token, decode_token, count_collection, find_in_collection
 from anella.model.user import Provider, Client, User
 from bson.objectid import ObjectId
-
 
 role_user = {'User.Client': Client,
              'User.Provider': Provider}
@@ -31,11 +30,10 @@ def get_permission(model):
         @wraps(fn)
         def decorated_url(*args, **kwargs):
             try:
-                jwt_token = get_token()
-                decode_jwt = jwt.decode(jwt_token, 'secret')
+                decode_jwt = decode_token(get_token())
                 _model = model
                 if model is None:
-                    #Tiene acceso tanto cliente como Proveedor
+                    # Tiene acceso tanto cliente como Proveedor
                     user = get_role_user(decode_jwt['user_id'])
                     _model = role_user.get(user['_cls'])
                 if get_authorize(_model, role_user.get(decode_jwt['role'])) == 401:
@@ -45,7 +43,9 @@ def get_permission(model):
                 return fn(*args, **kwargs)
             except Exception:
                 return respond_json(create_message_error(403, ''), status=403)
+
         return decorated_url
+
     return security
 
 
@@ -53,7 +53,30 @@ def after_function(fn):
     @wraps(fn)
     def post_function(*args, **kwargs):
         r = fn(*args, **kwargs)
-        print 'lalalala'
+        if r['status'] != 200:
+            return respond_json(r, r['status'])
+        decode_jwt = decode_token(get_token())
+        role = role_user.get(decode_jwt['role'])
+        if role == Client:
+            ''' hemos de buscar los proyectos de los clientes,
+            si tiene acceso al servicio que solicitan '''
+            id_client = ObjectId(decode_jwt['user_id'])
+            search_filter = dict(client=id_client)
+            cursor = find_in_collection("projects", search_filter)
+            is_service = False
+            for item in cursor:
+                search_filter = dict(project=item['_id'], service=ObjectId(get_view_args()))
+                sprojects = count_collection("sprojects", search_filter)
+                if sprojects > 0:
+                    is_service = True
+                    break
+            if not is_service:
+                return respond_json(create_message_error(401, 'NO_AUTORIZED'), status=401)
+        elif role == Provider:
+            if get_authorize(ObjectId(decode_jwt['user_id']), ObjectId(r['provider'])) == 401:
+                return respond_json(create_message_error(401, 'NO_AUTORIZED'), status=401)
+        else:
+            return respond_json(create_message_error(403, ''), status=403)
         return r
     return post_function
 
@@ -64,8 +87,7 @@ def get_authorize(a, b):
     else:
         return 401
 
+
 def get_role_user(user_id):
     u = User()
     return u.get(dict(_id=ObjectId(user_id)))
-
-
