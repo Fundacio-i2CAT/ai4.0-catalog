@@ -50,8 +50,7 @@ class AnellaRes(Resource):
         try:
             obj = self._cls.objects.get(id=ObjectId(id))
             return obj
-            # return self._cls.objects.get(pk=id)
-        except DoesNotExist,e:
+        except DoesNotExist:
             pass
 
     def _validate(self, obj):
@@ -296,6 +295,10 @@ def count_collection(collection, values):
 
 def find_in_collection(collection, search_filter):
     return get_db(_cfg.database__database_name)[collection].find(search_filter)
+
+
+def find_one_in_collection(collection, search_filter):
+    return get_db(_cfg.database__database_name)[collection].find_one(search_filter)
 
 
 def get_int(variable):

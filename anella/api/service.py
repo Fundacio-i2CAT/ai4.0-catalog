@@ -135,7 +135,7 @@ class VMImageRes(Resource):
 
 
 class ServiceConsumerParamsRes(ColRes):
-    @after_function
+    @after_function('services')
     def get(self, id):
         try:
             service = get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(id)})

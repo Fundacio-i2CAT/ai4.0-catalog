@@ -62,36 +62,45 @@ def after_get_permission(model):
     return security
 
 
-def after_function(fn):
-    @wraps(fn)
-    def post_function(*args, **kwargs):
-        r = fn(*args, **kwargs)
-        if r['status'] != 200:
-            return respond_json(r, r['status'])
-        decode_jwt = decode_token(get_token())
-        role = role_user.get(decode_jwt['role'])
-        if role == Client:
-            ''' hemos de buscar los proyectos de los clientes,
-            si tiene acceso al servicio que solicitan '''
-            id_client = ObjectId(decode_jwt['user_id'])
-            search_filter = dict(client=id_client)
-            cursor = find_in_collection("projects", search_filter)
-            is_service = False
-            for item in cursor:
-                search_filter = dict(project=item['_id'], service=ObjectId(get_view_args()))
-                sprojects = count_collection("sprojects", search_filter)
-                if sprojects > 0:
-                    is_service = True
-                    break
-            if not is_service:
-                return respond_json(create_message_error(401, 'NO_AUTORIZED'), status=401)
-        elif role == Provider:
-            if get_authorize(ObjectId(decode_jwt['user_id']), ObjectId(r['provider'])) == 401:
-                return respond_json(create_message_error(401, 'NO_AUTORIZED'), status=401)
-        else:
-            return respond_json(create_message_error(403, ''), status=403)
-        return r['response']
-    return post_function
+def after_function(cls):
+    def inner_after_function(fn):
+        @wraps(fn)
+        def post_function(*args, **kwargs):
+            r = fn(*args, **kwargs)
+            if r['status'] != 200:
+                return respond_json(r, r['status'])
+            decode_jwt = decode_token(get_token())
+            role = role_user.get(decode_jwt['role'])
+            if role == Client:
+                ''' hemos de buscar los proyectos de los clientes,
+                si tiene acceso al servicio que solicitan '''
+                id_client = ObjectId(decode_jwt['user_id'])
+                search_filter = dict(client=id_client)
+                cursor = find_in_collection("projects", search_filter)
+                is_service = False
+                for item in cursor:
+                    search_filter = define_filter(cls, item['_id'])
+                    sprojects = count_collection("sprojects", search_filter)
+                    if sprojects > 0:
+                        is_service = True
+                        break
+                if not is_service:
+                    return respond_json(create_message_error(401, 'NO_AUTORIZED'), status=401)
+            elif role == Provider:
+                if get_authorize(ObjectId(decode_jwt['user_id']), ObjectId(r['provider'])) == 401:
+                    return respond_json(create_message_error(401, 'NO_AUTORIZED'), status=401)
+            else:
+                return respond_json(create_message_error(403, ''), status=403)
+            return r['response']
+        return post_function
+    return inner_after_function
+
+
+def define_filter(cls, item):
+    if cls == 'services':
+        return dict(project=item, service=ObjectId(get_view_args()))
+    elif cls == 'projects':
+        return dict(project=item)
 
 
 def get_authorize(a, b):

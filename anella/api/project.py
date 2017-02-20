@@ -13,8 +13,9 @@ from anella import configuration as _cfg
 import json
 from anella.model.project import STATUS
 from anella.security.auhorize import get_permission, after_get_permission
-from anella.api.utils import regex_name
+from anella.api.utils import regex_name, find_one_in_collection
 from datetime import datetime
+from anella.security.auhorize import after_function
 
 def services_to_json(sprojects):
     sitems=[]
@@ -150,6 +151,7 @@ class ProjectStateRes(ProjectRes):
         self.orch = Orchestrator(debug=False)
         self.spres = SProjectRes()
         self.consumer_params = None
+        self.project = Project()
 
 
     def _set_state(self, services, state):
@@ -281,24 +283,28 @@ class ProjectStateRes(ProjectRes):
             return dict(status_code=self.orch.req.status_code, status=project_status,
                         state=STATES[project_status], runtime_params=data['runtime_params'])
 
+    @after_function('projects')
     def get(self, id):
         # import pdb;pdb.set_trace()
         self.project = self._find_obj(id)
+        sprojects = find_one_in_collection('sprojects', dict(project=ObjectId(id)))
+        print 'SPROJECTS %s ' % sprojects
         if not self.project:
-            return error_api( msg='Error: wrong project id in request.', status=404 )
+            return error_api(msg='Error: wrong project id in request.', status=404)
         status = self.project.get_status()
         if status < CONFIRMED:
-            response = dict(state= STATES[status], status=status, project_id=id)
-            return respond_json( response, status=200)
+            response = dict(state=STATES[status], status=status, project_id=id)
+            return dict(response=response, status=200, provider=str(sprojects['provider']))
 
         resp = self._get_state(self.project.services)
         if resp['status_code'] not in (200, 201):
-            return respond_json(resp, status=resp['status_code'])
+            return dict(response=resp, status=resp['status_code'])
         if resp['state']:
-            return respond_json({"status": resp["status"], "state": resp['state'], "project_id": id}, status=200)
+            response = dict(status=resp["status"], state=resp['state'], project_id=id)
+            return dict(response=response, status=200, provider=str(sprojects['provider']))
         else:
             response = dict( state='CONFIRMED', status=3, project_id=id)
-            return respond_json(response, status=200)
+            return dict(response=response, status=200, provider=str(sprojects['provider']))
 
     def put(self, id):
         # import pdb;pdb.set_trace()
