@@ -10,6 +10,7 @@ from flask_restful  import Resource
 
 from anella.common import *
 from anella import configuration as _cfg
+import re
 
 
 class AnellaRes(Resource):
@@ -67,7 +68,6 @@ class ColRes(AnellaRes):
         for name,value in values.items():
             if name not in self.filter_fields:
                 raise KeyError("Parameter '%s' not in filters." % name)
-
             field = self._cls._fields.get(name)
             if isinstance(field, (ReferenceField, GenericReferenceField)):
                 filter[name] = ObjectId(value)
@@ -78,7 +78,6 @@ class ColRes(AnellaRes):
 
             else:
                 filter[name] = value
-
         return filter
 
     def post(self):
@@ -100,8 +99,7 @@ class ColRes(AnellaRes):
         except Exception,e:
             return error_api( msg=str(e) )
 
-    def _get_items(self, skip=0, limit=1000):
-        values = get_args().copy() # args are inmutable
+    def _get_items(self, skip=0, limit=1000, values={}):
         filter = self._filter_from_inputs(values)
         cursor = get_db(_cfg.database__database_name)[self.collection].find( filter, skip=skip, limit=limit )
         return [item for item in cursor ]
@@ -140,29 +138,20 @@ class ItemRes(AnellaRes):
            
     def put(self, id):
         try:
-            data = get_json()
-            # item = self._item_from_json(data)
-            # result = get_db()[self.collection].update_one({'_id':ObjectId(id)}, 
-            #                                               {'$set' :item } )
-            # # v2 get_db()[self.collection].update({'_id':ObjectId(id)}, {'$set': item } )
-            # if not result.matched_count:
-            #     response = dict( status='fail', msg='%s not updated' % self.name,)
-            #     return respond_json( response, status=400)
-
-            # ME Validation
-            obj = self._find_obj(id)
-            obj = self._obj_from_json(data, obj)
-            valid_error = self._validate(obj)
-            if valid_error:
-                return error_api( msg='%s: %s' % (self.name,valid_error))
-
-            obj.save()
-
-            response = dict( status='ok', msg='%s updated' % self.name )
-            return respond_json( response, status=200)
+            data = dict(get_json())
+            resp = regex_name(data)
+            if resp is not None: return resp
+            item = get_db(_cfg.database__database_name)[self.collection]. \
+                update_one({'_id': ObjectId(id)},
+                           {'$set': data}, upsert=False)
+            if item.matched_count == 1:
+                response = respond_json(dict(id=id, message="Updated correctly"))
+            else:
+                response = respond_json(dict(id=id, message="Not updated"), status=404)
+            return response
 
         except Exception,e:
-            return error_api( msg=str(e) )
+            return respond_json(dict(id=id, message=str(e)), status=404)
     
     def get(self, id):
         item = self._find_item(id)
@@ -171,6 +160,12 @@ class ItemRes(AnellaRes):
 
         data = self._item_to_json(item)
         return data
+
+    def _get_items(self, skip=0, limit=1000, values={}, order_by="created_at"):
+        cursor = get_db(_cfg.database__database_name)[self.collection].find(values, skip=skip, limit=limit )\
+                            .sort(order_by, -1)
+        return [item for item in cursor]
+
 
 def item_to_json(item, fields):
     js_item = {}
@@ -183,12 +178,10 @@ def item_to_json(item, fields):
        elif isinstance(data, datetime):
            # js_data = str(data)
            js_data = data.isoformat()
-
        else:
            js_data = data
 
        js_item[field]= js_data
-
     return js_item
 
 def item_from_json(data, cls, fields=None):
@@ -288,10 +281,30 @@ def create_response_data(data):
         return respond_json(data.text, status=data.status_code)
 
 
-def create_message_error(status_code, code, status):
+def count_collection(collection, values):
+    return get_db(_cfg.database__database_name)[collection].find(values).count()
+
+
+def get_int(variable):
+    _i = 0
+    if variable is not None: _i = int(variable)
+    return _i
+
+
+def create_message_error(status_code, code, status=""):
     data = get_db(_cfg.database__database_name)['errors'].find_one({'code': code})
     if data is None:
         data = {"i18n": {"ca": "S'ha produït un error inesperat",
                           "es": "Se ha producido un error inesperado"}}
     response = dict(status_code=status_code, code=code, message=data['i18n'], status=status)
     return response
+
+
+def regex_name(item):
+    response = None
+    if 'name' in item:
+        if re.search('[¿?<>º"!·$%&/()=]', item['name']):
+            msg = create_message_error(400, 'NAME_INVALID')
+            response = respond_json(msg, status=400)
+    return response
+

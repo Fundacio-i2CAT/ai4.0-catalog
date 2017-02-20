@@ -95,7 +95,7 @@ class Project(Document, Base):
     description = StringField()
     sector = StringField(choices=ANELLA_SECTORS)
 
-    client = ReferenceField(Client)
+    client = ReferenceField(User)
     user_roles = DictField()
     services = ListField(ReferenceField(SProject))
 
