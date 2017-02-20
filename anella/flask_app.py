@@ -81,9 +81,10 @@ def add_resources(api):
     api.add_resource(ProjectUpdateStateRes, '/api/project/<id>/state')
     api.add_resource(ProjectOrchCallbackRes, '/api/projects/callback', methods=['POST'])
 
-    from anella.api.project import SProjectRes, SProjectsRes
+    from anella.api.project import SProjectRes, SProjectsRes, SProjectStatusRes
     api.add_resource(SProjectsRes, '/api/sprojects')
     api.add_resource(SProjectRes, '/api/sprojects/<id>')
+    api.add_resource(SProjectStatusRes, '/api/sprojects/status')
 
     from anella.api.register import RegisterRes
     api.add_resource(RegisterRes, '/api/register')
