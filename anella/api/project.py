@@ -575,7 +575,7 @@ class ProviderSProjectsRes(SProjectsRes):
         # status = int(values and values.pop('status', 0)) or None
         filter = self._filter_from_inputs(values)
         filter['provider'] = ObjectId(self.provider_id)
-        cursor = get_db(_cfg.database__database_name)['sprojects'].find(filter, skip=skip, limit=limit)
+        cursor = get_db(_cfg.database__database_name)['sprojects'].find(filter, skip=skip, limit=limit).sort('created_at', -1)
         return [item for item in cursor]
 
     def _items_to_json(self, items):
