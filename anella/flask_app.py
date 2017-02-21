@@ -78,7 +78,7 @@ def add_resources(api):
     api.add_resource(ClientProjectsRes, '/api/clients/<id>/projects')
     api.add_resource(ProviderSProjectsRes, '/api/providers/<id>/projects')
     api.add_resource(ProjectStateRes, '/api/projects/<id>/state')
-    api.add_resource(ProjectUpdateStateRes, '/api/project/<id>/state')
+    api.add_resource(ProjectUpdateStateRes, '/api/project/<id>/state', methods=['PUT'])
     api.add_resource(ProjectOrchCallbackRes, '/api/projects/callback', methods=['POST'])
 
     from anella.api.project import SProjectRes, SProjectsRes, SProjectStatusRes
