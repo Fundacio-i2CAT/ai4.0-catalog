@@ -18,18 +18,20 @@ DEPLOYED=6
 FAILED=7
 DISABLED=8
 UNKNOWN=9
+DENIED=10
 
 STATUS = (
-    ( CREATED,		u'CREATED' ),
-    ( SAVED,		u'SAVED' ),
-    ( PENDING,	 	u'PENDING' ),
-    ( CONFIRMED, 	u'CONFIRMED' ),
-    ( PROVISIONED, 	u'PROVISIONED' ),
-    ( RUNNING, 		u'RUNNING' ),
-    ( DEPLOYED, 	u'DEPLOYED' ),
-    ( FAILED, 		u'FAILED' ),
-    ( DISABLED, 	u'DISABLED' ),
-    ( UNKNOWN, 	    u'UNKNOWN' )
+    (CREATED,		u'CREATED'),
+    (SAVED,		    u'SAVED'),
+    (PENDING,	 	u'PENDING'),
+    (CONFIRMED, 	u'CONFIRMED'),
+    (PROVISIONED, 	u'PROVISIONED'),
+    (RUNNING, 		u'RUNNING'),
+    (DEPLOYED, 	    u'DEPLOYED'),
+    (FAILED, 		u'FAILED'),
+    (DISABLED, 	    u'DISABLED'),
+    (UNKNOWN, 	    u'UNKNOWN'),
+    (DENIED,        u'DENIED')
 )
 
 STATES = [status[1] for status in STATUS]
