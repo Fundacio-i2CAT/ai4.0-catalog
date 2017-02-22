@@ -22,8 +22,14 @@ cls_dict = {
 class Authenticator(object):
 
     def __init__(self):
-        self.root_path='http://%s:%s/LmpApiI2cat/' % (get_cfg('auth__host'), get_cfg('auth__port'))
+        self.root_path='https://%s:%s/LmpApiI2cat/1.0' % (get_cfg('auth__host'), get_cfg('auth__port'))
         self.session = Session()
+        with open(get_cfg('auth__oauth')) as fhandle:
+            self.authorization = json.load(fhandle)
+        self.session.headers.update(self.authorization['headers'])
+        # Waiting for Eurecat's certificate ...
+        #    meanwhile verification disabled
+        self.session.verify = False
         # For debugging purposes
         self.r_data = None
         self.path = None

@@ -1,3 +1,4 @@
+keys/oauth_eurecat.json
 venv/*
 *.pyc
 */*.pyc
