@@ -11,7 +11,7 @@ class BillingRes(ItemRes):
         self.orch = Orchestrator()
 
     def get(self, id):
-        self.project = find_one_in_collection(self.project.cls, {"_id": ObjectId(id)})
+        self.project = find_one_in_collection('projects', {"_id": ObjectId(id)})
         sproject = find_one_in_collection('sprojects', {"project": self.project['_id']})
         instance = find_one_in_collection('instances', {"sproject": sproject["_id"]})
         if instance is not None:
