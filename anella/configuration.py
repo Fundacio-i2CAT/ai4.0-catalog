@@ -23,6 +23,7 @@ auth__eurecat = None
 # Orchestrator Manager Service
 orch__host = None
 orch__port = None
+orch__url = None
 
 # Mail
 mail__from = None

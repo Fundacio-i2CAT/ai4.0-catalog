@@ -25,6 +25,7 @@ anella:
     orch: # Orchestrator service manager
         host: 127.0.0.1
         port: 8082
+        url: /orchestrator/api/v0.1/
     mail:
         from: anella.suport@gmail.com
         to: info@anellaindustrial.cat
