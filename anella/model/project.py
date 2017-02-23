@@ -87,10 +87,12 @@ class SProject(Document, Base):
 
 
 class Project(Document, Base):
+
+    def __init__(self):
+        self.cls = 'projects'
     """
     """
     meta = {'allow_inheritance': True, 'collection': 'projects'}
-
     # Collection fields
     name = StringField(max_length=40, required=True, unique=True)
     summary = StringField(max_length=120)

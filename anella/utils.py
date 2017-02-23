@@ -88,6 +88,7 @@ def load_config(configfile, clear_db_config=False):
 
         cfg.orch__host = yaml_config['anella']['orch']['host']
         cfg.orch__port = yaml_config['anella']['orch']['port']
+        cfg.orch__url = yaml_config['anella']['orch']['url']
 
         cfg.mail__from = yaml_config['anella']['mail']['from']
         cfg.mail__to = yaml_config['anella']['mail']['to']

@@ -89,6 +89,10 @@ def add_resources(api):
     from anella.api.register import RegisterRes
     api.add_resource(RegisterRes, '/api/register')
 
+    from anella.api.billing import BillingRes
+    api.add_resource(BillingRes, '/api/billing/<id>', methods=['GET']) #id_project
+
+
 def add_rules(app):
     """
     """
