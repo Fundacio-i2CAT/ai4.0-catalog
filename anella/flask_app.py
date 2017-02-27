@@ -84,7 +84,7 @@ def add_resources(api):
     from anella.api.project import SProjectRes, SProjectsRes, SProjectStatusRes
     api.add_resource(SProjectsRes, '/api/sprojects')
     api.add_resource(SProjectRes, '/api/sprojects/<id>')
-    api.add_resource(SProjectStatusRes, '/api/sprojects/status')
+    api.add_resource(SProjectStatusRes, '/api/sprojects/provider/<id>/status') #idprovider
 
     from anella.api.register import RegisterRes
     api.add_resource(RegisterRes, '/api/register')
