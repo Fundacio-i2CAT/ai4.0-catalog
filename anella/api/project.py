@@ -353,6 +353,7 @@ class ProjectUpdateStateRes(ProjectRes):
     def _update_state(self, services, state):
         # Services are items (not obj)
         # import pdb;pdb.set_trace()
+        code = get_status(state)
         for sproject in services:
             item = self.spres._find_item(unicode(sproject.pk))
             instance = find_instance(unicode(item['_id']))
@@ -378,6 +379,8 @@ class ProjectUpdateStateRes(ProjectRes):
                             error_code = response['response']['code']
                         return create_message_error(response['status_code'],
                                                     error_code, code)
+            elif code in (1, 3):
+                update_status_project(sproject.id, code)
 
 
 class ClientProjectsRes(ProjectsRes):
