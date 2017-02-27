@@ -87,10 +87,6 @@ class SProject(Document, Base):
 
 
 class Project(Document, Base):
-
-#    Comentado pues rompe algo en las vistas de projects
-#    def __init__(self):
-#        self.cls = 'projects'
     """
     """
     meta = {'allow_inheritance': True, 'collection': 'projects'}

@@ -515,17 +515,17 @@ class SProjectRes(ItemRes):
         return respond_json(response, status=200)
 
 
-class SProjectStatusRes(SProjectsRes):
+class SProjectStatusRes(SProjectRes):
     collection = 'sprojects'
     _cls = SProject
     name = 'SProject'
     fields = 'project,service,context_type,context,created_at'.split(',')
 
-    def get(self):
+    def get(self, id):
         item = []
         limit = get_int(get_arg('limit'))
         skip = get_int(get_arg('skip'))
-        _filter = self.get_status()
+        _filter = self.get_status(id)
         result = super(SProjectStatusRes, self)._get_items(skip * limit, limit, _filter)
         for sproject in result:
             sitems = []
@@ -544,7 +544,7 @@ class SProjectStatusRes(SProjectsRes):
                         result=item)
         return respond_json(response, status=200)
 
-    def get_status(self):
+    def get_status(self, id):
         if get_arg('status') is None:
             return {}
         else:
@@ -552,7 +552,8 @@ class SProjectStatusRes(SProjectsRes):
             nums = []
             for x in lst:
                 nums.append(int(x))
-            return {'status': {'$in': nums}}
+            return {'provider': ObjectId(id),
+                    'status': {'$in': nums}}
 
 
 class ProviderSProjectsRes(SProjectsRes):
