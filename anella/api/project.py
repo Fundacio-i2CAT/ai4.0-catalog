@@ -379,7 +379,7 @@ class ProjectUpdateStateRes(ProjectRes):
                             error_code = response['response']['code']
                         return create_message_error(response['status_code'],
                                                     error_code, code)
-            elif code in (1, 3):
+            elif code in (1, 3, 8):
                 update_status_project(sproject.id, code)
 
 
