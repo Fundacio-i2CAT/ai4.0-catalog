@@ -7,7 +7,6 @@ from anella.model.project import Project, SProject, SAVED, DISABLED, CONFIRMED, 
     ServiceDescription, Provider
 from anella.model.instance import Instance
 from anella.model.service import VMImage
-from flask_restful import abort
 
 from anella.orch import Orchestrator
 from anella.api.utils import regex_name, get_int, Resource, ColRes, ItemRes, \
