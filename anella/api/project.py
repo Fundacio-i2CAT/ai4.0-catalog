@@ -661,7 +661,8 @@ def update_project(project, item, is_new=False):
         try:
             project.save()
         except NotUniqueError:
-            return create_message_error(409, 'NOT_UNIQUE_PROJECT_NAME')
+            error_response = create_message_error(409, 'NOT_UNIQUE_PROJECT_NAME')
+            return respond_json(error_response, status=409)
 
         services = []
         if not sitems:
