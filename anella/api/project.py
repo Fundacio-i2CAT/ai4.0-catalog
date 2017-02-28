@@ -539,8 +539,12 @@ class SProjectStatusRes(SProjectRes):
             data['status'] = sproject['status']
             service = get_db(_cfg.database__database_name)['services'].find_one({'_id': sproject['service']})
             provider = get_db(_cfg.database__database_name)['users'].find_one({'_id': service['provider']})
+            print 'ID CLIENTE %s ' %project['client']
+            client = find_one_in_collection('users', {"_id": ObjectId(project['client'])})
             sitem['provider'] = item_to_json(provider, ['_id', 'user_name'])
             sitem['service'] = item_to_json(service, ['_id', 'name'])
+            print client
+            data['client'] = item_to_json(client, ['_id', 'user_name'])
             sitems.append(sitem)
             data['services'] = sitems
             item.append(data)
