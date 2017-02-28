@@ -7,6 +7,7 @@ from anella.model.project import Project, SProject, SAVED, DISABLED, CONFIRMED, 
     ServiceDescription, Provider
 from anella.model.instance import Instance
 from anella.model.service import VMImage
+from flask_restful import abort
 
 from anella.orch import Orchestrator
 from anella.api.utils import regex_name, get_int, Resource, ColRes, ItemRes, \
@@ -16,7 +17,7 @@ from anella import configuration as _cfg
 import json
 from anella.model.project import STATUS
 from datetime import datetime
-
+from mongoengine import NotUniqueError
 
 def services_to_json(sprojects):
     sitems = []
@@ -658,8 +659,11 @@ def update_project(project, item, is_new=False):
         for name in ['name', 'description', 'summary']:
             if name in item:
                 setattr(project, name, item[name])
+        try:
+            project.save()
+        except NotUniqueError:
+            return create_message_error(409, 'NOT_UNIQUE_PROJECT_NAME')
 
-        project.save()
         services = []
         if not sitems:
             project.delete()
