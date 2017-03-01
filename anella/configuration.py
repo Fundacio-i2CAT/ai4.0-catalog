@@ -19,6 +19,7 @@ database__database_repository = None
 auth__host = None
 auth__port = None
 auth__eurecat = None
+auth__oauth = None
 
 # Orchestrator Manager Service
 orch__host = None
