@@ -137,10 +137,10 @@ class VMImage:
         grid_fs_file.close()
         return data
 
-    def save_image_2(self):
+    def save_image_2(self, filename_uuid):
         image_file = self.grid_fs.new_file()
         image_file.filename = self.name_image
-        file_path = '{0}{1}'.format(_cfg.repository__download, self.name_image)
+        file_path = '{0}{1}'.format(_cfg.repository__download, filename_uuid)
         with open(file_path) as file_:
             file_size = os.path.getsize(file_path)
             for chunk_start, chunk_size in self.get_chunks(file_size):
