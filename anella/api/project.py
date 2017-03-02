@@ -192,7 +192,7 @@ class ProjectStateRes(ProjectRes):
                     else:
                         context['vm_image'] = _cfg.repository__ip + context['name_image']
                 else:
-                    # Si no lo está. GUardamos la imagen en local
+                    # Si no lo está. Guardamos la imagen en local
                     context['vm_image'] = save_image_to_local(context['vm_image'], context['name_image'])
                 # guardada la imagen. Seguimos
                 context['consumer_params'] = self.consumer_params
@@ -720,8 +720,8 @@ def create_project(item):
 def save_image_to_local(vm_image, vm_name):
     image = VMImage(vm_name)
     image.id = ObjectId(vm_image)
-    image.get_image()
-    return _cfg.repository__ip + vm_name
+    name_id = image.get_image()
+    return _cfg.repository__ip + name_id
 
 
 def find_instance(id):

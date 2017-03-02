@@ -122,11 +122,13 @@ class VMImage:
 
     def get_image(self):
         grid_fs_file = self.grid_fs.find_one({'_id': ObjectId(self.id)})
-        file_path = '{0}{1}'.format(_cfg.repository__path, self.name_image)
+        name_id = '{0}.img'.format(grid_fs_file._id)
+        file_path = '{0}{1}'.format(_cfg.repository__path,name_id)
         image_file = open(file_path, 'w')
         for chunk in grid_fs_file:
             image_file.write(chunk)
         image_file.close()
+        return name_id
 
     def save_image(self):
         file_id = self.get_file_id()
