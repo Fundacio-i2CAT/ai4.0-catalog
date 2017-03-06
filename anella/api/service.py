@@ -169,10 +169,8 @@ class VMImageUnchunkedRes(Resource):
             outfile.close()
             md5sum = self.checksum_md5(filename)
             if data['md5sum'] == md5sum:
-                response = dict(md5="ok", name_image=filename_uuid)
-                vm_image = VMImage(data['filename'])
-                vm_image.save_image_2(filename_uuid)
-                os.remove(_cfg.repository__download + filename_uuid)
+                response = dict(md5="ok", name_image=data['filename'],
+                                filename_uuid=filename_uuid)
                 return respond_json(response, status=200)
             else:
                 # Devolvemos 409
@@ -200,8 +198,16 @@ class VMImageUnchunkedRes(Resource):
 class VMImageUploadBDRes(Resource):
     def post(self):
         data = get_json()
-        response = dict(vm_image=unicode('vm_image'), name_image=data['filename'])
-        return respond_json(response, status=200)
+        try:
+            vm_image = VMImage(data['filename'])
+            data_vm = vm_image.save_image_2(data['filename_uuid'])
+            os.remove(_cfg.repository__download + data['filename_uuid'])
+            response = dict(vm_image=unicode(data_vm), name_image=data['filename'])
+            return respond_json(response, status=200)
+        except Exception as e:
+            os.remove(_cfg.repository__download + data['filename'])
+            response = dict(status="nok", msg="Error to upload file: %s" % e)
+            return respond_json(response, status=500)
 
 class Flavors(ItemRes):
     def get(self, id):
