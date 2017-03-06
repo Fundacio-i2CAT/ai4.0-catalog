@@ -594,8 +594,12 @@ class ProjectOrchCallbackRes(ProjectsRes):
         instance_info = get_json()
         if 'image_path' in instance_info:
             try:
-                file_to_remove = '{0}/{1}'.format(_cfg.repository__path,
-                                                  instance_info['image_path'])
+                instance = get_db(_cfg.database__database_name)['instances'].find_one({'instance_id': instance_info['service_instance_id']})
+                sproject = get_db(_cfg.database__database_name)['sprojects'].find_one({'_id': ObjectId(instance['sproject'])})
+                service = get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(sproject['service'])})
+                image_path = '{0}.img'.format(str(service['context']['vm_image']))
+                file_to_remove = '{0}{1}'.format(_cfg.repository__path,
+                                                  image_path)
                 os.remove(file_to_remove)
             except:
                 respond_json({'message': 'Error removing {0}'.format(file_to_remove)}, status=500)
