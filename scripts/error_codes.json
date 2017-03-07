@@ -82,5 +82,26 @@
             "ca" : "No està autoritzat a veure la informació que sol.licita",
             "es" : "No està autorizado a ver la información que solicita"
         }
+    },
+    {
+        "code" : "NO_INSTANCES",
+        "i18n" : {
+            "ca" : "No hi ha cap instància de servei per poder consultar",
+            "es" : "No hay ninguna instancia de servicio para poder consultar"
+        }
+    },
+    {
+        "code" : "BAD_URL",
+        "i18n" : {
+            "ca" : "Url incorrecte",
+            "es" : "Url incorrecta"
+        }
+    },
+    {
+        "code" : "NOT_UNIQUE_PROJECT_NAME",
+        "i18n" : {
+            "ca" : "Ja existeix un projecte amb el mateix nom",
+            "es" : "Ya existe un proyecto con el mismo nombre"
+        }
     }
 ]
