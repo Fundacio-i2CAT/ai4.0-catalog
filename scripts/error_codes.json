@@ -103,5 +103,12 @@
             "ca" : "Ja existeix un projecte amb el mateix nom",
             "es" : "Ya existe un proyecto con el mismo nombre"
         }
+    },
+    {
+        "code" : "TOKEN_EXPIRED",
+        "i18n" : {
+            "ca" : "Ha expirat el token. Torni a iniciar sessió",
+            "es" : "Ha caducado el token. Vuelva a loguearse"
+        }
     }
 ]
