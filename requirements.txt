@@ -9,5 +9,5 @@ Flask-RESTful==0.3.5
 Flask-DebugToolbar==0.10.0
 requests==2.10.0
 Sphinx==1.4.2
-jwt=0.5.2
+jwt==0.5.2
 # -e .
