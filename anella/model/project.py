@@ -18,18 +18,20 @@ DEPLOYED=6
 FAILED=7
 DISABLED=8
 UNKNOWN=9
+DENIED=10
 
 STATUS = (
-    ( CREATED,		u'CREATED' ),
-    ( SAVED,		u'SAVED' ),
-    ( PENDING,	 	u'PENDING' ),
-    ( CONFIRMED, 	u'CONFIRMED' ),
-    ( PROVISIONED, 	u'PROVISIONED' ),
-    ( RUNNING, 		u'RUNNING' ),
-    ( DEPLOYED, 	u'DEPLOYED' ),
-    ( FAILED, 		u'FAILED' ),
-    ( DISABLED, 	u'DISABLED' ),
-    ( UNKNOWN, 	    u'UNKNOWN' )
+    (CREATED,		u'CREATED'),
+    (SAVED,		    u'SAVED'),
+    (PENDING,	 	u'PENDING'),
+    (CONFIRMED, 	u'CONFIRMED'),
+    (PROVISIONED, 	u'PROVISIONED'),
+    (RUNNING, 		u'RUNNING'),
+    (DEPLOYED, 	    u'DEPLOYED'),
+    (FAILED, 		u'FAILED'),
+    (DISABLED, 	    u'DISABLED'),
+    (UNKNOWN, 	    u'UNKNOWN'),
+    (DENIED,        u'DENIED')
 )
 
 STATES = [status[1] for status in STATUS]
@@ -88,14 +90,17 @@ class Project(Document, Base):
     """
     """
     meta = {'allow_inheritance': True, 'collection': 'projects'}
-
     # Collection fields
-    name = StringField(max_length=40, required=True, unique=True)
+    name = StringField(max_length=40, required=True)
     summary = StringField(max_length=120)
     description = StringField()
     sector = StringField(choices=ANELLA_SECTORS)
 
-    client = ReferenceField(User)
+    # Don't allow project name duplication for the same client
+    #     requires dropping the index name_1 of the mongodb projects
+    #     collection to allow different users
+    #     to have the same project name
+    client = ReferenceField(User, unique_with='name')
     user_roles = DictField()
     services = ListField(ReferenceField(SProject))
 

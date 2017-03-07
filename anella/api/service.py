@@ -17,6 +17,8 @@ from datetime import datetime
 from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId, create_message_error
 from anella.security.auhorize import get_permission, after_function
 from anella.model.user import Provider
+from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId
+import uuid
 
 
 class ServicesRes(ColRes):
@@ -163,7 +165,8 @@ class VMImageResourceRes(Resource):
 class VMImageUnchunkedRes(Resource):
     def post(self):
         data = get_json()
-        filename = '{0}{1}'.format(_cfg.repository__download, data['filename'])
+        filename_uuid = '{0}.img'.format(str(uuid.uuid4()))
+        filename = '{0}{1}'.format(_cfg.repository__download, filename_uuid)
         path_repository = '{0}{1}{2}'.format(_cfg.repository__download, data['uuid'], "*")
         try:
             outfile = open(filename, "w")
@@ -176,7 +179,8 @@ class VMImageUnchunkedRes(Resource):
             outfile.close()
             md5sum = self.checksum_md5(filename)
             if data['md5sum'] == md5sum:
-                response = dict(md5="ok", name_image=data['filename'])
+                response = dict(md5="ok", name_image=data['filename'],
+                                filename_uuid=filename_uuid)
                 return respond_json(response, status=200)
             else:
                 # Devolvemos 409
@@ -206,15 +210,14 @@ class VMImageUploadBDRes(Resource):
         data = get_json()
         try:
             vm_image = VMImage(data['filename'])
-            data_vm = vm_image.save_image_2()
-            os.remove(_cfg.repository__download + data['filename'])
+            data_vm = vm_image.save_image_2(data['filename_uuid'])
+            os.remove(_cfg.repository__download + data['filename_uuid'])
             response = dict(vm_image=unicode(data_vm), name_image=data['filename'])
             return respond_json(response, status=200)
         except Exception as e:
             os.remove(_cfg.repository__download + data['filename'])
             response = dict(status="nok", msg="Error to upload file: %s" % e)
             return respond_json(response, status=500)
-
 
 class Flavors(ItemRes):
     def get(self, id):

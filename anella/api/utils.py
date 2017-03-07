@@ -99,10 +99,10 @@ class ColRes(AnellaRes):
         except Exception,e:
             return error_api( msg=str(e) )
 
-    def _get_items(self, skip=0, limit=1000, values={}):
-        filter = self._filter_from_inputs(values)
-        cursor = get_db(_cfg.database__database_name)[self.collection].find( filter, skip=skip, limit=limit )
-        return [item for item in cursor ]
+    def _get_items(self, skip=0, limit=1000, values={}, order_by="created_at"):
+        cursor = get_db(_cfg.database__database_name)[self.collection].find(values, skip=skip, limit=limit )\
+                            .sort(order_by, -1)
+        return [item for item in cursor]
 
     def get(self):
         try:
@@ -299,7 +299,6 @@ def find_in_collection(collection, search_filter):
 
 def find_one_in_collection(collection, search_filter):
     return get_db(_cfg.database__database_name)[collection].find_one(search_filter)
-
 
 def get_int(variable):
     _i = 0

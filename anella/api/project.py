@@ -8,12 +8,14 @@ from anella.model.instance import Instance
 from anella.model.service import VMImage
 
 from anella.orch import Orchestrator
-from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api, item_to_json, create_message_error,update_status_project
+from anella.api.utils import Resource, get_int,\
+                                ColRes, ItemRes, respond_json, error_api, \
+                                    item_to_json, create_message_error,update_status_project
 from anella import configuration as _cfg
 import json
 from anella.model.project import STATUS
 from anella.security.auhorize import get_permission, after_get_permission
-from anella.api.utils import regex_name, find_one_in_collection
+from anella.api.utils import regex_name, find_one_in_collection, count_collection
 from datetime import datetime
 from anella.security.auhorize import after_function
 
@@ -526,6 +528,50 @@ class SProjectRes(ItemRes):
         self.sproject.save()
         response = dict( status='ok', msg="Service project state set to %s" % state )
         return respond_json( response, status=200)
+
+
+class SProjectStatusRes(SProjectRes):
+    collection = 'sprojects'
+    _cls = SProject
+    name = 'SProject'
+    fields = 'project,service,context_type,context,created_at'.split(',')
+
+    def get(self, id):
+        item = []
+        limit = get_int(get_arg('limit'))
+        skip = get_int(get_arg('skip'))
+        _filter = self.get_status(id)
+        result = super(SProjectStatusRes, self)._get_items(skip * limit, limit, _filter)
+        for sproject in result:
+            sitems = []
+            sitem = {}
+            project = find_one_in_collection('projects', {"services": {"$in": [ObjectId(sproject['_id'])]}})
+            data = item_to_json(project, ['_id', 'name', 'summary', 'description', 'client', 'created_at'])
+            data['sproject'] = str(sproject['_id'])
+            data['status'] = sproject['status']
+            service = find_one_in_collection('services', {'_id': sproject['service']})
+            provider = find_one_in_collection('users', {'_id': service['provider']})
+            client = find_one_in_collection('users', {"_id": ObjectId(project['client'])})
+            sitem['provider'] = item_to_json(provider, ['_id', 'user_name'])
+            sitem['service'] = item_to_json(service, ['_id', 'name'])
+            data['client'] = item_to_json(client, ['_id', 'user_name'])
+            sitems.append(sitem)
+            data['services'] = sitems
+            item.append(data)
+        response = dict(count=count_collection(self.collection, _filter), skip=skip, limit=limit,
+                        result=item)
+        return respond_json(response, status=200)
+
+    def get_status(self, id):
+        if get_arg('status') is None:
+            return {}
+        else:
+            lst = get_arg('status').split(',')
+            nums = []
+            for x in lst:
+                nums.append(int(x))
+            return {'provider': ObjectId(id),
+                    'status': {'$in': nums}}
 
 class ProviderSProjectsRes(SProjectsRes):
     filter_fields = 'provider,status'.split(',')

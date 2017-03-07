@@ -14,6 +14,8 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,PATCH,POST,DELETE')
     #   response.headers.add('Access-Control-Allow-Credentials', 'true')
+    # Black magic wsgi
+    response.status_code = response.status_code
     return response
 
 
