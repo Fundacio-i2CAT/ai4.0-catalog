@@ -281,6 +281,10 @@ def create_response_data(data):
         return respond_json(data.text, status=data.status_code)
 
 
+def get_token():
+    return get_request().headers.get('authorization', None)
+
+
 def count_collection(collection, values):
     return get_db(_cfg.database__database_name)[collection].find(values).count()
 

@@ -16,8 +16,8 @@ class UserRole(object):
     def __init__(self):
         self.id = None
         self.role = None
-        self.entity = None
-        self.email = None
+        #self.entity = None
+        #self.email = None
         self.user_name = None
         self.auth_id = None
 
