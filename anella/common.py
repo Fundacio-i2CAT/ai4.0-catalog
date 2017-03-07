@@ -74,7 +74,7 @@ def get_response():
     return request.response
 
 def get_path():
-    return request.path
+    return request.path.lower()
 
 def get_method():
     return request.method
