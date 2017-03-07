@@ -15,7 +15,8 @@ class Orchestrator(object):
 
     def __init__(self, debug=True, is_fake=False):
         if get_cfg('orch__host'):
-            self.root_path='http://%s:%s/orchestrator/api/v0.1/service/instance' % (get_cfg('orch__host'), get_cfg('orch__port'))
+            self.root_path='http://%s:%s%sservice/instance' % (get_cfg('orch__host'), get_cfg('orch__port')
+                                                               , get_cfg('orch__url'))
             self.is_fake=is_fake
         else:
             self.is_fake=True
@@ -73,18 +74,29 @@ class Orchestrator(object):
         return bool(self.req.status_code == 204)
 
     def get_flavors(self, pop_id):
-        path = 'http://%s:%s/orchestrator/api/v0.1/pop/%s/flavors' % (get_cfg('orch__host'), get_cfg('orch__port'), pop_id)
+        path = 'http://%s:%s%spop/%s/flavors' % (get_cfg('orch__host'), get_cfg('orch__port')
+                                                 , get_cfg('orch__url'), pop_id)
         data = get(path)
         return create_response_data(data)
 
     def get_pop(self):
-        path = 'http://%s:%s/orchestrator/api/v0.1/pop' % (get_cfg('orch__host'), get_cfg('orch__port'))
+        path = 'http://%s:%s%spop' % (get_cfg('orch__host'), get_cfg('orch__port')
+                                                           , get_cfg('orch__url'))
         data = get(path)
         return create_response_data(data)
 
     def exists(self, data):
-        path = 'http://%s:%s/orchestrator/api/v0.1/iscached/%s' % (get_cfg('orch__host'), get_cfg('orch__port'), data['pop_id'])
+        path = 'http://%s:%s%siscached/%s' % (get_cfg('orch__host'), get_cfg('orch__port'),
+                                              get_cfg('orch__url'), data['pop_id'])
         resp = post(path, json=data)
+        return resp
+
+    def get_billing(self, data):
+        path = 'http://%s:%s%sservice/instance/%s/billing/%s/%s' % \
+                                (get_cfg('orch__host'), get_cfg('orch__port'),
+                                 get_cfg('orch__url'), data['instance'],
+                                 data['start_date'], data['end_date'])
+        resp = get(path)
         return resp
 
 def print_resp(req, data=None):

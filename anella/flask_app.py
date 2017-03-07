@@ -78,15 +78,20 @@ def add_resources(api):
     api.add_resource(ClientProjectsRes, '/api/clients/<id>/projects')
     api.add_resource(ProviderSProjectsRes, '/api/providers/<id>/projects')
     api.add_resource(ProjectStateRes, '/api/projects/<id>/state')
-    api.add_resource(ProjectUpdateStateRes, '/api/project/<id>/state')
+    api.add_resource(ProjectUpdateStateRes, '/api/project/<id>/state', methods=['PUT'])
     api.add_resource(ProjectOrchCallbackRes, '/api/projects/callback', methods=['POST'])
 
-    from anella.api.project import SProjectRes, SProjectsRes
+    from anella.api.project import SProjectRes, SProjectsRes, SProjectStatusRes
     api.add_resource(SProjectsRes, '/api/sprojects')
     api.add_resource(SProjectRes, '/api/sprojects/<id>')
+    api.add_resource(SProjectStatusRes, '/api/sprojects/provider/<id>/status') #idprovider
 
     from anella.api.register import RegisterRes
     api.add_resource(RegisterRes, '/api/register')
+
+    from anella.api.billing import BillingRes
+    api.add_resource(BillingRes, '/api/billing/<id>', methods=['GET']) #id_project
+
 
 def add_rules(app):
     """
