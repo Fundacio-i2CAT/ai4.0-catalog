@@ -4,6 +4,8 @@ import jwt
 from anella.api.utils import respond_json, create_message_error
 from anella.common import get_path
 
+paths = ['/api/session', '/api/services','/api/services/types']
+
 
 def authorizate(fn):
     @wraps(fn)
@@ -16,7 +18,7 @@ def authorizate(fn):
             except (jwt.DecodeError, jwt.ExpiredSignatureError):
                 return respond_json(create_message_error(403, 'TOKEN_EXPIRED'),
                                     status=403)
-        elif get_path() != '/api/session':
+        elif get_path() not in paths:
             return respond_json(create_message_error(403, 'TOKEN_EXPIRED'),
                                 status=403)
         return fn(*args, **kwargs)
