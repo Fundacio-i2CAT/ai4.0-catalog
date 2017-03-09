@@ -16,6 +16,8 @@ from anella.orch import Orchestrator
 from datetime import datetime
 from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId
 import uuid
+from anella.security.authorize import get_exists_user, get_authorize
+from anella.model.user import Provider
 
 class ServicesRes(ColRes):
     collection = 'services'
@@ -49,6 +51,10 @@ class ServicesRes(ColRes):
     def _get_items(self, skip=0, limit=1000, **values):
         return super(ServicesRes, self)._get_items(skip, limit, dict(activated=True))
 
+    @get_exists_user()
+    def get(self):
+        return super(ServicesRes, self).get()
+
 
 class ServicesProviderRes(ItemRes):
     collection = 'services'
@@ -57,6 +63,8 @@ class ServicesProviderRes(ItemRes):
     fields = '_id,created_at,name,summary,service_type,provider,context,sectors,price_initial,price_x_hour,activated'.split(
         ',')
 
+    @get_exists_user()
+    @get_authorize('User.Provider', 'services', False, 'provider', True)
     def get(self, id):
         limit = get_int(get_arg('limit'))
         skip = get_int(get_arg('skip'))
@@ -110,8 +118,13 @@ class ServiceRes(ItemRes):
             sitem['provider'] = item_to_json(provider, ['_id', 'user_name'])
         return sitem
 
+    @get_exists_user()
+    @get_authorize('User.Provider', 'services', True, 'provider')
+    def get(self,id):
+        return super(ServiceRes, self).get(id)
 
 class ServiceTypesRes(Resource):
+    @get_exists_user()
     def get(self):
         return [dict(name=st[0], description=st[1][1]) for st in get_service_types()]
 
@@ -132,6 +145,8 @@ class VMImageRes(Resource):
 
 
 class ServiceConsumerParamsRes(ColRes):
+    @get_exists_user()
+    @get_authorize('User.Provider', 'services', True, 'provider')
     def get(self, id):
         service = get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(id)})
         if service is None:
@@ -210,12 +225,14 @@ class VMImageUploadBDRes(Resource):
             return respond_json(response, status=500)
 
 class Flavors(ItemRes):
+    @get_exists_user()
     def get(self, id):
         orch = Orchestrator(debug=False)
         return orch.get_flavors(id)
 
 
 class Pop(ItemRes):
+    @get_exists_user()
     def get(self):
         orch = Orchestrator(debug=False)
         return orch.get_pop()

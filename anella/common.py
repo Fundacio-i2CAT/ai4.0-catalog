@@ -94,6 +94,9 @@ def get_json():
 def get_referer():
     return request.referer
 
+def get_view_args():
+    return request.__dict__['view_args']['id']
+
 # Session & user commons
 
 def get_session():
