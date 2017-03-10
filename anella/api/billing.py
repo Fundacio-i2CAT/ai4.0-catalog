@@ -3,6 +3,7 @@ from anella.model.project import Project
 from anella.orch import Orchestrator
 from bson import ObjectId
 from anella.common import get_arg
+from anella.security.authorize import get_exists_user, get_authorize_projects
 
 
 class BillingRes(ItemRes):
@@ -10,6 +11,8 @@ class BillingRes(ItemRes):
         self.project = Project()
         self.orch = Orchestrator()
 
+    @get_exists_user()
+    @get_authorize_projects(None)
     def get(self, id):
         self.project = find_one_in_collection('projects', {"_id": ObjectId(id)})
         sproject = find_one_in_collection('sprojects', {"project": self.project['_id']})

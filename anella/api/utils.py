@@ -4,13 +4,12 @@ from datetime import datetime
 from mongoengine import *
 from mongoengine import ValidationError, NotUniqueError
 from bson import ObjectId, DBRef
-
 from flask import json, jsonify, make_response
 from flask_restful  import Resource
-
 from anella.common import *
 from anella import configuration as _cfg
 import re
+import jwt
 
 
 class AnellaRes(Resource):
@@ -284,6 +283,8 @@ def create_response_data(data):
 def get_token():
     return get_request().headers.get('authorization', None)
 
+def decode_token(jwt_token):
+    return jwt.decode(jwt_token, 'secret')
 
 def count_collection(collection, values):
     return get_db(_cfg.database__database_name)[collection].find(values).count()
