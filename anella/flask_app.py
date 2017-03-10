@@ -52,11 +52,11 @@ def add_resources(api):
     from anella.api.service import ServicesRes, ServiceRes, ServiceTypesRes, VMImageRes, \
         ServiceConsumerParamsRes, VMImageResourceRes, VMImageUnchunkedRes, VMImageUploadBDRes, \
         Flavors, Pop, ServicesProviderRes
-    # All access
+    # All access (No token)
     api.add_resource(ServicesRes, '/api/services', methods=['GET'])
-    # All access
+    # All access (No token)
     api.add_resource(ServiceTypesRes, '/api/services/types', methods=['GET'])
-    # Provider access
+    # Provider access (No token)
     api.add_resource(ServiceRes, '/api/services/<id>', methods=['GET', 'PUT'])
     # Provider access
     api.add_resource(ServicesProviderRes, '/api/services/provider/<id>', methods=['GET'])
