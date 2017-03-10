@@ -17,7 +17,7 @@ import json
 from anella.model.project import STATUS
 from datetime import datetime
 from mongoengine import NotUniqueError
-from anella.security.authorize import get_exists_user, get_authorize_projects, get_after_authorized
+from anella.security.authorize import get_exists_user, get_authorize_projects
 
 def services_to_json(sprojects):
     sitems = []
