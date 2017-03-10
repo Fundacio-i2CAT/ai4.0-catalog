@@ -21,9 +21,9 @@ def authorizate(fn):
                 jwt.decode(jwt_token, 'secret',
                            algorithms=['HS256'])
             except (jwt.DecodeError, jwt.ExpiredSignatureError):
-                return return_error_response(403, 'TOKEN_EXPIRED')
+                return respond_json(create_message_error(403, 'TOKEN_EXPIRED'),
+                                    status=403)
         return fn(*args, **kwargs)
-
     return decorated_view
 
 
