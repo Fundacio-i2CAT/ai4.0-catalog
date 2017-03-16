@@ -81,7 +81,7 @@ def add_resources(api):
     api.add_resource(ProjectsRes, '/api/projects', methods=['GET', 'POST'])
     api.add_resource(ProjectStatesRes, '/api/projects/states', methods=['GET'])
     # Access Provider and Client
-    api.add_resource(ProjectRes, '/api/projects/<id>', methods=['GET', 'PUT'])
+    api.add_resource(ProjectRes, '/api/projects/<id>', methods=['GET', 'PUT', 'DELETE'])
     # api.add_resource(ProjectServicesRes, '/api/projects/<id>/services', methods=['GET', 'POST'])
     api.add_resource(ClientProjectsRes, '/api/clients/<id>/projects', methods=['GET'])
     api.add_resource(ProviderSProjectsRes, '/api/providers/<id>/projects', methods=['GET'])
