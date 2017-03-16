@@ -26,6 +26,8 @@ class ServicesRes(ColRes):
         ',')
     filter_fields = 'name,keywords,sectors,activated'.split(',')
 
+    @get_exists_user('User.Provider')
+    @post_authorize('User.Provider', 'provider')
     def post(self):
         item = get_json()
         return create_service(item)
@@ -52,11 +54,6 @@ class ServicesRes(ColRes):
 
     def get(self):
         return super(ServicesRes, self).get()
-
-    @get_exists_user('User.Provider')
-    @post_authorize('User.Provider', 'provider')
-    def post(self):
-        return super(ServicesRes, self).post()
 
 
 class ServicesProviderRes(ItemRes):
