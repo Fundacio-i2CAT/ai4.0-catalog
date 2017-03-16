@@ -16,8 +16,7 @@ from anella.orch import Orchestrator
 from datetime import datetime
 from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId
 import uuid
-from anella.security.authorize import get_exists_user, get_authorize
-from anella.model.user import Provider
+from anella.security.authorize import get_exists_user, get_authorize, post_authorize
 
 class ServicesRes(ColRes):
     collection = 'services'
@@ -51,9 +50,13 @@ class ServicesRes(ColRes):
     def _get_items(self, skip=0, limit=1000, **values):
         return super(ServicesRes, self)._get_items(skip, limit, dict(activated=True))
 
-    #@get_exists_user()
     def get(self):
         return super(ServicesRes, self).get()
+
+    @get_exists_user('User.Provider')
+    @post_authorize('User.Provider', 'provider')
+    def post(self):
+        return super(ServicesRes, self).post()
 
 
 class ServicesProviderRes(ItemRes):
@@ -63,7 +66,7 @@ class ServicesProviderRes(ItemRes):
     fields = '_id,created_at,name,summary,service_type,provider,context,sectors,price_initial,price_x_hour,activated'.split(
         ',')
 
-    @get_exists_user()
+    @get_exists_user(None)
     @get_authorize('User.Provider', 'services', False, 'provider', True)
     def get(self, id):
         limit = get_int(get_arg('limit'))
@@ -130,6 +133,7 @@ class ServiceTypesRes(Resource):
 
 
 class VMImageRes(Resource):
+    @get_exists_user('User.Provider')
     def post(self):
         try:
             _file = request.files['file']
@@ -145,7 +149,7 @@ class VMImageRes(Resource):
 
 
 class ServiceConsumerParamsRes(ColRes):
-    @get_exists_user()
+    @get_exists_user(None)
     @get_authorize('User.Provider', 'services', True, 'provider')
     def get(self, id):
         service = get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(id)})
@@ -161,6 +165,7 @@ class ServiceConsumerParamsRes(ColRes):
 
 
 class VMImageResourceRes(Resource):
+    @get_exists_user('User.Provider')
     def post(self):
         _file = request.files['file']
         filename = secure_filename(_file.filename)
@@ -168,6 +173,7 @@ class VMImageResourceRes(Resource):
 
 
 class VMImageUnchunkedRes(Resource):
+    @get_exists_user('User.Provider')
     def post(self):
         data = get_json()
         filename_uuid = '{0}.img'.format(str(uuid.uuid4()))
@@ -211,6 +217,7 @@ class VMImageUnchunkedRes(Resource):
 
 
 class VMImageUploadBDRes(Resource):
+    @get_exists_user('User.Provider')
     def post(self):
         data = get_json()
         try:
@@ -225,14 +232,14 @@ class VMImageUploadBDRes(Resource):
             return respond_json(response, status=500)
 
 class Flavors(ItemRes):
-    @get_exists_user()
+    @get_exists_user(None)
     def get(self, id):
         orch = Orchestrator(debug=False)
         return orch.get_flavors(id)
 
 
 class Pop(ItemRes):
-    @get_exists_user()
+    @get_exists_user(None)
     def get(self):
         orch = Orchestrator(debug=False)
         return orch.get_pop()

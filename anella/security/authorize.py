@@ -6,7 +6,8 @@ from bson.objectid import ObjectId
 from anella.api.utils import respond_json, decode_token, \
     create_message_error, find_one_in_collection, count_collection
 from anella.model.user import Provider, Client, User
-from anella.common import get_view_args
+from anella.common import get_view_args,get_data
+import json
 
 role_user = {'User.Client': Client,
              'User.Provider': Provider}
@@ -33,7 +34,7 @@ Comprobamos que el usuario exista
 '''
 
 
-def get_exists_user():
+def get_exists_user(model):
     def security(fn):
         @wraps(fn)
         def decorated(*args, **kwargs):
@@ -44,6 +45,9 @@ def get_exists_user():
                                                             "activated": True})
                     if data is None:
                         return return_error_response(401, 'NO_AUTORIZED')
+                    if model is not None:
+                        if get_http_status_code(get_model(model), get_model(decode_jwt['role'])) == 401:
+                            return return_error_response(401, 'NO_AUTORIZED')
                 else:
                     return return_error_response(403, 'TOKEN_EXPIRED')
                 return fn(*args, **kwargs)
@@ -138,32 +142,27 @@ def get_authorize_projects(model, is_by_id=True, attribute=None, is_same_user=Fa
         return decorated
     return security
 
-'''
-def get_after_authorized(model):
+
+def post_authorize(model, field):
     def security(fn):
         @wraps(fn)
         def decorated(*args, **kwargs):
-            funct = fn(*args, **kwargs)
-            if funct['status'] != 200:
-                return respond_json(funct, funct['status'])
-            response = []
-            decode_jwt = decode_token(get_token())
-            user_model = get_model(decode_jwt['role'])
-            if get_http_status_code(ObjectId(decode_jwt['user_id']), ObjectId(get_view_args())) == 401:
-                return return_error_response(401, 'NO_AUTORIZED')
-            if get_http_status_code(get_model(model), get_model(decode_jwt['role'])) == 401:
-                return return_error_response(401, 'NO_AUTORIZED')
-            if user_model == Provider:
-                for item in funct['response']['result']:
-                    if item['provider'] == decode_jwt['user_id']:
-                        response.append(item)
-                funct['response']['result'] = response
-                funct['response']['count'] = count_collection('sprojects',
-                                                              {'provider': ObjectId(decode_jwt['user_id'])})
-            return funct
+            try:
+                decode_jwt = decode_token(get_token())
+                if decode_jwt:
+                    body = json.loads(get_data())[field]
+                    if get_http_status_code(ObjectId(decode_jwt['user_id']), ObjectId(body)) == 401:
+                        return return_error_response(401, 'NO_AUTORIZED')
+                    if model is not None:
+                        if get_http_status_code(get_model(model), get_model(decode_jwt['role'])) == 401:
+                            return return_error_response(401, 'NO_AUTORIZED')
+            except Exception as e:
+                print e
+                return return_error_response(403, '')
+            return fn(*args, **kwargs)
         return decorated
+
     return security
-'''
 
 
 def get_project(collection, filter):

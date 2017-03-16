@@ -11,7 +11,7 @@ class BillingRes(ItemRes):
         self.project = Project()
         self.orch = Orchestrator()
 
-    @get_exists_user()
+    @get_exists_user(None)
     @get_authorize_projects(None)
     def get(self, id):
         self.project = find_one_in_collection('projects', {"_id": ObjectId(id)})
