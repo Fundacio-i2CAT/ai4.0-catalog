@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from anella.common import get_db
-from anella.model.user import User, Administrator
-
+from anella.model.user import User
 from anella.api.utils import ColRes, ItemRes, item_to_json, respond_json, get_json, get_arg
 from anella import configuration as _cfg
 from requests import Session
 import json
+from anella.security.authorize import get_exists_user
 
 
 def get_num_page(page):
@@ -21,6 +21,7 @@ class UsersCrudRes(ColRes):
         self.root_path = '%s%s' % (_cfg.auth__eurecat, 'people')
         self.session = Session()
 
+    @get_exists_user('User.Administrator')
     def get(self):
         page = get_arg('page')
         path = self.root_path + '?page=' + get_num_page(page)
@@ -33,6 +34,7 @@ class UserCrudRes(ColRes):
         self.root_path = '%s%s' % (_cfg.auth__eurecat, 'people/')
         self.session = Session()
 
+    @get_exists_user('User.Administrator')
     def put(self, id):
         data = get_json()
         path = self.root_path + id
@@ -40,12 +42,14 @@ class UserCrudRes(ColRes):
         req = self.session.patch(path, headers={'Content-Type': 'application/json'}, json=data)
         return get_response(req)
 
+    @get_exists_user('User.Administrator')
     def patch(self, id):
         data = get_json()
         path = self.root_path + id
         req = self.session.patch(path, headers={'Content-Type': 'application/json'}, json=data)
         return get_response(req)
 
+    @get_exists_user('User.Administrator')
     def delete(self, id):
         data = get_json()
         path = self.root_path + id
