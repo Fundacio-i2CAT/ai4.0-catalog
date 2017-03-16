@@ -121,6 +121,11 @@ class ServiceRes(ItemRes):
     def get(self,id):
         return super(ServiceRes, self).get(id)
 
+    @get_exists_user(None)
+    @get_authorize('User.Provider', 'services', True, 'provider')
+    def put(self,id):
+        return super(ServiceRes, self).put(id)
+
 
 class ServiceTypesRes(Resource):
     def get(self):
