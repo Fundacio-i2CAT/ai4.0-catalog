@@ -17,7 +17,7 @@ import json
 from anella.model.project import STATUS
 from datetime import datetime
 from mongoengine import NotUniqueError
-from anella.security.authorize import get_exists_user, get_authorize_projects
+from anella.security.authorize import get_exists_user, get_authorize_projects, post_authorize
 
 def services_to_json(sprojects):
     sitems = []
@@ -73,7 +73,7 @@ def get_service_by_objectid(id_service):
 
 
 class ProjectStatesRes(Resource):
-    @get_exists_user()
+    @get_exists_user(None)
     def get(self):
         return [dict(status=st[0], name=st[1]) for st in STATUS]
 
@@ -92,10 +92,12 @@ class ProjectsRes(ColRes):
         item['services'] = services_to_json(services)
         return item_to_json(item, self.fields)
 
-    @get_exists_user()
+    @get_exists_user(None)
     def get(self):
         return ColRes.get(self)
 
+    @get_exists_user(None)
+    @post_authorize(None, 'client')
     def post(self):
         item = get_json()
         return create_project(item)
@@ -115,7 +117,7 @@ class ProjectRes(ItemRes):
         item['services'] = services_to_json(services)
         return item_to_json(item, self.fields)
 
-    @get_exists_user()
+    @get_exists_user(None)
     @get_authorize_projects(None)
     def get(self, id):
         return super(ProjectRes, self).get(id)
@@ -284,7 +286,7 @@ class ProjectStateRes(ProjectRes):
             return dict(status_code=self.orch.req.status_code, status=project_status,
                         state=STATES[project_status], runtime_params=data['runtime_params'])
 
-    @get_exists_user()
+    @get_exists_user(None)
     @get_authorize_projects(None)
     def get(self, id):
         # import pdb;pdb.set_trace()
@@ -394,7 +396,7 @@ class ProjectUpdateStateRes(ProjectRes):
 
 class ClientProjectsRes(ProjectsRes):
 
-    @get_exists_user()
+    @get_exists_user(None)
     @get_authorize_projects('User.Client', False, 'client', True)
     def get(self, id):
         self.client_id = id
@@ -536,7 +538,7 @@ class SProjectStatusRes(SProjectRes):
     name = 'SProject'
     fields = 'project,service,context_type,context,created_at'.split(',')
 
-    @get_exists_user()
+    @get_exists_user(None)
     @get_authorize_projects('User.Provider', is_same_user=True)
     def get(self, id):
         item = []
@@ -581,7 +583,7 @@ class SProjectStatusRes(SProjectRes):
 class ProviderSProjectsRes(SProjectsRes):
     filter_fields = 'provider,status'.split(',')
 
-    @get_exists_user()
+    @get_exists_user(None)
     @get_authorize_projects('User.Provider', False, 'provider', True)
     def get(self, id):
         # import pdb;pdb.set_trace()

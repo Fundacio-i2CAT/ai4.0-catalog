@@ -53,19 +53,22 @@ def add_resources(api):
         ServiceConsumerParamsRes, VMImageResourceRes, VMImageUnchunkedRes, VMImageUploadBDRes, \
         Flavors, Pop, ServicesProviderRes
     # All access (No token)
-    api.add_resource(ServicesRes, '/api/services', methods=['GET'])
+    api.add_resource(ServicesRes, '/api/services', methods=['GET', 'POST'])
     # All access (No token)
     api.add_resource(ServiceTypesRes, '/api/services/types', methods=['GET'])
     # Provider access (No token)
-    api.add_resource(ServiceRes, '/api/services/<id>', methods=['GET', 'PUT'])
+    api.add_resource(ServiceRes, '/api/services/<id>', methods=['GET'])
     # Provider access
     api.add_resource(ServicesProviderRes, '/api/services/provider/<id>', methods=['GET'])
     # Provider access
     api.add_resource(VMImageRes, '/api/services/vmimage', methods=['POST'])
     # Provider access
     api.add_resource(ServiceConsumerParamsRes, '/api/services/consumer/params/<id>', methods=['GET'])
+    # Provider access
     api.add_resource(VMImageResourceRes, '/api/services/vmimage/chunked', methods=['POST'])
+    # Provider access
     api.add_resource(VMImageUnchunkedRes, '/api/services/vmimage/unchunked', methods=['POST'])
+    # Provider access
     api.add_resource(VMImageUploadBDRes, '/api/services/vmimage/upload', methods=['POST'])
     api.add_resource(Flavors, '/api/services/flavors/<id>', methods=['GET'])
     api.add_resource(Pop, '/api/services/pop', methods=['GET'])
@@ -85,6 +88,7 @@ def add_resources(api):
     # Access Provider and Client
     api.add_resource(ProjectStateRes, '/api/projects/<id>/state', methods=['GET', 'PUT'])
     api.add_resource(ProjectUpdateStateRes, '/api/project/<id>/state', methods=['PUT'])
+    # Not secure, because is a call to orchestrator make to service_manager and it's necessary token in orchestrator
     api.add_resource(ProjectOrchCallbackRes, '/api/projects/callback', methods=['POST'])
 
     '''
