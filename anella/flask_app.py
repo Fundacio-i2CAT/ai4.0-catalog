@@ -62,7 +62,7 @@ def add_resources(api):
     api.add_resource(ServicesProviderRes, '/api/services/provider/<id>', methods=['GET'])
     # Provider access
     api.add_resource(VMImageRes, '/api/services/vmimage', methods=['POST'])
-    # Provider access
+    # Provider and Client access
     api.add_resource(ServiceConsumerParamsRes, '/api/services/consumer/params/<id>', methods=['GET'])
     # Provider access
     api.add_resource(VMImageResourceRes, '/api/services/vmimage/chunked', methods=['POST'])

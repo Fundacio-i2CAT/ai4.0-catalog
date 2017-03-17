@@ -150,7 +150,7 @@ class VMImageRes(Resource):
 
 class ServiceConsumerParamsRes(ColRes):
     @get_exists_user(None)
-    @get_authorize('User.Provider', 'services', True, 'provider')
+    @get_authorize(None, 'services', True, 'provider')
     def get(self, id):
         service = get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(id)})
         if service is None:
