@@ -79,16 +79,18 @@ def get_authorize(model, collection, is_by_id, attribute, is_same_user=False):
                     if is_same_user:
                         if get_http_status_code(ObjectId(decode_jwt['user_id']), ObjectId(get_view_args())) == 401:
                             return return_error_response(401, 'NO_AUTORIZED')
-                    if get_http_status_code(get_model(model), get_model(decode_jwt['role'])) == 401:
+                    if model is not None and \
+                            get_http_status_code(get_model(model), get_model(decode_jwt['role'])) == 401:
                         return return_error_response(401, 'NO_AUTORIZED')
-                    if is_by_id:
-                        filters = {"_id": ObjectId(get_view_args()),
-                                   attribute: ObjectId(decode_jwt['user_id'])}
-                    else:
-                        filters = {attribute: ObjectId(decode_jwt['user_id'])}
-                    data = find_one_in_collection(collection, filters)
-                    if data is None:
-                        return return_error_response(401, 'NO_AUTORIZED')
+                    if get_model(decode_jwt['role']) == Provider:
+                        if is_by_id:
+                            filters = {"_id": ObjectId(get_view_args()),
+                                       attribute: ObjectId(decode_jwt['user_id'])}
+                        else:
+                            filters = {attribute: ObjectId(decode_jwt['user_id'])}
+                        data = find_one_in_collection(collection, filters)
+                        if data is None:
+                            return return_error_response(401, 'NO_AUTORIZED')
             except Exception:
                 return return_error_response(403, '')
             return fn(*args, **kwargs)

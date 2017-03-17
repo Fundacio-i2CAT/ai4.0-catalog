@@ -57,12 +57,12 @@ def add_resources(api):
     # All access (No token)
     api.add_resource(ServiceTypesRes, '/api/services/types', methods=['GET'])
     # Provider access (No token)
-    api.add_resource(ServiceRes, '/api/services/<id>', methods=['GET'])
+    api.add_resource(ServiceRes, '/api/services/<id>', methods=['GET', 'PUT'])
     # Provider access
     api.add_resource(ServicesProviderRes, '/api/services/provider/<id>', methods=['GET'])
     # Provider access
     api.add_resource(VMImageRes, '/api/services/vmimage', methods=['POST'])
-    # Provider access
+    # Provider and Client access
     api.add_resource(ServiceConsumerParamsRes, '/api/services/consumer/params/<id>', methods=['GET'])
     # Provider access
     api.add_resource(VMImageResourceRes, '/api/services/vmimage/chunked', methods=['POST'])

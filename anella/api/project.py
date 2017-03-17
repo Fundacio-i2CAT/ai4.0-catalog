@@ -122,6 +122,8 @@ class ProjectRes(ItemRes):
     def get(self, id):
         return super(ProjectRes, self).get(id)
 
+    @get_exists_user(None)
+    @get_authorize_projects(None)
     def put(self, id):
         """ Modifies the project when not confirmed.
             Use Project/state othercase
@@ -137,6 +139,8 @@ class ProjectRes(ItemRes):
         item = get_json()
         return update_project(project, item)
 
+    @get_exists_user(None)
+    @get_authorize_projects(None)
     def delete(self, id):
         project = self._find_obj(id)
         if not project:
@@ -307,6 +311,8 @@ class ProjectStateRes(ProjectRes):
             response = dict(state='CONFIRMED', status=3, project_id=id)
             return respond_json(response, status=200)
 
+    @get_exists_user(None)
+    @get_authorize_projects(None)
     def put(self, id):
         # import pdb;pdb.set_trace()
         self.project = self._find_obj(id)
@@ -339,6 +345,8 @@ class ProjectUpdateStateRes(ProjectRes):
         self.orch = Orchestrator(debug=False)
         self.spres = SProjectRes()
 
+    @get_exists_user(None)
+    @get_authorize_projects(None)
     def put(self, id):
         # import pdb;pdb.set_trace()
         self.project = self._find_obj(id)

@@ -26,6 +26,8 @@ class ServicesRes(ColRes):
         ',')
     filter_fields = 'name,keywords,sectors,activated'.split(',')
 
+    @get_exists_user('User.Provider')
+    @post_authorize('User.Provider', 'provider')
     def post(self):
         item = get_json()
         return create_service(item)
@@ -52,11 +54,6 @@ class ServicesRes(ColRes):
 
     def get(self):
         return super(ServicesRes, self).get()
-
-    @get_exists_user('User.Provider')
-    @post_authorize('User.Provider', 'provider')
-    def post(self):
-        return super(ServicesRes, self).post()
 
 
 class ServicesProviderRes(ItemRes):
@@ -121,13 +118,16 @@ class ServiceRes(ItemRes):
             sitem['provider'] = item_to_json(provider, ['_id', 'user_name'])
         return sitem
 
-    #@get_exists_user()
-    #@get_authorize('User.Provider', 'services', True, 'provider')
     def get(self,id):
         return super(ServiceRes, self).get(id)
 
+    @get_exists_user(None)
+    @get_authorize('User.Provider', 'services', True, 'provider')
+    def put(self,id):
+        return super(ServiceRes, self).put(id)
+
+
 class ServiceTypesRes(Resource):
-    #@get_exists_user()
     def get(self):
         return [dict(name=st[0], description=st[1][1]) for st in get_service_types()]
 
@@ -150,7 +150,7 @@ class VMImageRes(Resource):
 
 class ServiceConsumerParamsRes(ColRes):
     @get_exists_user(None)
-    @get_authorize('User.Provider', 'services', True, 'provider')
+    @get_authorize(None, 'services', True, 'provider')
     def get(self, id):
         service = get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(id)})
         if service is None:
