@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from anella.common import get_db
+from anella.common import get_db, get_cfg
 from anella.model.user import User
 from anella.api.utils import ColRes, ItemRes, item_to_json, respond_json, get_json, get_arg
 from anella import configuration as _cfg
@@ -18,8 +18,14 @@ def get_num_page(page):
 
 class UsersCrudRes(ColRes):
     def __init__(self):
-        self.root_path = '%s%s' % (_cfg.auth__eurecat, 'people')
+        self.root_path='https://%s:%s/1.0/LmpApiI2cat/people/' % (get_cfg('auth__host'), get_cfg('auth__port'))
         self.session = Session()
+        with open(get_cfg('auth__oauth')) as fhandle:
+            self.authorization = json.load(fhandle)
+        self.session.headers.update(self.authorization['headers'])
+        # Waiting for Eurecat's certificate ...
+        #    meanwhile verification disabled
+        self.session.verify = False
 
     @get_exists_user('User.Administrator')
     def get(self):
