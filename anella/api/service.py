@@ -144,7 +144,7 @@ class VMImageRes(Resource):
                             vm_image_format=extension_file[1:])
             return respond_json(response, status=200)
         except Exception as e:
-            response = dict(status='nok', msg="Error %s %s" % (e, e.message))
+            response = dict(status='nok', msg="Error")
             return respond_json(response, status=400)
 
 
@@ -195,11 +195,11 @@ class VMImageUnchunkedRes(Resource):
                 return respond_json(response, status=200)
             else:
                 # Devolvemos 409
-                response = dict(status="nok", msg="Error to upload file. MD5 not equal: %s" % data['filename'])
+                response = dict(status="nok", msg="Error to upload file. MD5 not equal")
                 return respond_json(response, status=409)
         except Exception as e:
             self.delete_files_tmp(path_repository, filename)
-            response = dict(status="nok", msg="Error to upload file: %s" % e)
+            response = dict(status="nok", msg="Error to upload file")
             return respond_json(response, status=500)
 
     def checksum_md5(self, filename):
@@ -228,7 +228,7 @@ class VMImageUploadBDRes(Resource):
             return respond_json(response, status=200)
         except Exception as e:
             os.remove(_cfg.repository__download + data['filename'])
-            response = dict(status="nok", msg="Error to upload file: %s" % e)
+            response = dict(status="nok", msg="Error to upload file")
             return respond_json(response, status=500)
 
 class Flavors(ItemRes):
