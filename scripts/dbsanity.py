@@ -5,7 +5,7 @@
 from pymongo import MongoClient
 from bson import ObjectId, DBRef
 import sys
-sys.path.insert(0, '/home/alfonso/catalog/')
+sys.path.insert(0, '~/catalog/')
 from anella.model.project import STATES
 import sys
 import sys
