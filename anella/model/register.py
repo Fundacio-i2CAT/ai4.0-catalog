@@ -29,10 +29,16 @@ class RegisterEurecat(object):
 
 class Register(object):
     def __init__(self):
-        self.root_path = 'http://%s:%s/LmpApiI2cat/people' % (get_cfg('auth__host'), get_cfg('auth__port'))
-        self.entity_association_path = 'http://%s:%s/LmpApiI2cat/personEntityRelationships' % (get_cfg('auth__host'), get_cfg('auth__port'))
-        self.default_entity_path = 'http://%s:%s/LmpApiI2cat/entities/4' % (get_cfg('auth__host'), get_cfg('auth__port'))
+        self.root_path='https://%s:%s/1.0/LmpApiI2cat/people' % (get_cfg('auth__host'), get_cfg('auth__port'))
+        self.entity_association_path = 'https://%s:%s/1.0/LmpApiI2cat/personEntityRelationships' % (get_cfg('auth__host'), get_cfg('auth__port'))
+        self.default_entity_path = 'https://%s:%s/1.0/LmpApiI2cat/entities/4' % (get_cfg('auth__host'), get_cfg('auth__port'))
         self.session = Session()
+        with open(get_cfg('auth__oauth')) as fhandle:
+            self.authorization = json.load(fhandle)
+        self.session.headers.update(self.authorization['headers'])
+        # Waiting for Eurecat's certificate ...
+        #    meanwhile verification disabled
+        self.session.verify = False
         self.user = RegisterEurecat()
 
     def create(self, data):
@@ -50,8 +56,8 @@ class Register(object):
         }
         resp_association = self.session.post(self.entity_association_path,
                                              json=entity_association)
-        if resp_association.status_code in (200, 201):
-            self.send_email()
+        # if resp_association.status_code in (200, 201):
+        #     self.send_email()
         return create_response(resp.status_code, resp.text)
 
     def create_dict(self, data):
