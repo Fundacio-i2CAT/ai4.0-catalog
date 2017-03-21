@@ -74,7 +74,7 @@ def get_response():
     return request.response
 
 def get_path():
-    return request.path
+    return request.path.lower()
 
 def get_method():
     return request.method
@@ -93,6 +93,9 @@ def get_json():
 
 def get_referer():
     return request.referer
+
+def get_view_args():
+    return request.__dict__['view_args']['id']
 
 # Session & user commons
 

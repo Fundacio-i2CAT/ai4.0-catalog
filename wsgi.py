@@ -1,4 +1,5 @@
 from anella.flask_app import create_app
+from anella.security.authorize import authorizate
 
 app = create_app()
 
@@ -16,6 +17,12 @@ def after_request(response):
     # Black magic wsgi
     response.status_code = response.status_code
     return response
+
+
+@app.before_request
+@authorizate
+def before_request():
+    pass
 
 
 def bootstrap_app():

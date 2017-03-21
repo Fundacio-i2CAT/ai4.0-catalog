@@ -35,61 +35,76 @@ def add_resources(api):
 
     api.add_resource(SessionRes, '/api/session', methods=['POST', 'DELETE'])
     api.add_resource(SessionUserRes, '/api/session/user', methods=['GET'])
-
+    '''
     from anella.api.provider import ProvidersRes, ProviderRes, ProviderServicesRes, ProviderServicePublishRes
-    from anella.api.provider import  PartnerSectorsRes, PartnerTypesRes
     from anella.api.client import ClientsRes, ClientRes # , ClientServicesRes
-
     api.add_resource(ProvidersRes, '/api/providers')
-    api.add_resource(PartnerSectorsRes, '/api/providers/sectors', methods=['GET'])
     api.add_resource(ProviderRes, '/api/providers/<id>')
-    api.add_resource(ProviderServicesRes, '/api/providers/<id>/services', 
-                     methods=['GET'] )
+    api.add_resource(ProviderServicesRes, '/api/providers/<id>/services', methods=['GET'] )
     api.add_resource(ProviderServicePublishRes, '/api/providers/service/publish/<id>')
-
     api.add_resource(ClientsRes, '/api/clients')
-    api.add_resource(PartnerTypesRes, '/api/clients/types', methods=['GET'])
     api.add_resource(ClientRes, '/api/clients/<id>')
+    '''
+    from anella.api.provider import PartnerSectorsRes, PartnerTypesRes
+    api.add_resource(PartnerSectorsRes, '/api/providers/sectors', methods=['GET'])
+    api.add_resource(PartnerTypesRes, '/api/clients/types', methods=['GET'])
 
     from anella.api.service import ServicesRes, ServiceRes, ServiceTypesRes, VMImageRes, \
         ServiceConsumerParamsRes, VMImageResourceRes, VMImageUnchunkedRes, VMImageUploadBDRes, \
         Flavors, Pop, ServicesProviderRes
-
-    api.add_resource(ServicesRes, '/api/services')
+    # All access (No token)
+    api.add_resource(ServicesRes, '/api/services', methods=['GET', 'POST'])
+    # All access (No token)
     api.add_resource(ServiceTypesRes, '/api/services/types', methods=['GET'])
-    api.add_resource(ServiceRes, '/api/services/<id>')
-    api.add_resource(ServicesProviderRes, '/api/services/provider/<id>')
-    api.add_resource(VMImageRes, '/api/services/vmimage')
-    api.add_resource(ServiceConsumerParamsRes, '/api/services/consumer/params/<id>')
-    api.add_resource(VMImageResourceRes, '/api/services/vmimage/chunked')
-    api.add_resource(VMImageUnchunkedRes, '/api/services/vmimage/unchunked')
-    api.add_resource(VMImageUploadBDRes, '/api/services/vmimage/upload')
-    api.add_resource(Flavors, '/api/services/flavors/<id>')
-    api.add_resource(Pop, '/api/services/pop')
+    # Provider access (No token)
+    api.add_resource(ServiceRes, '/api/services/<id>', methods=['GET', 'PUT'])
+    # Provider access
+    api.add_resource(ServicesProviderRes, '/api/services/provider/<id>', methods=['GET'])
+    # Provider access
+    api.add_resource(VMImageRes, '/api/services/vmimage', methods=['POST'])
+    # Provider and Client access
+    api.add_resource(ServiceConsumerParamsRes, '/api/services/consumer/params/<id>', methods=['GET'])
+    # Provider access
+    api.add_resource(VMImageResourceRes, '/api/services/vmimage/chunked', methods=['POST'])
+    # Provider access
+    api.add_resource(VMImageUnchunkedRes, '/api/services/vmimage/unchunked', methods=['POST'])
+    # Provider access
+    api.add_resource(VMImageUploadBDRes, '/api/services/vmimage/upload', methods=['POST'])
+    api.add_resource(Flavors, '/api/services/flavors/<id>', methods=['GET'])
+    api.add_resource(Pop, '/api/services/pop', methods=['GET'])
 
     from anella.api.project import ProjectsRes, ProjectRes, ProjectServicesRes
     from anella.api.project import ClientProjectsRes, ProviderSProjectsRes
     from anella.api.project import ProjectStateRes, ProjectStatesRes, ProjectUpdateStateRes
     from anella.api.project import ProjectOrchCallbackRes
+    # Access Provider and Client
     api.add_resource(ProjectsRes, '/api/projects', methods=['GET', 'POST'])
-    api.add_resource(ProjectStatesRes, '/api/projects/states')
-    api.add_resource(ProjectRes, '/api/projects/<id>')
-    api.add_resource(ProjectServicesRes, '/api/projects/<id>/services')
-    api.add_resource(ClientProjectsRes, '/api/clients/<id>/projects')
-    api.add_resource(ProviderSProjectsRes, '/api/providers/<id>/projects')
-    api.add_resource(ProjectStateRes, '/api/projects/<id>/state')
+    api.add_resource(ProjectStatesRes, '/api/projects/states', methods=['GET'])
+    # Access Provider and Client
+    api.add_resource(ProjectRes, '/api/projects/<id>', methods=['GET', 'PUT', 'DELETE'])
+    # api.add_resource(ProjectServicesRes, '/api/projects/<id>/services', methods=['GET', 'POST'])
+    api.add_resource(ClientProjectsRes, '/api/clients/<id>/projects', methods=['GET'])
+    api.add_resource(ProviderSProjectsRes, '/api/providers/<id>/projects', methods=['GET'])
+    # Access Provider and Client
+    api.add_resource(ProjectStateRes, '/api/projects/<id>/state', methods=['GET', 'PUT'])
     api.add_resource(ProjectUpdateStateRes, '/api/project/<id>/state', methods=['PUT'])
+    # Not secure, because is a call to orchestrator make to service_manager and it's necessary token in orchestrator
     api.add_resource(ProjectOrchCallbackRes, '/api/projects/callback', methods=['POST'])
 
+    '''
     from anella.api.project import SProjectRes, SProjectsRes, SProjectStatusRes
     api.add_resource(SProjectsRes, '/api/sprojects')
     api.add_resource(SProjectRes, '/api/sprojects/<id>')
-    api.add_resource(SProjectStatusRes, '/api/sprojects/provider/<id>/status') #idprovider
+    '''
+    from anella.api.project import SProjectStatusRes
+    # Access Provider
+    api.add_resource(SProjectStatusRes, '/api/sprojects/provider/<id>/status', methods=['GET']) #idprovider
 
     from anella.api.register import RegisterRes
     api.add_resource(RegisterRes, '/api/register')
 
     from anella.api.billing import BillingRes
+    # Access Provider and Client
     api.add_resource(BillingRes, '/api/billing/<id>', methods=['GET']) #id_project
 
 
