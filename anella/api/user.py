@@ -39,6 +39,12 @@ class UserCrudRes(ColRes):
     def __init__(self):
         self.root_path = '%s%s' % (_cfg.auth__eurecat, 'people/')
         self.session = Session()
+        with open(_cfg.auth__oauth) as fhandle:
+            self.authorization = json.load(fhandle)
+        self.session.headers.update(self.authorization['headers'])
+        # Waiting for Eurecat's certificate ...
+        #    meanwhile verification disabled
+        self.session.verify = False
 
     @get_exists_user('User.Administrator')
     def put(self, id):

@@ -21,7 +21,7 @@ anella:
     auth: # Authentication service
         host: 84.88.76.5
         port: 8244
-        eurecat: https://84.88.76.5:8244/LmpApiI2cat/1.0/
+        eurecat: https://84.88.76.5:8244/1.0/LmpApiI2cat/
         oauth: keys/oauth_eurecat.json
     orch: # Orchestrator service manager
         host: 127.0.0.1
