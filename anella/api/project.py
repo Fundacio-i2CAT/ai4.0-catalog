@@ -400,7 +400,8 @@ class ProjectUpdateStateRes(ProjectRes):
                                                     error_code, code)
             elif code in (1, 3, 8):
                 update_status_project(sproject.id, code)
-
+            else:
+                return create_message_error(404, 'NOT_UPDATE_STATE')
 
 class ClientProjectsRes(ProjectsRes):
 
@@ -553,7 +554,6 @@ class SProjectStatusRes(SProjectRes):
         limit = get_int(get_arg('limit'))
         skip = get_int(get_arg('skip'))
         _filter = self.get_status(id)
-        print _filter
         result = super(SProjectStatusRes, self)._get_items(skip * limit, limit, _filter)
         for sproject in result:
             sitems = []
