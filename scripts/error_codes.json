@@ -110,5 +110,12 @@
             "ca" : "Ha expirat el token. Torni a iniciar sessió",
             "es" : "Ha caducado el token. Vuelva a loguearse"
         }
+    },
+    {
+        "code" : "NOT_UPDATE_STATE",
+        "i18n" : {
+            "ca" : "No s'ha pogut realitzar l'acció sol.licitada, Si us plau, contacti amb l'administrador.",
+            "es" : "No se ha podido realizar la acción solicitada. Por favor, contacte con el administrador."
+        }
     }
 ]
