@@ -8,7 +8,7 @@ from anella import configuration as _cfg
 from requests import Session
 import json
 from anella.security.authorize import get_exists_user
-
+import anella.configuration as cfg
 
 def get_num_page(page):
     _page = 0
@@ -49,18 +49,25 @@ class UserCrudRes(ColRes):
 
     @get_exists_user('User.Administrator')
     def put(self, id):
+
         data = get_json()
         path = self.root_path + id
-        # PROVISIONAL CAMBIAMOS POR PATCH
         prev_req = self.session.get(path, headers={'Content-Type': 'application/json'})
         previous = json.loads(prev_req.text)
-        req = self.session.patch(path, headers={'Content-Type': 'application/json'}, json=data)
+        # PROVISIONAL CAMBIAMOS POR PATCH
+        req = self.session.put(path, headers={'Content-Type': 'application/json'}, json=data)
         smm = ServiceManagerMailer()
         if previous['activated'] and not data['activated']:
             smm.ban(data['email'])
         if data['activated'] and not previous['activated']:
             smm.welcome(data['email'])
+        self.update_user(id, data['activated'])
         return get_response(req)
+
+    def update_user(self, id, status):
+        u = User()
+        data = {'auth_id': int(id), 'info': {'$set': {'activated': status}}}
+        u.update(data)
 
     @get_exists_user('User.Administrator')
     def patch(self, id):
@@ -112,6 +119,7 @@ def partner_to_json(item):
         item['partner'] = None
 
     return item
+
 
 def get_response(req):
     if req.status_code == 200:
