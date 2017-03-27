@@ -1,0 +1,3 @@
+Nou usuari registrat pendent d'activació:
+
+{0}

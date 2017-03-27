@@ -28,24 +28,21 @@ anella:
         port: 8082
         url: /orchestrator/api/v0.1/
     mail:
-        from: anella.suport@gmail.com
+        from: admin.pi40@i2cat.net
         to: alfonso.egio@i2cat.net
-        system: anella.suport@gmail.com
-        owner: info@anellaindustrial.cat
+        system: admin.pi40@i2cat.net
+        owner: alfonso.egio@i2cat.net
         developer: alfonso.egio@i2cat.net
         welcome: anella/mail_templates/welcome.txt
         ban: anella/mail_templates/ban.txt
         notify: anella/mail_templates/notify.txt
         account: keys/mail.json
-        pass: i2catAnellaNexusII
-        port: 587
-        smtp: smtp.gmail.com
         subject: Registre de nou usuari
         body: Nou registre
     repository:
         path: /var/www/html/
-        ip: http://dev.anella.i2cat.net:81/
-        download: /home/ubuntu/tmp/
+        ip: http://pi40.i2cat.net:81/
+        download: /home/www-data/tmp/
     tenor:
         host: localhost
         port: 4000
