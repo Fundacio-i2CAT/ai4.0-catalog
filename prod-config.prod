@@ -1,0 +1,50 @@
+
+anella:
+    admin:
+        user: orambla
+        email: oscar.rambla@i2cat.net
+        sendmail: false
+
+    app: # Anella app
+        host: 0.0.0.0
+        port: 9999
+
+    database:
+        host: 127.0.0.1
+        port: 27017
+        database_name: anella
+        collections:
+            config: config
+            log: log
+        database_repository: anella_repository
+
+    auth: # Authentication service
+        host: 84.88.76.5
+        port: 8244
+        eurecat: https://84.88.76.5:8244/1.0/LmpApiI2cat/
+        oauth: keys/oauth_eurecat.json
+    orch: # Orchestrator service manager
+        host: 127.0.0.1
+        port: 8082
+        url: /orchestrator/api/v0.1/
+    mail:
+        from: admin.pi40@i2cat.net
+        to: alfonso.egio@i2cat.net
+        system: admin.pi40@i2cat.net
+        owner: alfonso.egio@i2cat.net
+        developer: alfonso.egio@i2cat.net
+        welcome: anella/mail_templates/welcome.txt
+        ban: anella/mail_templates/ban.txt
+        notify: anella/mail_templates/notify.txt
+        account: keys/mail.json
+        subject: Registre de nou usuari
+        body: Nou registre
+    repository:
+        path: /var/www/html/
+        ip: http://pi40.i2cat.net:81/
+        download: /home/www-data/tmp/
+    tenor:
+        host: localhost
+        port: 4000
+    errors:
+        orchestrator_state: ORCHESTRATOR_GET_STATE

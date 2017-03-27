@@ -93,9 +93,6 @@ def load_config(configfile, clear_db_config=False):
 
         cfg.mail__from = yaml_config['anella']['mail']['from']
         cfg.mail__to = yaml_config['anella']['mail']['to']
-        cfg.mail__pass = yaml_config['anella']['mail']['pass']
-        cfg.mail__port = yaml_config['anella']['mail']['port']
-        cfg.mail__smtp = yaml_config['anella']['mail']['smtp']
         cfg.mail__subject = yaml_config['anella']['mail']['subject']
         cfg.mail__body = yaml_config['anella']['mail']['body']
 
