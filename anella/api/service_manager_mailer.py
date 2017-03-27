@@ -26,11 +26,11 @@ class ServiceManagerMailer(object):
 
     def ban(self, toaddr):
         self.send_email(toaddr, self.cfg['system'], 'Usuari desactivat',
-                        self.template['ban'].format(toaddr, fromaddr))
+                        self.template['ban'].format(toaddr, self.cfg['system']))
 
     def welcome(self, toaddr):
         self.send_email(toaddr, self.cfg['system'], 'Usuari activat',
-                        self.template['welcome'].format(toaddr, fromaddr))
+                        self.template['welcome'].format(toaddr, self.cfg['system']))
 
     def notify(self, toaddr):
         self.send_email(self.cfg['owner'], self.cfg['system'],
