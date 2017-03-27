@@ -1,6 +1,7 @@
 from anella.api.utils import respond_json
 from anella.common import get_db, get_cfg
 import smtplib
+from anella.api.service_manager_mailer import ServiceManagerMailer
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 from requests import Session
@@ -56,8 +57,9 @@ class Register(object):
         }
         resp_association = self.session.post(self.entity_association_path,
                                              json=entity_association)
-        # if resp_association.status_code in (200, 201):
-        #     self.send_email()
+        if resp_association.status_code in (200, 201):
+            smm = ServiceManagerMailer()
+            smm.notify(self.user.email)
         return create_response(resp.status_code, resp.text)
 
     def create_dict(self, data):

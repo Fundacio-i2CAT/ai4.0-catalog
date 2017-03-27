@@ -3,6 +3,7 @@
 from anella.common import get_db, get_cfg
 from anella.model.user import User
 from anella.api.utils import ColRes, ItemRes, item_to_json, respond_json, get_json, get_arg
+from anella.api.service_manager_mailer import ServiceManagerMailer
 from anella import configuration as _cfg
 from requests import Session
 import json
@@ -51,7 +52,14 @@ class UserCrudRes(ColRes):
         data = get_json()
         path = self.root_path + id
         # PROVISIONAL CAMBIAMOS POR PATCH
+        prev_req = self.session.get(path, headers={'Content-Type': 'application/json'})
+        previous = json.loads(prev_req.text)
         req = self.session.patch(path, headers={'Content-Type': 'application/json'}, json=data)
+        smm = ServiceManagerMailer()
+        if previous['activated'] and not data['activated']:
+            smm.ban(data['email'])
+        if data['activated'] and not previous['activated']:
+            smm.welcome(data['email'])
         return get_response(req)
 
     @get_exists_user('User.Administrator')

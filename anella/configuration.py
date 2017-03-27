@@ -34,6 +34,12 @@ mail__port = None
 mail__smtp = None
 mail__subject = None
 mail__body = None
+mail__owner = None
+mail__developer = None
+mail__ban = None
+mail__welcome = None
+mail__notify = None
+mail__system = None
 
 repository__path = None
 repository__ip = None
