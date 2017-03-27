@@ -6,6 +6,7 @@ import smtplib
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 import yaml
+import json
 
 CFG_FILENAME = 'prod-config.yaml'
 
@@ -23,6 +24,12 @@ class ServiceManagerMailer(object):
             self.template['welcome'] = stream.read()
         with open(self.cfg['notify']) as stream:
             self.template['notify'] = stream.read()
+        with open(self.cfg['account']) as stream:
+             jsontext = stream.read()
+             data = json.loads(jsontext)
+             self.cfg['smtp'] = data['smtp']
+             self.cfg['pass'] = data['pass']
+             self.cfg['port'] = data['port']
 
     def ban(self, toaddr):
         self.send_email(toaddr, self.cfg['system'], 'Usuari desactivat',
@@ -47,7 +54,6 @@ class ServiceManagerMailer(object):
         server.starttls()
         server.login(fromaddr, self.cfg['pass'])
         server.sendmail(msg.get('From'), msg['To'], msg.as_string())
-        print 'lakjsdlsakjd'
         server.quit()
         server.close()
 
