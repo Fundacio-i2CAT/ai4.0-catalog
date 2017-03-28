@@ -625,9 +625,11 @@ class ProjectOrchCallbackRes(ProjectsRes):
                 instance = get_db(_cfg.database__database_name)['instances'].find_one({'instance_id': instance_info['service_instance_id']})
                 sproject = get_db(_cfg.database__database_name)['sprojects'].find_one({'_id': ObjectId(instance['sproject'])})
                 service = get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(sproject['service'])})
-                get_db(_cfg.database__database_name)['sprojects'].update({'_id': ObjectId(instance['sproject'])},
-                                                                         {'$set': {'status': 5}},
-                                                                         upsert=False)
+                nstatus = [x[0] for x in STATUS if instance_info['state'].upper() == x[1]]
+                if len(nstatus) > 0:
+                    get_db(_cfg.database__database_name)['sprojects'].update({'_id': ObjectId(instance['sproject'])},
+                                                                             {'$set': {'status': nstatus[0]}},
+                                                                             upsert=False)
                 image_path = '{0}.img'.format(str(service['context']['vm_image']))
                 file_to_remove = '{0}{1}'.format(_cfg.repository__path,
                                                   image_path)
