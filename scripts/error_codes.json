@@ -117,5 +117,12 @@
             "ca" : "No s'ha pogut realitzar l'acció sol.licitada, Si us plau, contacti amb l'administrador.",
             "es" : "No se ha podido realizar la acción solicitada. Por favor, contacte con el administrador."
         }
+    },
+    {
+        "code" : "USER_DUPLICATED",
+        "i18n" : {
+            "ca" : "Aquest usuari ja està enregistrat.",
+            "es" : "Este usuario ya está registrado."
+        }
     }
 ]

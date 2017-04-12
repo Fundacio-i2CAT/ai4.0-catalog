@@ -22,17 +22,13 @@ class Register(object):
         self.path = get_cfg('keystone__url')
         self.user = None
         self.keystone = Keystone()
-        self.response_msg = create_message_error(400)
+        self.response_msg = create_message_error(409, 'USER_DUPLICATED')
         self.session = Session()
         self.smm = ServiceManagerMailer()
 
     def save_keystone(self, data):
         # login
-        json_data = read_json_file(get_cfg('keystone__data_login'))
-        json_data['auth']['identity']['password']['user']['name'] = self.keystone.keystone_admin
-        json_data['auth']['identity']['password']['user']['password'] = self.keystone.keystone_admin_pass
-        url = self.path + get_cfg('keystone__login')
-        response = post_kesytone(self.session, url, None, json_data)
+        response = self.keystone.get_login(self.session)
         if response.status_code == 201:
             token = response.headers.get('X-Subject-Token')
             entity = self.keystone.get_project(get_cfg('keystone__project_name'))
@@ -65,6 +61,7 @@ class Register(object):
                     url = url + "/" + user_id
                     delete_keystone(self.session, url,
                                     put_headers_keystone(token))
+                    self.response_msg = create_message_error(400)
                 if self.response_msg['status_code'] == 201:
                     self.smm.notify(self.user.email)
             return respond_json(self.response_msg, self.response_msg['status_code'])
