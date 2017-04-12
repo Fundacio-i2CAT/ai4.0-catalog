@@ -299,7 +299,7 @@ def get_int(variable):
     return _i
 
 
-def create_message_error(status_code, code, status=""):
+def create_message_error(status_code, code=None, status=""):
     data = get_db(_cfg.database__database_name)['errors'].find_one({'code': code})
     if data is None:
         data = {"i18n": {"ca": "S'ha produït un error inesperat",
@@ -307,6 +307,23 @@ def create_message_error(status_code, code, status=""):
     response = dict(status_code=status_code, code=code, message=data['i18n'], status=status)
     return response
 
+
+def read_json_file(path):
+    with open(path) as json_data:
+        d = json.load(json_data)
+        return d
+
+
+def post_kesytone(session, url, data, json_data):
+    return session.post(url, headers=data, json=json_data)
+
+
+def delete_keystone(session, url, data):
+    return session.delete(url, headers=data)
+
+
+def replace_characters(data, a, b):
+    return data.replace(a,b)
 
 def regex_name(item):
     response = None

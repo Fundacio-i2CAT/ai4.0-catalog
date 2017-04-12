@@ -11,4 +11,4 @@ class RegisterRes(ColRes):
 
     def post(self):
         item = get_json()
-        return self.register.create(item)
+        return self.register.save_keystone(item)

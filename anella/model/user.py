@@ -21,13 +21,22 @@ class UserRole(object):
         self.user_name = None
         self.auth_id = None
 
-
 class User(Document, Base):
     meta = {'allow_inheritance': True, 'collection': 'users'}
 
     user_name = StringField(required=True, unique=True)
-    auth_id = IntField()  # Id returned from Eurecat auth module
-    activated = BooleanField(default=True)
+    activated = BooleanField(default=False)
+    entity = DictField()
+    keystone_user_id = StringField()
+    name = StringField()
+    surname = StringField()
+    email = StringField()
+    company = StringField()
+    address = StringField()
+    phone = StringField()
+    position = StringField()
+    legal = BooleanField()
+    identification = DictField()
 
     def save(self, *args, **kwargs):
         return super(User, self).save(*args, **kwargs)

@@ -3,7 +3,6 @@ from anella.security.authorize import authorizate
 
 app = create_app()
 
-
 @app.after_request
 def after_request(response):
     """

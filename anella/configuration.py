@@ -49,3 +49,11 @@ tenor__host = None
 tenor__port = None
 
 errors__orchestrator_state = None
+
+keystone__url = None
+keystone__file = None
+keystone__login = None
+keystone__data_login = None
+keystone__project_name = None
+keystone__data_create_user = None
+keystone__create_user = None

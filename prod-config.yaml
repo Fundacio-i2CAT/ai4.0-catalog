@@ -31,7 +31,7 @@ anella:
         from: admin.pi40@i2cat.net
         to: alfonso.egio@i2cat.net
         system: admin.pi40@i2cat.net
-        owner: info@anellaindustrial.cat
+        owner: admin.pi40@i2cat.net
         developer: alfonso.egio@i2cat.net
         welcome: anella/mail_templates/welcome.txt
         ban: anella/mail_templates/ban.txt
@@ -50,3 +50,11 @@ anella:
         port: 4000
     errors:
         orchestrator_state: ORCHESTRATOR_GET_STATE
+    keystone:
+        url: http://dev.anella.i2cat.net:5000/v3/
+        file: keys/keystone.json
+        login: auth/tokens
+        data_login: request/body_auth.json
+        data_create_user: request/body_create_user.json
+        create_user: users
+        project_name: PI40

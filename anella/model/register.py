@@ -1,95 +1,86 @@
-from anella.api.utils import respond_json
-from anella.common import get_db, get_cfg
-import smtplib
+from anella.api.utils import respond_json, read_json_file, create_message_error
+from anella.common import get_cfg, put_headers_keystone
 from anella.api.service_manager_mailer import ServiceManagerMailer
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEText import MIMEText
-from requests import Session
-from anella.api.utils import create_response
-
+from anella.api.utils import post_kesytone, delete_keystone
+from anella.model.user import Client, Provider
+from anella.api.keystone import Keystone
 import json
+from requests import Session
 
-class RegisterEurecat(object):
-    def __init__(self):
-        self.name = None
-        self.surname = None
-        self.email = None
-        self.password = None
-        self.identifier = None
-        self.phone = None
-        self.company = None
-        self.address = None
-        self.postalCode = None
-        self.jobPosition = None
-        self.description = None
-        self.country = None
-        self.legal = False
-        self.clientRole = False
-        self.providerRole = False
-        self.activated = False
+
+def create_identification(identification):
+    key = "CIF"
+    if identification['isnif']:
+        key = "NIF"
+    item = {"key": key,
+            "value": identification['value']}
+    return item
+
 
 class Register(object):
     def __init__(self):
-        self.root_path='https://%s:%s/1.0/LmpApiI2cat/people' % (get_cfg('auth__host'), get_cfg('auth__port'))
-        self.entity_association_path = 'https://%s:%s/1.0/LmpApiI2cat/personEntityRelationships' % (get_cfg('auth__host'), get_cfg('auth__port'))
-        self.default_entity_path = 'https://%s:%s/1.0/LmpApiI2cat/entities/4' % (get_cfg('auth__host'), get_cfg('auth__port'))
+        self.path = get_cfg('keystone__url')
+        self.user = None
+        self.keystone = Keystone()
+        self.response_msg = create_message_error(400)
         self.session = Session()
-        with open(get_cfg('auth__oauth')) as fhandle:
-            self.authorization = json.load(fhandle)
-        self.session.headers.update(self.authorization['headers'])
-        # Waiting for Eurecat's certificate ...
-        #    meanwhile verification disabled
-        self.session.verify = False
-        self.user = RegisterEurecat()
+        self.smm = ServiceManagerMailer()
 
-    def create(self, data):
-        self.create_dict(data)
-        resp = self.session.post(self.root_path, json=self.user.__dict__)
-        # ASOCIAMOS CON ENTIDAD DEFAULT ID=4 (PROVISIONAL)
-        if not resp.status_code in (200, 201):
-            return create_response(resp.status_code, resp.text)
-        resp_data = json.loads(resp.text)
-        user_id = resp_data['id']
-        entity_association = {
-            "state": "REQUESTED_FROM_USER",
-            "organization": self.default_entity_path,
-            "person": "{0}/{1}".format(self.root_path, user_id)
-        }
-        resp_association = self.session.post(self.entity_association_path,
-                                             json=entity_association)
-        if resp_association.status_code in (200, 201):
-            smm = ServiceManagerMailer()
-            smm.notify(self.user.email)
-        return create_response(resp.status_code, resp.text)
+    def save_keystone(self, data):
+        # login
+        json_data = read_json_file(get_cfg('keystone__data_login'))
+        json_data['auth']['identity']['password']['user']['name'] = self.keystone.keystone_admin
+        json_data['auth']['identity']['password']['user']['password'] = self.keystone.keystone_admin_pass
+        url = self.path + get_cfg('keystone__login')
+        response = post_kesytone(self.session, url, None, json_data)
+        if response.status_code == 201:
+            token = response.headers.get('X-Subject-Token')
+            entity = self.keystone.get_project(get_cfg('keystone__project_name'))
+            entity_id = entity['keystone_project_id']
+            json_data = read_json_file(get_cfg('keystone__data_create_user'))
+            json_data['user']['default_project_id'] = entity_id
+            json_data['user']['name'] = data['email']
+            json_data['user']['password'] = data['password']
+            url = self.path + get_cfg('keystone__create_user')
+            response = post_kesytone(self.session, url,
+                                     put_headers_keystone(token),
+                                     json_data)
+            if response.status_code == 201:
+                user_id = json.loads(response.text)['user']['id']
+                # grabamos la info en mongo
+                if data['provider_role']:
+                    self.user = Provider()
+                else:
+                    self.user = Client()
+                try:
+                    self.dict_to_mongo_user(data, user_id,
+                                            entity_id, str(entity['_id']))
+                    self.response_msg = dict(status_code=201)
+                except Exception as e:
+                    '''
+                    Cualquier error que se produzca al intentar grabar en BBDD. 
+                    Hemos de borrar el usuario de Keystone
+                    '''
+                    print e
+                    url = url + "/" + user_id
+                    delete_keystone(self.session, url,
+                                    put_headers_keystone(token))
+                if self.response_msg['status_code'] == 201:
+                    self.smm.notify(self.user.email)
+            return respond_json(self.response_msg, self.response_msg['status_code'])
 
-    def create_dict(self, data):
-        self.user.name = data.get('name')
-        self.user.surname = data.get('surname')
-        self.user.email = data.get('email')
-        self.user.password = data.get('password')
-        self.user.identifier = data.get('identification_number')['value']
-        self.user.phone = data.get('comp_phone')
-        self.user.company = data.get('company')
-        self.user.address = data.get('comp_address')
-        self.user.jobPosition = data.get('comp_position')
-        self.user.legal = data.get('legal')
-        self.user.clientRole = data.get('client_role')
-        self.user.providerRole = data.get('provider_role')
-
-
-    def send_email(self):
-        toaddr = get_cfg('mail__to')
-        fromaddr = get_cfg('mail__from')
-        msg = MIMEMultipart()
-        msg['Subject'] = get_cfg('mail__subject')
-        msg['From'] = fromaddr
-        msg['To'] = toaddr
-        body = get_cfg('mail__body') + ':\n\n Nom: ' + self.user.name + '\n\n Cognoms: ' \
-               + self.user.surname + '\n\n Email: ' + self.user.email
-        msg.attach(MIMEText(body, 'plain'))
-        server = smtplib.SMTP(get_cfg('mail__smtp'), get_cfg('mail__port'))
-        server.starttls()
-        server.login(fromaddr, get_cfg('mail__pass'))
-        server.sendmail(msg.get('From'), msg["To"], msg.as_string())
-        server.quit()
-        server.close()
+    def dict_to_mongo_user(self, data, id_keystone, keystone_project_id, project_id):
+        self.user.user_name = data['email']
+        self.user.name = data['name']
+        self.user.surname = data['surname']
+        self.user.email = data['email']
+        self.user.company = data['company']
+        self.user.address = data['comp_address']
+        self.user.phone = data['comp_phone']
+        self.user.position = data['comp_position']
+        self.user.legal = data['legal']
+        self.user.identification = create_identification(data['identification_number'])
+        self.user.entity = {'keystone_project_id': keystone_project_id,
+                            'entity_id': project_id}
+        self.user.keystone_user_id = id_keystone
+        self.user.save()
