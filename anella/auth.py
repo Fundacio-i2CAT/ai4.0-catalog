@@ -41,7 +41,7 @@ class Authenticator(object):
                 self.user.user_name = data['name']
                 self.user.id = str(data['_id'])
                 self.user.role = data['_cls']
-                self.create_token(response)
+                self.create_token()
                 response.status_code = 200
             else:
                 response.status_code = 404
@@ -52,12 +52,11 @@ class Authenticator(object):
         self.user = UserRole()
         self.item = self.user.__dict__
 
-    def create_token(self, response):
+    def create_token(self):
         payload = {
             'user_id': self.user.id,
             'exp': datetime.utcnow() + timedelta(seconds=900),
-            'role': self.user.role,
-            'keystone_token': get_keystone_token(response)
+            'role': self.user.role
         }
         jwt_token = jwt.encode(payload, 'secret', 'HS256')
         self.user.token = jwt_token
