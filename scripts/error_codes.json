@@ -124,5 +124,19 @@
             "ca" : "Aquest usuari ja està enregistrat.",
             "es" : "Este usuario ya está registrado."
         }
+    },
+    {
+        "code" : "USER_NOT_FOUND",
+        "i18n" : {
+            "ca" : "Usuari no trobat.",
+            "es" : "Usuario no encontrado."
+        }
+    },
+    {
+        "code" : "USER_NOT_ACTIVATED",
+        "i18n" : {
+            "ca" : "Aquest usuari no s'ha activitat per poder accedir a la plataforma.",
+            "es" : "Este usuario no se ha activado para poder acceder a la plataforma."
+        }
     }
 ]

@@ -1,7 +1,7 @@
 from anella.api.utils import respond_json, read_json_file, create_message_error
 from anella.common import get_cfg, put_headers_keystone
 from anella.api.service_manager_mailer import ServiceManagerMailer
-from anella.api.utils import post_kesytone, delete_keystone
+from anella.api.utils import post_kesytone, delete_keystone, get_keystone_token
 from anella.model.user import Client, Provider
 from anella.api.keystone import Keystone
 import json
@@ -30,7 +30,7 @@ class Register(object):
         # login
         response = self.keystone.get_login(self.session)
         if response.status_code == 201:
-            token = response.headers.get('X-Subject-Token')
+            token = get_keystone_token(response)
             entity = self.keystone.get_project(get_cfg('keystone__project_name'))
             entity_id = entity['keystone_project_id']
             json_data = read_json_file(get_cfg('keystone__data_create_user'))

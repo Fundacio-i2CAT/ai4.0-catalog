@@ -19,7 +19,6 @@ class UserRole(object):
         #self.entity = None
         #self.email = None
         self.user_name = None
-        self.auth_id = None
 
 class User(Document, Base):
     meta = {'allow_inheritance': True, 'collection': 'users'}

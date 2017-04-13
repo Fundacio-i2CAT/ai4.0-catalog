@@ -325,6 +325,10 @@ def delete_keystone(session, url, data):
 def replace_characters(data, a, b):
     return data.replace(a,b)
 
+
+def get_keystone_token(response):
+    return response.headers.get('X-Subject-Token')
+
 def regex_name(item):
     response = None
     if 'name' in item:
