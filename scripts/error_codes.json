@@ -133,10 +133,17 @@
         }
     },
     {
-        "code" : "USER_NOT_ACTIVATED",
+        "code": "USER_NOT_ACTIVATED",
+        "i18n": {
+            "ca": "Aquest usuari no s'ha activitat per poder accedir a la plataforma.",
+            "es": "Este usuario no se ha activado para poder acceder a la plataforma."
+        }
+    },
+    {
+        "code" : "PROVIDER_CLIENT",
         "i18n" : {
-            "ca" : "Aquest usuari no s'ha activitat per poder accedir a la plataforma.",
-            "es" : "Este usuario no se ha activado para poder acceder a la plataforma."
+            "ca" : "S'ha de ser proveïdor o client",
+            "es" : "Ha de ser proveedor o cliente"
         }
     }
 ]

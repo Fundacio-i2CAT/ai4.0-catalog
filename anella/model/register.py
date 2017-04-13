@@ -27,6 +27,9 @@ class Register(object):
         self.smm = ServiceManagerMailer()
 
     def save_keystone(self, data):
+        #primero comprobamos que el usuario ha de ser o proveedor o cliente
+        if not data['client_role'] and not data['provider_role']:
+            return respond_json(create_message_error(400, 'PROVIDER_CLIENT'), 400)
         # login
         response = self.keystone.get_login(self.session)
         if response.status_code == 201:
