@@ -6,7 +6,7 @@ import logging
 from requests import Session
 from anella.model.user import UserRole, Administrator, Client, Provider
 from anella.api.utils import create_response, find_one_in_collection, \
-    create_message_error, get_keystone_token
+    create_message_error
 import jwt
 from datetime import datetime, timedelta
 from anella.api.keystone import Keystone
@@ -30,7 +30,7 @@ class Authenticator(object):
     def user_login(self, email, password):
         self.keystone.keystone_admin = email
         self.keystone.keystone_admin_pass = password
-        response = self.keystone.get_login(self.session)
+        response = self.keystone.get_login()
 
         if response.status_code == 201:
             # Encontrado el usuario en Keystone. Lo buscamos en mongo

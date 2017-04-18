@@ -56,5 +56,6 @@ anella:
         login: auth/tokens
         data_login: request/body_auth.json
         data_create_user: request/body_create_user.json
+        data_patch_user: request/body_patch_user.json
         create_user: users
         project_name: PI40

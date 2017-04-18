@@ -4,6 +4,7 @@ from mongoengine import *
 from base import Base
 from anella.common import get_db
 import anella.configuration as cfg
+from bson import ObjectId
 
 IDIOMS = [
     (u'ca', u'Català'),
@@ -44,11 +45,10 @@ class User(Document, Base):
         return get_db(cfg.database__database_name).get_collection('users') \
             .find_one({'auth_id': auth_id})
 
-    def update(self, data):
+    def update(self, id, data):
         get_db(cfg.database__database_name).get_collection('users'). \
-            update_one({'auth_id': data['auth_id']}, data['info'],
+            update_one({'_id': ObjectId(id)}, {"$set": data},
                        upsert=False)
-
 
 class Provider(User):
     _cls = "User.Provider"

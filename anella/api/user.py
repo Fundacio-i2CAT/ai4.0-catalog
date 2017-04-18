@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 
-from anella.common import get_db, get_cfg
+from anella.common import get_db, get_arg
 from anella.model.user import User
-from anella.api.utils import ColRes, ItemRes, item_to_json, respond_json, get_json, get_arg
+from anella.api.utils import ColRes, ItemRes, item_to_json, respond_json, \
+    get_json, get_int, count_collection, find_one_in_collection, create_message_error, create_response
 from anella.api.service_manager_mailer import ServiceManagerMailer
 from anella import configuration as _cfg
-from requests import Session
 import json
 from anella.security.authorize import get_exists_user
+from anella.api.keystone import Keystone
+from requests import Session
+from bson.objectid import ObjectId
+
 
 def get_num_page(page):
     _page = 0
@@ -16,51 +20,56 @@ def get_num_page(page):
     return str(_page)
 
 
+def jsonDefault(object):
+    return object.__dict__
+
 class UsersCrudRes(ColRes):
     def __init__(self):
-        self.root_path='https://%s:%s/1.0/LmpApiI2cat/people/' % (get_cfg('auth__host'), get_cfg('auth__port'))
-        self.session = Session()
-        with open(get_cfg('auth__oauth')) as fhandle:
-            self.authorization = json.load(fhandle)
-        self.session.headers.update(self.authorization['headers'])
-        # Waiting for Eurecat's certificate ...
-        #    meanwhile verification disabled
-        self.session.verify = False
+        self.collection = 'users'
+        self.filter = {"_cls": {"$in": ['User.Client', 'User.Provider']}}
+        self.fields = "_id,_cls,user_name,activated,name,surname,email,company,address,phone,position," \
+                      "legal,identification".split(",")
 
     @get_exists_user('User.Administrator')
     def get(self):
-        page = get_arg('page')
-        path = self.root_path + '?page=' + get_num_page(page)
-        req = self.session.get(path)
-        return get_response(req)
-
+        limit = get_int(get_arg('limit'))
+        skip = get_int(get_arg('skip'))
+        result = super(UsersCrudRes, self)._get_items(skip=skip * limit, limit=limit, values=self.filter)
+        response = dict(count=count_collection(self.collection, self.filter), skip=skip, limit=limit,
+                        result=result)
+        return respond_json(response, status=200)
 
 class UserCrudRes(ColRes):
     def __init__(self):
-        self.root_path = '%s%s' % (_cfg.auth__eurecat, 'people/')
         self.session = Session()
-        with open(_cfg.auth__oauth) as fhandle:
-            self.authorization = json.load(fhandle)
-        self.session.headers.update(self.authorization['headers'])
-        # Waiting for Eurecat's certificate ...
-        #    meanwhile verification disabled
-        self.session.verify = False
+        self.keystone = Keystone()
+        self.collection = 'users'
+        self.smm = ServiceManagerMailer()
+        self.u = User()
 
     @get_exists_user('User.Administrator')
     def put(self, id):
-
         data = get_json()
-        path = self.root_path + id
-        prev_req = self.session.get(path, headers={'Content-Type': 'application/json'})
-        previous = json.loads(prev_req.text)
-        req = self.session.put(path, headers={'Content-Type': 'application/json'}, json=data)
-        smm = ServiceManagerMailer()
-        if previous['activated'] and not data['activated']:
-            smm.ban(data['email'])
-        if data['activated'] and not previous['activated']:
-            smm.welcome(data['email'])
-        self.update_user_status(id, data['activated'])
-        return get_response(req)
+        user = find_one_in_collection(self.collection, {"_id": ObjectId(id)})
+        response = self.keystone.patch_user(user['keystone_user_id'], data['activated'])
+        if response.status_code == 200:
+            item = json.loads(response.text)
+            if user['activated'] and not data['activated']:
+                self.smm.ban(data['email'])
+            if data['activated'] and not user['activated']:
+                self.smm.welcome(data['email'])
+            if '_id' in data:
+                del data['_id']
+            try:
+                self.u.update(id, data)
+            except Exception as e:
+                print e
+                response.status_code = 400
+                item = create_message_error(400, "USER_NOT_FOUND")
+                self.keystone.patch_user(user['keystone_user_id'], not (data['activated']))
+        else:
+            item = create_message_error(response.status_code, "USER_NOT_FOUND")
+        return create_response(response.status_code, item)
 
     @get_exists_user('User.Administrator')
     def patch(self, id):

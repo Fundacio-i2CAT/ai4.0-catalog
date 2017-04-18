@@ -1,7 +1,7 @@
 from anella.api.utils import respond_json, read_json_file, create_message_error
 from anella.common import get_cfg, put_headers_keystone
 from anella.api.service_manager_mailer import ServiceManagerMailer
-from anella.api.utils import post_kesytone, delete_keystone, get_keystone_token
+from anella.api.utils import post, delete, get_keystone_token
 from anella.model.user import Client, Provider
 from anella.api.keystone import Keystone
 import json
@@ -23,15 +23,15 @@ class Register(object):
         self.user = None
         self.keystone = Keystone()
         self.response_msg = create_message_error(409, 'USER_DUPLICATED')
-        self.session = Session()
         self.smm = ServiceManagerMailer()
+        self.session = Session()
 
     def save_keystone(self, data):
         #primero comprobamos que el usuario ha de ser o proveedor o cliente
         if not data['client_role'] and not data['provider_role']:
             return respond_json(create_message_error(400, 'PROVIDER_CLIENT'), 400)
         # login
-        response = self.keystone.get_login(self.session)
+        response = self.keystone.get_login()
         if response.status_code == 201:
             token = get_keystone_token(response)
             entity = self.keystone.get_project(get_cfg('keystone__project_name'))
@@ -41,9 +41,9 @@ class Register(object):
             json_data['user']['name'] = data['email']
             json_data['user']['password'] = data['password']
             url = self.path + get_cfg('keystone__create_user')
-            response = post_kesytone(self.session, url,
-                                     put_headers_keystone(token),
-                                     json_data)
+            response = post(self.session, url,
+                            put_headers_keystone(token),
+                            json_data)
             if response.status_code == 201:
                 user_id = json.loads(response.text)['user']['id']
                 # grabamos la info en mongo
@@ -62,8 +62,8 @@ class Register(object):
                     '''
                     print e
                     url = url + "/" + user_id
-                    delete_keystone(self.session, url,
-                                    put_headers_keystone(token))
+                    delete(self.session, url,
+                           put_headers_keystone(token))
                     self.response_msg = create_message_error(400)
                 if self.response_msg['status_code'] == 201:
                     self.smm.notify(self.user.email)
