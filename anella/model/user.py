@@ -46,7 +46,7 @@ class User(Document, Base):
             .find_one({'auth_id': auth_id})
 
     def update(self, id, data):
-        get_db(cfg.database__database_name).get_collection('users'). \
+        return get_db(cfg.database__database_name).get_collection('users'). \
             update_one({'_id': ObjectId(id)}, {"$set": data},
                        upsert=False)
 
