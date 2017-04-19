@@ -351,4 +351,4 @@ def regex_name(item):
         if re.search('[¿?<>º"!·$%&/()=]', item['name']):
             msg = create_message_error(400, 'NAME_INVALID')
             response = respond_json(msg, status=400)
-    return response
+    return response 
