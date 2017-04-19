@@ -53,21 +53,26 @@ class UserCrudRes(ColRes):
     @get_exists_user('User.Administrator')
     def put(self, id):
         data = get_json()
-        response, user = self.update_info_user(id, data)
-        if response.status_code == 200:
-            if '_id' in data:
-                del data['_id']
-            try:
-                self.u.update(id, data)
-                response.status_code = 204
-            except Exception as e:
-                print e
-                response.status_code = 400
-                self.item = create_message_error(400, "USER_NOT_FOUND")
-                self.keystone.patch_user(user, not (data['activated']))
-        else:
-            self.item = create_message_error(response.status_code, "USER_NOT_FOUND")
-        return create_response(response.status_code, self.item)
+        user = find_one_in_collection(self.collection, {"_id": ObjectId(id)})
+        if 'activated' in data:
+            response = self.keystone.patch_user(user['keystone_user_id'], data['activated'])
+            if response.status_code == 200:
+                if user['activated'] and not data['activated']:
+                    self.smm.ban(user['email'])
+                if data['activated'] and not user['activated']:
+                    self.smm.welcome(user['email'])
+        if '_id' in data:
+            del data['_id']
+        try:
+            self.u.update(id, data)
+            status_code = 204
+        except Exception as e:
+            print e
+            status_code = 400
+            self.item = create_message_error(status_code, "USER_NOT_FOUND")
+            if 'activated' in data:
+                self.keystone.patch_user(user['keystone_user_id'], not (data['activated']))
+        return create_response(status_code, self.item)
 
     @get_exists_user('User.Administrator')
     def patch(self, id):
@@ -85,16 +90,6 @@ class UserCrudRes(ColRes):
         u = User()
         data = {'auth_id': int(id), 'info': {'$set': {'activated': status}}}
         u.update(data)
-
-    def update_info_user(self, id, data):
-        user = find_one_in_collection(self.collection, {"_id": ObjectId(id)})
-        response = self.keystone.patch_user(user['keystone_user_id'], data['activated'])
-        if response.status_code == 200:
-            if user['activated'] and not data['activated']:
-                self.smm.ban(data['email'])
-            if data['activated'] and not user['activated']:
-                self.smm.welcome(data['email'])
-        return response, user['keystone_user_id']
 
 class UsersRes(ColRes):
     collection = 'users'
