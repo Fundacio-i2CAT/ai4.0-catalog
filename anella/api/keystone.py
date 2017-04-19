@@ -16,13 +16,19 @@ class Keystone(object):
         self.path = get_cfg('keystone__url')
         self.session = Session()
 
-    def get_project(self, name_project):
+    def get_project(self, name_project, data):
         """
         Consultamos el proyecto/entidad en Mongo, ya que guardamos cierta información de la entitiy
         y la API de keystone no ofrece un findByName.
         :return: 
         """
-        return find_one_in_collection('entities', {"name": name_project})
+        entity = find_one_in_collection('entities', {"name": name_project})
+        entity_id = entity['keystone_project_id']
+        json_data = read_json_file(get_cfg('keystone__data_create_user'))
+        json_data['user']['default_project_id'] = entity_id
+        json_data['user']['name'] = data['email']
+        json_data['user']['password'] = data['password']
+        return json_data, entity_id, entity
 
     def get_login(self):
         json_data = read_json_file(get_cfg('keystone__data_login'))

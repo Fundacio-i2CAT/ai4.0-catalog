@@ -37,13 +37,14 @@ class User(Document, Base):
     position = StringField()
     legal = BooleanField()
     identification = DictField()
+    deleted = BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         return super(User, self).save(*args, **kwargs)
 
-    def get(self, auth_id):
+    def get(self, id):
         return get_db(cfg.database__database_name).get_collection('users') \
-            .find_one({'auth_id': auth_id})
+            .find_one({'_id': ObjectId(id)})
 
     def update(self, id, data):
         return get_db(cfg.database__database_name).get_collection('users'). \

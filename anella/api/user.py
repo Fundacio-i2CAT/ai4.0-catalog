@@ -26,7 +26,7 @@ def jsonDefault(object):
 class UsersCrudRes(ColRes):
     def __init__(self):
         self.collection = 'users'
-        self.filter = {"_cls": {"$in": ['User.Client', 'User.Provider']}}
+        self.filter = {"_cls": {"$in": ['User.Client', 'User.Provider']}, "deleted": False}
         self.fields = "_id,_cls,user_name,activated,name,surname,email,company,address,phone,position," \
                       "legal,identification".split(",")
 
@@ -41,7 +41,6 @@ class UsersCrudRes(ColRes):
 
 class UserCrudRes(ColRes):
     def __init__(self):
-        self.session = Session()
         self.keystone = Keystone()
         self.collection = 'users'
         self.smm = ServiceManagerMailer()
@@ -49,6 +48,7 @@ class UserCrudRes(ColRes):
         self.fields = "_id,_cls,user_name,activated,name,surname,email,company,address,phone,position," \
                       "legal,identification".split(",")
         self.item = None
+        self.data_delete = {'activated': False, "deleted": True}
 
     @get_exists_user('User.Administrator')
     def put(self, id):
@@ -80,16 +80,16 @@ class UserCrudRes(ColRes):
 
     @get_exists_user('User.Administrator')
     def delete(self, id):
-        data = get_json()
-        path = self.root_path + id
-        req = self.session.patch(path, headers={'Content-Type': 'application/json'}, json=data)
-        self.update_user_status(self, id, False)
-        return get_response(req)
-
-    def update_user_status(self, id, status):
-        u = User()
-        data = {'auth_id': int(id), 'info': {'$set': {'activated': status}}}
-        u.update(data)
+        self.u.update(id, self.data_delete)
+        user = self.u.get(id)
+        response = self.keystone.patch_user(user['keystone_user_id'], False)
+        if response.status_code == 200:
+            status_code = 204
+            item = None
+        else:
+            status_code = 404
+            item = create_message_error(404, "USER_NOT_FOUND")
+        return create_response(status_code, item)
 
 class UsersRes(ColRes):
     collection = 'users'

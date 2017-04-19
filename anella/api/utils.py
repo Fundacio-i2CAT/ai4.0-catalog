@@ -21,7 +21,6 @@ class AnellaRes(Resource):
     TIMEOUT = 1000
 
     def _item_to_json(self, item):
-        print self.fields
         return item_to_json(item, self.fields)
 
     def _items_to_json(self, items):

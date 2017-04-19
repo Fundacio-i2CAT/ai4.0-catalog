@@ -34,12 +34,7 @@ class Register(object):
         response = self.keystone.get_login()
         if response.status_code == 201:
             token = get_keystone_token(response)
-            entity = self.keystone.get_project(get_cfg('keystone__project_name'))
-            entity_id = entity['keystone_project_id']
-            json_data = read_json_file(get_cfg('keystone__data_create_user'))
-            json_data['user']['default_project_id'] = entity_id
-            json_data['user']['name'] = data['email']
-            json_data['user']['password'] = data['password']
+            json_data, entity_id, entity = self.keystone.get_project(get_cfg('keystone__project_name'), data)
             url = self.path + get_cfg('keystone__create_user')
             response = post(self.session, url,
                             put_headers_keystone(token),
@@ -54,7 +49,7 @@ class Register(object):
                 try:
                     self.dict_to_mongo_user(data, user_id,
                                             entity_id, str(entity['_id']))
-                    self.response_msg = dict(status_code=201)
+                    self.response_msg = dict(status_code=204)
                 except Exception as e:
                     '''
                     Cualquier error que se produzca al intentar grabar en BBDD. 
@@ -65,7 +60,7 @@ class Register(object):
                     delete(self.session, url,
                            put_headers_keystone(token))
                     self.response_msg = create_message_error(400)
-                if self.response_msg['status_code'] == 201:
+                if self.response_msg['status_code'] == 204:
                     self.smm.notify(self.user.email)
             return respond_json(self.response_msg, self.response_msg['status_code'])
 
