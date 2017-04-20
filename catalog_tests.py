@@ -120,6 +120,41 @@ class CatalogTestCase(unittest.TestCase):
         assert 'data' in cpdata
         return cpdata['data']
 
+    def stop_project(self, project_id):
+        confirm = requests.put('{0}/api/project/{1}/state'.format(BASE_URL,
+                                                                  project_id),
+                               headers={'Content-Type': 'application/json',
+                                        'Authorization': self._client['token']},
+                               json={'status': 6})
+        max_retries = 10
+        deployed_ok = False
+        while True:
+            state = requests.get('{0}/api/projects/{1}/state'.format(BASE_URL,
+                                                                    project_id),
+                                headers={'Content-Type': 'application/json',
+                                         'Authorization': self._client['token']})
+            status = json.loads(state.text)
+            print status['project_id'], status['status'], '\t', status['state']
+            time.sleep(3)
+            max_retries = max_retries-1
+            if status['state'] == 'DEPLOYED':
+                print 'DEPLOYED state reached OK'
+                deployed_ok = True
+                break
+            if max_retries < 0:
+                print 'Timeout waiting project stop'
+                break
+
+        if deployed_ok:
+            conflict = requests.put('{0}/api/project/{1}/state'.format(BASE_URL,
+                                                                       project_id),
+                                    headers={'Content-Type': 'application/json',
+                                             'Authorization': self._client['token']},
+                                    json={'status': 6})
+            print 'Trying to stop a stopped service results in {0} OK'.format(conflict.status_code)
+            assert not conflict.status_code in (200,201)
+
+
     def test_05(self):
         """Approve and instantiate project"""
         print
@@ -159,6 +194,7 @@ class CatalogTestCase(unittest.TestCase):
                                 json={'status': 5, 'consumer_params': cprequired})
         assert instresp.status_code == 200
         max_retries = 10
+        instantiation_ok = False
         while True:
             state = requests.get('{0}/api/projects/{1}/state'.format(BASE_URL,
                                                                     project_id),
@@ -174,6 +210,7 @@ class CatalogTestCase(unittest.TestCase):
             max_retries = max_retries-1
             if status['state'] == 'RUNNING':
                 print 'Instantiation went well'
+                instantiation_ok = True
                 break
             if max_retries < 0:
                 print 'Timeout waiting instantiation'
@@ -182,6 +219,9 @@ class CatalogTestCase(unittest.TestCase):
                 print 'Error instantiating ...'
                 print state.status_code, status['code']
             time.sleep(20)
+        if instantiation_ok:
+            print 'Checking stop project feature'
+            self.stop_project(project_id)
 
     def tearDown(self):
         """tearDown"""
