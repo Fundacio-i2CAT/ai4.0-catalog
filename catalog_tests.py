@@ -8,8 +8,10 @@ import requests
 import random
 import time
 import uuid
+import sys
+import os
 
-BASE_URL = 'http://localhost:9999'
+BASE_URL = 'http://dev.anella.i2cat.net:9999'
 
 CLIENT = {'user_name': 'client@i2cat.net', 'password': 'i2cat', 'role': 'User.Client'}
 PROVIDER = {'user_name': 'user@i2cat.net', 'password': 'i2cat', 'role': 'User.Provider'}
@@ -98,10 +100,10 @@ class CatalogTestCase(unittest.TestCase):
             self._project_ids.append(project['id'])
         return sid, project['id']
 
-    def test_06(self):
+    def test_04(self):
         """Create many projects"""
         print
-        nprojects = 10
+        nprojects = 100
         print 'Creating {0} projects'.format(nprojects)
         self._client = self.login('client@i2cat.net', 'i2cat', 'User.Client')
         for i in range(0,nprojects):
@@ -111,18 +113,20 @@ class CatalogTestCase(unittest.TestCase):
     def get_consumer_params(self, service_id):
         """Get consumer params"""
         cpresp = requests.get('{0}/api/services/consumer/params/{1}'.format(BASE_URL,
-                                                                            service_id))
+                                                                            service_id),
+                              headers={'Authorization': self._client['token']})
         assert cpresp.status_code == 200
         cpdata = json.loads(cpresp.text)
         assert 'data' in cpdata
         return cpdata['data']
 
-    def test_07(self):
+    def test_05(self):
         """Approve and instantiate project"""
         print
         self._client = self.login('client@i2cat.net', 'i2cat', 'User.Client')
         self._provider = self.login('user@i2cat.net', 'i2cat', 'User.Provider')
         service_id, project_id = self.create_project(self._provider['id'])
+        print service_id
         pending = requests.get('{0}/api/providers/{1}/projects'.format(BASE_URL,
                                                                        self._provider['id']),
                                headers={'Authorization': self._provider['token']})
@@ -131,37 +135,53 @@ class CatalogTestCase(unittest.TestCase):
         assert 'result' in pending_data
         for pproj in pending_data['result']:
             if project_id == pproj['project']['_id']:
-                print project_id
-                print self._provider['token']
                 confirm = requests.put('{0}/api/project/{1}/state'.format(BASE_URL,
                                                                       pproj['project']['_id']),
                                        headers={'Content-Type': 'application/json',
                                                 'Authorization': self._provider['token']},
                                        json={'status': 3})
-                print confirm.status_code
-                print confirm.text
                 assert confirm.status_code == 200
-        # cprequired = self.get_consumer_params(service_id)
-        # for cpr in cprequired:
-        #     for field in cpr['fields']:
-        #         if field['type'] == 'String':
-        #             field['value'] = str(uuid.uuid4())
-        #         else:
-        #             field['value'] = random.randint(0, 10000)
-        # instresp = requests.put('{0}/api/projects/{1}/state'.format(BASE_URL,
-        #                                                            project_id),
-        #                        headers={'Content-Type': 'application/json'},
-        #                        json={'status': 5, 'consumer_params': cprequired})
-        # assert instresp.status_code == 200
-        # url = '{0}/api/projects/{1}'.format(BASE_URL, project_id)
-        # while True:
-        #     time.sleep(10)
-        #     resp = requests.get(url)
-        #     assert resp.status_code == 200
-        #     nsi = json.loads(resp.text)
-        #     if nsi['status'] != 9:
-        #         print nsi
-        #         break
+        print 'Obtaining consumer params for service {0}'.format(service_id)
+        cprequired = self.get_consumer_params(service_id)
+        print 'Filling consumer params with random values'
+        for cpr in cprequired:
+            for field in cpr['fields']:
+                if field['type'] == 'String':
+                    field['value'] = str(uuid.uuid4())
+                else:
+                    field['value'] = random.randint(0, 10000)
+                print field['name'],' = ', field['value']
+        print 'Instantiating project'
+        instresp = requests.put('{0}/api/projects/{1}/state'.format(BASE_URL,
+                                                                    project_id),
+                                headers={'Content-Type': 'application/json',
+                                         'Authorization': self._client['token']},
+                                json={'status': 5, 'consumer_params': cprequired})
+        assert instresp.status_code == 200
+        max_retries = 10
+        while True:
+            state = requests.get('{0}/api/projects/{1}/state'.format(BASE_URL,
+                                                                    project_id),
+                                headers={'Content-Type': 'application/json',
+                                         'Authorization': self._client['token']})
+            try:
+                status = json.loads(state.text)
+                print status['project_id'], status['status'], '\t', status['state']
+            except:
+                print 'Error instantiating ...'
+                print state.status_code, status['code']
+                break
+            max_retries = max_retries-1
+            if status['state'] == 'RUNNING':
+                print 'Instantiation went well'
+                break
+            if max_retries < 0:
+                print 'Timeout waiting instantiation'
+                break
+            if state.status_code != 200:
+                print 'Error instantiating ...'
+                print state.status_code, status['code']
+            time.sleep(20)
 
     def tearDown(self):
         """tearDown"""
@@ -174,4 +194,5 @@ class CatalogTestCase(unittest.TestCase):
             assert delete_data['status'] == 'ok'
 
 if __name__ == '__main__':
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
     unittest.main()
