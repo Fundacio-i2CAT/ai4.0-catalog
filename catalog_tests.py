@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Anella 4.0 Service Manager Tests"""
+"""Plataforma Industrial 4.0 Service Manager Tests"""
 
 import json
 import unittest
@@ -9,13 +9,10 @@ import random
 import time
 import uuid
 
-BASE_URL = 'http://dev.anella.i2cat.net:9999'
+BASE_URL = 'http://localhost:9999'
 
-TEST_PROJECT_CONTEXT = {
-    "name": "Test de creació de projecte",
-    "summary":"Test de creació de projecte",
-    "description":"Test de creació de projecte"
-}
+CLIENT = {'user_name': 'client@i2cat.net', 'password': 'i2cat', 'role': 'User.Client'}
+PROVIDER = {'user_name': 'user@i2cat.net', 'password': 'i2cat', 'role': 'User.Provider'}
 
 class CatalogTestCase(unittest.TestCase):
     """Full test"""
@@ -23,6 +20,8 @@ class CatalogTestCase(unittest.TestCase):
     def setUp(self):
         """Initial setup"""
         self._project_ids = []
+        self._client = {}
+        self._provider = {}
 
     def login(self, user_name, password, role, expected=200):
         resp = requests.post('{0}/api/session'.format(BASE_URL),
@@ -33,47 +32,64 @@ class CatalogTestCase(unittest.TestCase):
             resp_data = json.loads(resp.text)
             assert resp_data['role'] == role
             assert 'id' in resp_data
-            return resp_data['id']
-
+            print 'Login as {0} with role {1} OK'.format(user_name, role)
+            return {'id': resp_data['id'], 'token': resp_data['token']}
+        else:
+            print 'Expected status code {0} for wrong login OK'.format(resp.status_code)
 
     def test_01(self):
         """Login Tests"""
-        self.login('client@i2cat.net', 'i2cat', 'User.Client')
-        self.login('user@i2cat.net', 'i2cat', 'User.Provider')
+        self.login(CLIENT['user_name'], CLIENT['password'], CLIENT['role'])
+        self.login(PROVIDER['user_name'], PROVIDER['password'], PROVIDER['role'])
         self.login('user@i2cat.net', 'i2catasd', 'User.Provider', 401)
 
-    def test_04(self):
+    def test_02(self, provider_id=None):
         """Services API endpoint"""
         resp = requests.get('{0}/api/services'.format(BASE_URL),
                              headers={'Content-Type': 'application/json'})
         assert resp.status_code == 200
         services = json.loads(resp.text)
         assert 'result' in services
-        return services['result']
+        res = []
+        if not provider_id:
+            res = services['result']
+        else:
+            print 'Choosing services for provider {0}'.format(provider_id)
+            for serv in services['result']:
+                if serv['provider']['_id'] == provider_id:
+                    res.append(serv)
+        return res
 
-    def test_05(self):
+    def test_03(self):
         """Client projects endpoint"""
-        client_id = self.login('client@i2cat.net', 'i2cat', 'User.Client')
+        print '\nChecking client projects endpoint'
+        client = self.login(CLIENT['user_name'], CLIENT['password'], CLIENT['role'])
+        headers = {'Authorization': client['token']}
         resp = requests.get('{0}/api/clients/{1}/projects'.format(BASE_URL,
-                                                                  client_id))
+                                                                  client['id']),
+                            headers=headers)
         assert resp.status_code == 200
         client_projects = json.loads(resp.text)
         assert 'result' in client_projects
+        for proj in client_projects['result']:
+            assert proj['client'] == client['id']
         return client_projects['result']
 
-    def create_project(self, preserve=False):
+    def create_project(self, provider_id=None, preserve=False):
         """Create project test"""
-        tpc = TEST_PROJECT_CONTEXT
-        client_id = self.login('client@i2cat.net', 'i2cat', 'User.Client')
-        services = self.test_04()
+        tpc = {}
+        services = self.test_02(provider_id)
         service = random.choice(services)
         sid = service['_id']
         tpc['services'] = []
         tpc['services'].append({'service': sid})
-        tpc['client'] = client_id
+        tpc['client'] = self._client['id']
         tpc['name'] = str(uuid.uuid4())
+        tpc['summary'] = 'lkasjd'
+        tpc['description'] = 'lakjsdlaskjd'
         resp = requests.post('{0}/api/projects'.format(BASE_URL),
-                             headers={'Content-Type': 'application/json'},
+                             headers={'Content-Type': 'application/json',
+                                      'Authorization': self._client['token']},
                              json=tpc)
         assert resp.status_code in (200, 201)
         project = json.loads(resp.text)
@@ -84,13 +100,13 @@ class CatalogTestCase(unittest.TestCase):
 
     def test_06(self):
         """Create many projects"""
-        self.create_project()
-        self.create_project()
-        self.create_project()
-        self.create_project()
-        self.create_project()
-        self.create_project()
-        self.create_project()
+        print
+        nprojects = 10
+        print 'Creating {0} projects'.format(nprojects)
+        self._client = self.login('client@i2cat.net', 'i2cat', 'User.Client')
+        for i in range(0,nprojects):
+            self.create_project()
+        print 'All projects {0} successfully created OK'.format(nprojects)
 
     def get_consumer_params(self, service_id):
         """Get consumer params"""
@@ -103,46 +119,55 @@ class CatalogTestCase(unittest.TestCase):
 
     def test_07(self):
         """Approve and instantiate project"""
-        user_id = self.login('user@i2cat.net', 'i2cat', 'User.Provider')
-        service_id, project_id = self.create_project(False)
+        print
+        self._client = self.login('client@i2cat.net', 'i2cat', 'User.Client')
+        self._provider = self.login('user@i2cat.net', 'i2cat', 'User.Provider')
+        service_id, project_id = self.create_project(self._provider['id'])
         pending = requests.get('{0}/api/providers/{1}/projects'.format(BASE_URL,
-                                                                       user_id))
+                                                                       self._provider['id']),
+                               headers={'Authorization': self._provider['token']})
         assert pending.status_code == 200
         pending_data = json.loads(pending.text)
         assert 'result' in pending_data
         for pproj in pending_data['result']:
             if project_id == pproj['project']['_id']:
-                confirm = requests.put('{0}/api/sprojects/{1}'.format(BASE_URL,
-                                                                      pproj['_id']),
-                                       headers={'Content-Type': 'application/json'},
+                print project_id
+                print self._provider['token']
+                confirm = requests.put('{0}/api/project/{1}/state'.format(BASE_URL,
+                                                                      pproj['project']['_id']),
+                                       headers={'Content-Type': 'application/json',
+                                                'Authorization': self._provider['token']},
                                        json={'status': 3})
+                print confirm.status_code
+                print confirm.text
                 assert confirm.status_code == 200
-        cprequired = self.get_consumer_params(service_id)
-        for cpr in cprequired:
-            for field in cpr['fields']:
-                if field['type'] == 'String':
-                    field['value'] = str(uuid.uuid4())
-                else:
-                    field['value'] = random.randint(0, 10000)
-        instresp = requests.put('{0}/api/projects/{1}/state'.format(BASE_URL,
-                                                                   project_id),
-                               headers={'Content-Type': 'application/json'},
-                               json={'status': 5, 'consumer_params': cprequired})
-        assert instresp.status_code == 200
-        url = '{0}/api/projects/{1}'.format(BASE_URL, project_id)
-        while True:
-            time.sleep(10)
-            resp = requests.get(url)
-            assert resp.status_code == 200
-            nsi = json.loads(resp.text)
-            if nsi['status'] != 9:
-                print nsi
-                break
+        # cprequired = self.get_consumer_params(service_id)
+        # for cpr in cprequired:
+        #     for field in cpr['fields']:
+        #         if field['type'] == 'String':
+        #             field['value'] = str(uuid.uuid4())
+        #         else:
+        #             field['value'] = random.randint(0, 10000)
+        # instresp = requests.put('{0}/api/projects/{1}/state'.format(BASE_URL,
+        #                                                            project_id),
+        #                        headers={'Content-Type': 'application/json'},
+        #                        json={'status': 5, 'consumer_params': cprequired})
+        # assert instresp.status_code == 200
+        # url = '{0}/api/projects/{1}'.format(BASE_URL, project_id)
+        # while True:
+        #     time.sleep(10)
+        #     resp = requests.get(url)
+        #     assert resp.status_code == 200
+        #     nsi = json.loads(resp.text)
+        #     if nsi['status'] != 9:
+        #         print nsi
+        #         break
 
     def tearDown(self):
         """tearDown"""
         for pro in self._project_ids:
-            resp = requests.delete('{0}/api/projects/{1}'.format(BASE_URL, pro))
+            resp = requests.delete('{0}/api/projects/{1}'.format(BASE_URL, pro),
+                                   headers={'Authorization': self._client['token']})
             assert resp.status_code == 200
             delete_data = json.loads(resp.text)
             assert 'status' in delete_data
