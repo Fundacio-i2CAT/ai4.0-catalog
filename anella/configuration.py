@@ -19,10 +19,12 @@ database__database_repository = None
 auth__host = None
 auth__port = None
 auth__eurecat = None
+auth__oauth = None
 
 # Orchestrator Manager Service
 orch__host = None
 orch__port = None
+orch__url = None
 
 # Mail
 mail__from = None
@@ -32,6 +34,12 @@ mail__port = None
 mail__smtp = None
 mail__subject = None
 mail__body = None
+mail__owner = None
+mail__developer = None
+mail__ban = None
+mail__welcome = None
+mail__notify = None
+mail__system = None
 
 repository__path = None
 repository__ip = None

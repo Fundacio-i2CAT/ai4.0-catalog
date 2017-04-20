@@ -3,25 +3,29 @@
 from bson import ObjectId
 import os
 from anella.common import *
-from anella.model.project import Project, SProject, SAVED, DISABLED, CONFIRMED, STATES, STATUS, Client, ServiceDescription, Provider
+from anella.model.project import Project, SProject, SAVED, DISABLED, CONFIRMED, STATES, STATUS, Client, \
+    ServiceDescription, Provider
 from anella.model.instance import Instance
 from anella.model.service import VMImage
 
 from anella.orch import Orchestrator
-from anella.api.utils import Resource, ColRes, ItemRes, respond_json, error_api, item_to_json, create_message_error,update_status_project
+from anella.api.utils import regex_name, get_int, Resource, ColRes, ItemRes, \
+    respond_json, error_api, item_to_json, create_message_error, \
+    update_status_project, find_one_in_collection, count_collection
 from anella import configuration as _cfg
 import json
 from anella.model.project import STATUS
-from anella.api.utils import regex_name
 from datetime import datetime
+from mongoengine import NotUniqueError
+from anella.security.authorize import get_exists_user, get_authorize_projects, post_authorize
 
 def services_to_json(sprojects):
-    sitems=[]
+    sitems = []
     for service_id in sprojects:
-        sproject = get_db(_cfg.database__database_name)['sprojects'].find_one({'_id':service_id})
-        sitem = item_to_json(sproject, ['_id', 'context_type', 'status', 'provider', 'created_at' ])
-        service = get_db(_cfg.database__database_name)['services'].find_one({'_id':sproject['service']})
-        provider = get_db(_cfg.database__database_name)['users'].find_one({'_id':service['provider']})
+        sproject = get_db(_cfg.database__database_name)['sprojects'].find_one({'_id': service_id})
+        sitem = item_to_json(sproject, ['_id', 'context_type', 'status', 'provider', 'created_at'])
+        service = get_db(_cfg.database__database_name)['services'].find_one({'_id': sproject['service']})
+        provider = get_db(_cfg.database__database_name)['users'].find_one({'_id': service['provider']})
 
         sitem['provider'] = item_to_json(provider, ['_id', 'user_name'])
         # sitem['service'] = item_to_json(service, ['_id', 'name'])
@@ -30,21 +34,23 @@ def services_to_json(sprojects):
 
     return sitems
 
+
 def sprojects_to_json(sprojects):
     # import pdb;pdb.set_trace()
-    sitems=[]
+    sitems = []
     for sproject in sprojects:
         sitem = sproject_to_json(sproject)
         sitems.append(sitem)
-    
+
     return sitems
 
+
 def sproject_to_json(sproject, context=False):
-    project = get_db(_cfg.database__database_name)['projects'].find_one({'_id':sproject['project']})
-    sitem = item_to_json(sproject, ['_id', 'status', 'created_at' ])
-    service = get_db(_cfg.database__database_name)['services'].find_one({'_id':sproject['service']})
-    provider = get_db(_cfg.database__database_name)['users'].find_one({'_id':service['provider']})
-    client = get_db(_cfg.database__database_name)['users'].find_one({'_id':project['client']})
+    project = get_db(_cfg.database__database_name)['projects'].find_one({'_id': sproject['project']})
+    sitem = item_to_json(sproject, ['_id', 'status', 'created_at'])
+    service = get_db(_cfg.database__database_name)['services'].find_one({'_id': sproject['service']})
+    provider = get_db(_cfg.database__database_name)['users'].find_one({'_id': service['provider']})
+    client = get_db(_cfg.database__database_name)['users'].find_one({'_id': project['client']})
 
     sitem['project'] = item_to_json(project, ['_id', 'name'])
     sitem['client'] = item_to_json(client, ['_id', 'user_name'])
@@ -53,7 +59,7 @@ def sproject_to_json(sproject, context=False):
     sitem['service'] = item_to_json(service, ['_id', 'name'])
 
     if context:
-        sitem.update( item_to_json(sproject, ['context_type', 'context']) )
+        sitem.update(item_to_json(sproject, ['context_type', 'context']))
 
     return sitem
 
@@ -61,17 +67,21 @@ def sproject_to_json(sproject, context=False):
 def get_service(id_service):
     return get_db(_cfg.database__database_name)['services'].find_one({'_id': id_service})
 
+
 def get_service_by_objectid(id_service):
     return get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(id_service)})
 
+
 class ProjectStatesRes(Resource):
+    @get_exists_user(None)
     def get(self):
-        return [ dict(status=st[0], name=st[1]) for st in STATUS]
+        return [dict(status=st[0], name=st[1]) for st in STATUS]
+
 
 class ProjectsRes(ColRes):
-    collection= 'projects'
+    collection = 'projects'
     _cls = Project
-    name= 'Projects'
+    name = 'Projects'
     fields = '_id,name,summary,client,status,services,created_at,updated_at,runtime_params'.split(',')
     filter_fields = 'name,status'.split(',')
 
@@ -82,18 +92,23 @@ class ProjectsRes(ColRes):
         item['services'] = services_to_json(services)
         return item_to_json(item, self.fields)
 
+    @get_exists_user(None)
     def get(self):
         return ColRes.get(self)
 
+    @get_exists_user(None)
+    @post_authorize(None, 'client')
     def post(self):
         item = get_json()
         return create_project(item)
 
+
 class ProjectRes(ItemRes):
-    collection= 'projects'
+    collection = 'projects'
     _cls = Project
-    name= 'Project'
-    fields = '_id,name,summary,description,client,services,status,created_at,created_by,updated_at,updated_by'.split(',')
+    name = 'Project'
+    fields = '_id,name,summary,description,client,services,status,created_at,created_by,updated_at,updated_by'.split(
+        ',')
 
     def _item_to_json(self, item):
         project = self._find_obj(item['_id'])
@@ -102,7 +117,13 @@ class ProjectRes(ItemRes):
         item['services'] = services_to_json(services)
         return item_to_json(item, self.fields)
 
+    @get_exists_user(None)
+    @get_authorize_projects(None)
+    def get(self, id):
+        return super(ProjectRes, self).get(id)
 
+    @get_exists_user(None)
+    @get_authorize_projects(None)
     def put(self, id):
         """ Modifies the project when not confirmed.
             Use Project/state othercase
@@ -110,18 +131,20 @@ class ProjectRes(ItemRes):
         # import pdb;pdb.set_trace()
         project = self._find_obj(id)
         if not project:
-            return error_api( msg='Error: wrong project id in request.', status=404 )
+            return error_api(msg='Error: wrong project id in request.', status=404)
         status = project.get_status()
         if status >= CONFIRMED:
-            return error_api( msg='Error: project is confirmed yet.', status=400 )
+            return error_api(msg='Error: project is confirmed yet.', status=400)
 
         item = get_json()
         return update_project(project, item)
 
+    @get_exists_user(None)
+    @get_authorize_projects(None)
     def delete(self, id):
         project = self._find_obj(id)
         if not project:
-            return error_api( msg='Error: wrong project id in request.', status=404 )
+            return error_api(msg='Error: wrong project id in request.', status=404)
         status = project.get_status()
         for sproject in project.services:
             spres = SProjectRes()
@@ -132,21 +155,18 @@ class ProjectRes(ItemRes):
                 orch.instance_delete(instance['instance_id'])
         return delete_project(project)
 
-
 class ProjectStateRes(ProjectRes):
-
     def __init__(self):
         self.orch = Orchestrator(debug=False)
         self.spres = SProjectRes()
         self.consumer_params = None
-
 
     def _set_state(self, services, state):
         # Services are items (not obj)
         # import pdb;pdb.set_trace()
         for sproject in services:
             item = self.spres._find_item(unicode(sproject.pk))
-            #Save consumer params in SProjects
+            # Save consumer params in SProjects
             sproject.consumer_params = dict(consumer_params=self.consumer_params)
             sproject.save()
             instance = find_instance(unicode(item['_id']))
@@ -174,10 +194,10 @@ class ProjectStateRes(ProjectRes):
                                                     error_code, code)
 
             else:
-                #context para el orquestrador
+                # context para el orquestrador
                 service = get_service(item['service'])
                 context = service['context']
-                #name_image = context['name_image']
+                # name_image = context['name_image']
                 # Primero miramos si está la imagen cacheada en el orquestrador
                 if (context['vm_image_format'] == 'openstack_id') or (self.exists_image(context)):
                     if context['vm_image_format'] == 'openstack_id':
@@ -185,9 +205,9 @@ class ProjectStateRes(ProjectRes):
                     else:
                         context['vm_image'] = _cfg.repository__ip + context['name_image']
                 else:
-                    # Si no lo está. GUardamos la imagen en local
+                    # Si no lo está. Guardamos la imagen en local
                     context['vm_image'] = save_image_to_local(context['vm_image'], context['name_image'])
-                #guardada la imagen. Seguimos
+                # guardada la imagen. Seguimos
                 context['consumer_params'] = self.consumer_params
                 context = dict(context=context)
                 resp = self.orch.instance_create(context)
@@ -197,8 +217,8 @@ class ProjectStateRes(ProjectRes):
                     instance = Instance(sproject=sproject, instance_id=instance_id)
                     instance.save()
                     # delete local image
-                    #path_file = "{0}{1}".format(_cfg.repository__path, name_image)
-                    #os.remove(path_file)
+                    # path_file = "{0}{1}".format(_cfg.repository__path, name_image)
+                    # os.remove(path_file)
                 else:
                     resp_text = ''
                     json_load = json.loads(resp.text)
@@ -207,7 +227,7 @@ class ProjectStateRes(ProjectRes):
                     return create_message_error(resp.status_code, resp_text, '')
 
         error = self._get_state(services)
-        if error['status_code'] not in (200,201):
+        if error['status_code'] not in (200, 201):
             return create_message_error(self.orch.req.status_code,
                                         json.loads(self.orch.req.text)['code'], '')
 
@@ -232,11 +252,11 @@ class ProjectStateRes(ProjectRes):
             item = self.spres._find_item(unicode(service_id))
             instance = find_instance(unicode(item['_id']))
             if sproject.status == DISABLED:
-                project_status=DISABLED
+                project_status = DISABLED
                 break
             if instance:
                 data = self.orch.instance_get_state(instance['instance_id'])
-                if self.orch.req.status_code not in (200,201):
+                if self.orch.req.status_code not in (200, 201):
                     code = None
                     response = json.loads(self.orch.req.text)
                     if 'state' in response:
@@ -262,23 +282,25 @@ class ProjectStateRes(ProjectRes):
                     update_status_project(sproject.pk, code)
                     return create_message_error(404, _cfg.errors__orchestrator_state, code)
                     # some error
-                    #break
+                    # break
 
         if (project_status is None) or (data is None):
-            return create_message_error(404, _cfg.errors__orchestrator_state,'')
+            return create_message_error(404, _cfg.errors__orchestrator_state, '')
         else:
             return dict(status_code=self.orch.req.status_code, status=project_status,
                         state=STATES[project_status], runtime_params=data['runtime_params'])
 
+    @get_exists_user(None)
+    @get_authorize_projects(None)
     def get(self, id):
         # import pdb;pdb.set_trace()
         self.project = self._find_obj(id)
         if not self.project:
-            return error_api( msg='Error: wrong project id in request.', status=404 )
+            return error_api(msg='Error: wrong project id in request.', status=404)
         status = self.project.get_status()
         if status < CONFIRMED:
-            response = dict(state= STATES[status], status=status, project_id=id)
-            return respond_json( response, status=200)
+            response = dict(state=STATES[status], status=status, project_id=id)
+            return respond_json(response, status=200)
 
         resp = self._get_state(self.project.services)
         if resp['status_code'] not in (200, 201):
@@ -286,34 +308,36 @@ class ProjectStateRes(ProjectRes):
         if resp['state']:
             return respond_json({"status": resp["status"], "state": resp['state'], "project_id": id}, status=200)
         else:
-            response = dict( state='CONFIRMED', status=3, project_id=id)
+            response = dict(state='CONFIRMED', status=3, project_id=id)
             return respond_json(response, status=200)
 
+    @get_exists_user(None)
+    @get_authorize_projects(None)
     def put(self, id):
         # import pdb;pdb.set_trace()
         self.project = self._find_obj(id)
         if not self.project:
-            return error_api( msg='Error: wrong project id in request.', status=404 )
+            return error_api(msg='Error: wrong project id in request.', status=404)
         status = self.project.get_status()
         if status < CONFIRMED:
-            return error_api( msg='Error: project is not confirmed yet.', status=400 )
+            return error_api(msg='Error: project is not confirmed yet.', status=400)
 
         data = get_json()
         status = data.get('status')
         if status not in range(len(STATES)):
-            return error_api( msg='Error: wrong status in request.', status=400 )
+            return error_api(msg='Error: wrong status in request.', status=400)
         state = STATES[status]
-        if state not in  STATES:
-            return error_api( msg='Error: wrong status in request.', status=400 )
+        if state not in STATES:
+            return error_api(msg='Error: wrong status in request.', status=400)
         # In any case ensure instances exist
         self.consumer_params = data.get('consumer_params')
-        error = self._set_state(self.project.services, state )
+        error = self._set_state(self.project.services, state)
 
         if error:
             return respond_json(error, status=error['status_code'])
         else:
-            response = dict( status='ok', msg="Project state set to '%s'" % state )
-            return respond_json( response, status=200)
+            response = dict(status='ok', msg="Project state set to '%s'" % state)
+            return respond_json(response, status=200)
 
 
 class ProjectUpdateStateRes(ProjectRes):
@@ -321,31 +345,34 @@ class ProjectUpdateStateRes(ProjectRes):
         self.orch = Orchestrator(debug=False)
         self.spres = SProjectRes()
 
+    @get_exists_user(None)
+    @get_authorize_projects(None)
     def put(self, id):
         # import pdb;pdb.set_trace()
         self.project = self._find_obj(id)
         if not self.project:
-            return error_api( msg='Error: wrong project id in request.', status=404)
+            return error_api(msg='Error: wrong project id in request.', status=404)
 
         data = get_json()
         status = data.get('status')
         if status not in range(len(STATES)):
-            return error_api( msg='Error: wrong status in request.', status=400 )
+            return error_api(msg='Error: wrong status in request.', status=400)
         state = STATES[status]
-        if state not in  STATES:
-            return error_api( msg='Error: wrong status in request.', status=400 )
+        if state not in STATES:
+            return error_api(msg='Error: wrong status in request.', status=400)
         # In any case ensure instances exist
         error = self._update_state(self.project.services, state)
 
         if error:
             return respond_json(error, status=error['status_code'])
         else:
-            response = dict( status='ok', msg="Project state set to '%s'" % state )
-            return respond_json( response, status=200)
+            response = dict(status='ok', msg="Project state set to '%s'" % state)
+            return respond_json(response, status=200)
 
     def _update_state(self, services, state):
         # Services are items (not obj)
         # import pdb;pdb.set_trace()
+        code = get_status(state)
         for sproject in services:
             item = self.spres._find_item(unicode(sproject.pk))
             instance = find_instance(unicode(item['_id']))
@@ -371,19 +398,25 @@ class ProjectUpdateStateRes(ProjectRes):
                             error_code = response['response']['code']
                         return create_message_error(response['status_code'],
                                                     error_code, code)
+            elif code in (1, 3, 8):
+                update_status_project(sproject.id, code)
+            else:
+                return create_message_error(404, 'NOT_UPDATE_STATE')
 
 class ClientProjectsRes(ProjectsRes):
 
+    @get_exists_user(None)
+    @get_authorize_projects('User.Client', False, 'client', True)
     def get(self, id):
-        self.client_id=id
+        self.client_id = id
         return super(ClientProjectsRes, self).get()
 
     def _get_items(self, skip=0, limit=1000):
-        values = get_args().copy() # args are inmutable
+        values = get_args().copy()  # args are inmutable
         # status = int(values and values.pop('status', 0)) or None
         filter = self._filter_from_inputs(values)
         filter['client'] = ObjectId(self.client_id)
-        cursor = get_db(_cfg.database__database_name)['projects'].find(filter, skip=skip, limit=limit )
+        cursor = get_db(_cfg.database__database_name)['projects'].find(filter, skip=skip, limit=limit)
         items = []
         for item in cursor:
             project = self._find_obj(item['_id'])
@@ -412,9 +445,9 @@ class ClientProjectsRes(ProjectsRes):
 
 
 class SessionProjectRes(ProjectRes):
-    collection= 'projects'
+    collection = 'projects'
     _cls = Project
-    name= 'Project'
+    name = 'Project'
     fields = '_id,name,summary,description,client,status,created_at,created_by,updated_at,updated_by'.split(',')
 
     def post(self):
@@ -426,15 +459,15 @@ class SessionProjectRes(ProjectRes):
         item = get_json()
         item['client'] = user.partner_id
         return create_project(item)
-    
 
 
 class ProjectServicesRes(ColRes):
-    collection= 'sprojects'
+    collection = 'sprojects'
     _cls = SProject
-    name= 'Service Contract'
+    name = 'Service Contract'
     fields = '_id,service,status,created_at,updated_at'.split(',')
-#     filter_fields = 'name'.split(',')
+
+    #     filter_fields = 'name'.split(',')
 
     def post(self, id):
         try:
@@ -443,31 +476,31 @@ class ProjectServicesRes(ColRes):
             obj.project = project
             valid_error = self._validate(obj)
             if valid_error:
-                response = dict( status='fail', msg='%s: %s' % (self.name,valid_error))
-                return respond_json( response, status=400)
+                response = dict(status='fail', msg='%s: %s' % (self.name, valid_error))
+                return respond_json(response, status=400)
 
             obj.save()
-            response = dict( status='ok', msg='%s updated' % self.name )
-            return respond_json( response, status=200)
+            response = dict(status='ok', msg='%s updated' % self.name)
+            return respond_json(response, status=200)
 
-        except Exception,e:
-            return error_api( msg=str(e) )
-        
+        except Exception, e:
+            return error_api(msg=str(e))
 
     def get(self, id):
-        project = get_db(_cfg.database__database_name)['projects'].find_one({'_id':ObjectId(id)})
+        project = get_db(_cfg.database__database_name)['projects'].find_one({'_id': ObjectId(id)})
         result = services_to_json(project['services'])
-        response = dict( status='ok', result=result )
-        return respond_json( response, status=200)
+        response = dict(status='ok', result=result)
+        return respond_json(response, status=200)
+
 
 class SProjectsRes(ColRes):
-    collection= 'sprojects'
+    collection = 'sprojects'
     _cls = SProject
-    name= 'SProjects'
+    name = 'SProjects'
     fields = '_id,project,service,context,created_at'.split(',')
 
     def item_from_json(self, data):
-        service_cls = get_service_cls( data.get('service_type') )
+        service_cls = get_service_cls(data.get('service_type'))
         if service_cls:
             self._cls = service_cls
         item = ColRes.item_from_json(self, data)
@@ -475,10 +508,11 @@ class SProjectsRes(ColRes):
         # obj = service_cls.from_json(item)
         return item
 
+
 class SProjectRes(ItemRes):
-    collection= 'sprojects'
+    collection = 'sprojects'
     _cls = SProject
-    name= 'SProject'
+    name = 'SProject'
     fields = 'project,service,context_type,context,created_at'.split(',')
 
     def _item_to_json(self, item):
@@ -488,30 +522,80 @@ class SProjectRes(ItemRes):
         # import pdb;pdb.set_trace()
         self.sproject = self._find_obj(id)
         if not self.sproject:
-            return error_api( msg='Error: wrong service project id in request.', status=404 )
+            return error_api(msg='Error: wrong service project id in request.', status=404)
         data = get_json()
         status = data.get('status')
-        if status not in [CONFIRMED, DISABLED]: # Only support confirm by now. not in range(len(STATES)):
-            return error_api( msg='Error: wrong status in request.', status=400 )
+        if status not in [CONFIRMED, DISABLED]:  # Only support confirm by now. not in range(len(STATES)):
+            return error_api(msg='Error: wrong status in request.', status=400)
 
-        if status==CONFIRMED and self.sproject.status in range(CONFIRMED, DISABLED):
-            return error_api( msg='Error: service project is already confirmed yet.', status=400 )
+        if status == CONFIRMED and self.sproject.status in range(CONFIRMED, DISABLED):
+            return error_api(msg='Error: service project is already confirmed yet.', status=400)
 
-#         if status==DISABLED and self.sproject.status < CONFIRMED, DISABLED):
-#             return error_api( msg='Error: service project is already confirmed yet.', status=400 )
+        #         if status==DISABLED and self.sproject.status < CONFIRMED, DISABLED):
+        #             return error_api( msg='Error: service project is already confirmed yet.', status=400 )
 
         state = STATES[status]
-        self.sproject.status= status
+        self.sproject.status = status
         self.sproject.save()
-        response = dict( status='ok', msg="Service project state set to %s" % state )
-        return respond_json( response, status=200)
+        response = dict(status='ok', msg="Service project state set to %s" % state)
+        return respond_json(response, status=200)
+
+
+class SProjectStatusRes(SProjectRes):
+    collection = 'sprojects'
+    _cls = SProject
+    name = 'SProject'
+    fields = 'project,service,context_type,context,created_at'.split(',')
+
+    @get_exists_user(None)
+    @get_authorize_projects('User.Provider', is_same_user=True)
+    def get(self, id):
+        item = []
+        limit = get_int(get_arg('limit'))
+        skip = get_int(get_arg('skip'))
+        _filter = self.get_status(id)
+        result = super(SProjectStatusRes, self)._get_items(skip * limit, limit, _filter)
+        for sproject in result:
+            sitems = []
+            sitem = {}
+            project = find_one_in_collection('projects', {"services": {"$in": [ObjectId(sproject['_id'])]}})
+            data = item_to_json(project, ['_id', 'name', 'summary', 'description', 'client', 'created_at'])
+            data['sproject'] = str(sproject['_id'])
+            data['status'] = sproject['status']
+            service = find_one_in_collection('services', {'_id': sproject['service']})
+            provider = find_one_in_collection('users', {'_id': service['provider']})
+            client = find_one_in_collection('users', {"_id": ObjectId(project['client'])})
+            sitem['provider'] = item_to_json(provider, ['_id', 'user_name'])
+            sitem['service'] = item_to_json(service, ['_id', 'name'])
+            data['client'] = item_to_json(client, ['_id', 'user_name'])
+            data['provider'] = str(sproject['provider'])
+            sitems.append(sitem)
+            data['services'] = sitems
+            item.append(data)
+        response = dict(count=count_collection(self.collection, _filter), skip=skip, limit=limit,
+                        result=item)
+        return dict(response=response, status=200)
+
+    def get_status(self, id):
+        if get_arg('status') is None:
+            return {'provider': ObjectId(id)}
+        else:
+            lst = get_arg('status').split(',')
+            nums = []
+            for x in lst:
+                nums.append(int(x))
+            return {'provider': ObjectId(id),
+                    'status': {'$in': nums}}
+
 
 class ProviderSProjectsRes(SProjectsRes):
     filter_fields = 'provider,status'.split(',')
 
+    @get_exists_user(None)
+    @get_authorize_projects('User.Provider', False, 'provider', True)
     def get(self, id):
         # import pdb;pdb.set_trace()
-        self.provider_id=id
+        self.provider_id = id
         return super(ProviderSProjectsRes, self).get()
 
     def _filter_from_inputs(self, values):
@@ -522,28 +606,39 @@ class ProviderSProjectsRes(SProjectsRes):
 
     def _get_items(self, skip=0, limit=1000):
         # import pdb;pdb.set_trace()
-        values = get_args().copy() # args are inmutable
+        values = get_args().copy()  # args are inmutable
         # status = int(values and values.pop('status', 0)) or None
         filter = self._filter_from_inputs(values)
         filter['provider'] = ObjectId(self.provider_id)
-        cursor = get_db(_cfg.database__database_name)['sprojects'].find(filter, skip=skip, limit=limit )
-        return [item for item in cursor ]
+        cursor = get_db(_cfg.database__database_name)['sprojects'].find(filter, skip=skip, limit=limit).sort('created_at', -1)
+        return [item for item in cursor]
 
     def _items_to_json(self, items):
         return sprojects_to_json(items)
 
 
 class ProjectOrchCallbackRes(ProjectsRes):
-
     def post(self):
         instance_info = get_json()
         if 'image_path' in instance_info:
             try:
-                file_to_remove = '{0}/{1}'.format(_cfg.repository__path,
-                                                  instance_info['image_path'])
+                instance = get_db(_cfg.database__database_name)['instances'].find_one({'instance_id': instance_info['service_instance_id']})
+                sproject = get_db(_cfg.database__database_name)['sprojects'].find_one({'_id': ObjectId(instance['sproject'])})
+                service = get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(sproject['service'])})
+                nstatus = [x[0] for x in STATUS if instance_info['state'].upper() == x[1]]
+                if len(nstatus) > 0:
+                    rpps = None
+                    if 'runtime_params' in instance_info:
+                        rpps = {'runtime_params' : instance_info['runtime_params']}
+                    get_db(_cfg.database__database_name)['sprojects'].update({'_id': ObjectId(instance['sproject'])},
+                                                                             {'$set': {'status': nstatus[0], 'runtime_params': rpps}},
+                                                                             upsert=False)
+                image_path = '{0}.img'.format(str(service['context']['vm_image']))
+                file_to_remove = '{0}{1}'.format(_cfg.repository__path,
+                                                  image_path)
                 os.remove(file_to_remove)
             except:
-                respond_json({'message': 'Error removing {0}'.format(file_to_remove)}, status=500)
+                respond_json({'message': 'Error removing'}, status=500)
         return respond_json(instance_info, status=200)
 
 
@@ -554,27 +649,29 @@ def delete_project(project):
         services = project.services
         if services:
             for sproject in list(services):
-                if status<CONFIRMED:
+                if status < CONFIRMED:
                     sproject.delete()
                 else:
-                    sproject.status=DISABLED
+                    sproject.status = DISABLED
                     sproject.save()
 
-        if status<CONFIRMED:
+        if status < CONFIRMED:
             project.delete()
-            response = dict( status='ok', id=unicode(project.pk), msg="Project deleted." )
+            response = dict(status='ok', id=unicode(project.pk), msg="Project deleted.")
         else:
-            response = dict( status='ok', id=unicode(project.pk), msg="Project disabled." )
-        return respond_json( response, status=200)
+            response = dict(status='ok', id=unicode(project.pk), msg="Project disabled.")
+        return respond_json(response, status=200)
 
-    except Exception,e:
-        response = dict( status='fail', msg=unicode(e) )
-        return respond_json( response, status=400)
+    except Exception, e:
+        response = dict(status='fail', msg=unicode(e))
+        return respond_json(response, status=400)
 
 
 def update_project(project, item, is_new=False):
     # import pdb;pdb.set_trace()
     _status = SAVED
+    status_code = 200
+    if is_new: status_code = 201
     try:
         resp = regex_name(item)
         if resp is not None: return resp
@@ -584,11 +681,13 @@ def update_project(project, item, is_new=False):
         client_id = item.pop('client', None)
         if client_id:
             is_provider = get_type_user(client_id)
-            if is_provider: client = Provider.objects.get(id=client_id); _status = CONFIRMED
-            else: client = Client.objects.get(id=client_id)
+            if is_provider:
+                client = Provider.objects.get(id=client_id); _status = CONFIRMED
+            else:
+                client = Client.objects.get(id=client_id)
         if project.client:
-            if client and project.client!=client:
-                return error_api( msg='Error: Client project can not be changed.', status=400 )
+            if client and project.client != client:
+                return error_api(msg='Error: Client project can not be changed.', status=400)
         elif client is None:
             return error_api("Client not defined.", status=400)
         else:
@@ -599,23 +698,27 @@ def update_project(project, item, is_new=False):
             for sproject in list(services):
                 sproject.delete()
                 project.services.remove(sproject)
-                
+
         sitems = item.pop('services')
 
         for name in ['name', 'description', 'summary']:
             if name in item:
                 setattr(project, name, item[name])
+        try:
+            project.save()
+        except NotUniqueError:
+            error_response = create_message_error(409, 'NOT_UNIQUE_PROJECT_NAME')
+            return respond_json(error_response, status=409)
 
-        project.save()
-        services=[]
+        services = []
         if not sitems:
             project.delete()
             return error_api("No services.", status=400)
         try:
             for sitem in sitems:
                 service_id = sitem['service']
-                #service = ServiceDescription.objects.get(id=service_id)
-                service = get_db(_cfg.database__database_name)['services'].\
+                # service = ServiceDescription.objects.get(id=service_id)
+                service = get_db(_cfg.database__database_name)['services']. \
                     find_one({'_id': ObjectId(service_id)})
                 if service is None:
                     project.delete()
@@ -641,12 +744,9 @@ def update_project(project, item, is_new=False):
                     sproject.delete()
                 project.delete()
                 return error_api(msg="Error: updating project '%s'." % err, status=400)
-        if is_new:
-            response = dict( status='ok', id=unicode(project.pk), msg="Project created." )
-            return respond_json(response, status=201)
-        else:
-            response = dict( status='ok', id=unicode(project.pk), msg="Project updated." )
-            return respond_json(response, status=200)
+        response = dict(status=project.status, id=unicode(project.pk), name=project.name,
+                        created=project.created_at)
+        return respond_json(response, status=status_code)
     except Exception, e:
         response = dict(status='fail', msg=unicode(e))
         return respond_json(response, status=400)
@@ -660,12 +760,12 @@ def create_project(item):
 def save_image_to_local(vm_image, vm_name):
     image = VMImage(vm_name)
     image.id = ObjectId(vm_image)
-    image.get_image()
-    return _cfg.repository__ip + vm_name
+    name_id = image.get_image()
+    return _cfg.repository__ip + name_id
 
 
 def find_instance(id):
-    instance = get_db(_cfg.database__database_name)['instances'].find_one({'sproject':ObjectId(id)})
+    instance = get_db(_cfg.database__database_name)['instances'].find_one({'sproject': ObjectId(id)})
     return instance
 
 
@@ -673,9 +773,9 @@ def get_status(state):
     _status = dict(STATUS)
     return list(_status.keys())[list(_status.values()).index(state)]
 
+
 def get_type_user(id):
-    cursor = get_db(_cfg.database__database_name)['users'].find_one({'_id':ObjectId(id)})
+    cursor = get_db(_cfg.database__database_name)['users'].find_one({'_id': ObjectId(id)})
     if cursor['_cls'] == 'User.Provider':
         return True
     return False
-

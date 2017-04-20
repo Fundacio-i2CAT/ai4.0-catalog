@@ -75,5 +75,47 @@
 	    "ca" : "S'ha produït un error a l'hora de configurar un servei",
 	    "es" : "Se ha producido un error de configuración de un servicio"
 	}
+    },
+    {
+        "code" : "NO_AUTORIZED",
+        "i18n" : {
+            "ca" : "No està autoritzat a veure la informació que sol.licita",
+            "es" : "No està autorizado a ver la información que solicita"
+        }
+    },
+    {
+        "code" : "NO_INSTANCES",
+        "i18n" : {
+            "ca" : "No hi ha cap instància de servei per poder consultar",
+            "es" : "No hay ninguna instancia de servicio para poder consultar"
+        }
+    },
+    {
+        "code" : "BAD_URL",
+        "i18n" : {
+            "ca" : "Url incorrecte",
+            "es" : "Url incorrecta"
+        }
+    },
+    {
+        "code" : "NOT_UNIQUE_PROJECT_NAME",
+        "i18n" : {
+            "ca" : "Ja existeix un projecte amb el mateix nom",
+            "es" : "Ya existe un proyecto con el mismo nombre"
+        }
+    },
+    {
+        "code" : "TOKEN_EXPIRED",
+        "i18n" : {
+            "ca" : "Ha expirat el token. Torni a iniciar sessió",
+            "es" : "Ha caducado el token. Vuelva a loguearse"
+        }
+    },
+    {
+        "code" : "NOT_UPDATE_STATE",
+        "i18n" : {
+            "ca" : "No s'ha pogut realitzar l'acció sol.licitada, Si us plau, contacti amb l'administrador.",
+            "es" : "No se ha podido realizar la acción solicitada. Por favor, contacte con el administrador."
+        }
     }
 ]

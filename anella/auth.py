@@ -9,6 +9,8 @@ from requests import Session
 from anella.common import *
 from anella.model.user import UserRole, User, Administrator, Client, Provider
 from anella.api.utils import create_response
+import jwt
+from datetime import datetime, timedelta
 
 LOGGER = logging.getLogger('stdout')
 
@@ -22,14 +24,21 @@ cls_dict = {
 class Authenticator(object):
 
     def __init__(self):
-        self.root_path='http://%s:%s/LmpApiI2cat/' % (get_cfg('auth__host'), get_cfg('auth__port'))
+        self.root_path='https://%s:%s/1.0/LmpApiI2cat/' % (get_cfg('auth__host'), get_cfg('auth__port'))
         self.session = Session()
+        with open(get_cfg('auth__oauth')) as fhandle:
+            self.authorization = json.load(fhandle)
+        self.session.headers.update(self.authorization['headers'])
+        # Waiting for Eurecat's certificate ...
+        #    meanwhile verification disabled
+        self.session.verify = False
         # For debugging purposes
         self.r_data = None
         self.path = None
         self.user = None
         self.item = dict(message="User not found")
         self.provider = None
+        self.email = None
 
     def user_login(self, email, password):
         path = self.root_path + 'authenticateWithPassword?email=' + email + '&password=' + password
@@ -38,7 +47,7 @@ class Authenticator(object):
         if req.status_code == 200:
             #Encontrado el usuario
             self.create_role_user()
-            self.user.email = email
+            self.email = email
             data = self.user_find(self.user)
             self.user.user_name = data['name']
             self.user.auth_id = data['id']
@@ -46,6 +55,7 @@ class Authenticator(object):
             try:
                 self.user.role = self.find_user_role(data['_links']['associations']['href'])
                 self.user.id = self.get_cls()
+                self.create_token()
             except IndexError:
                 req.status_code = 500
                 self.item = dict(message="This user isn't associated any entity")
@@ -56,7 +66,7 @@ class Authenticator(object):
         self.item = self.user.__dict__
 
     def user_find(self, user):
-        self.path = self.root_path+'people/search/findFirstByEmail?email='+quote_plus(user.email)
+        self.path = self.root_path+'people/search/findFirstByEmail?email='+quote_plus(self.email)
         self.req = self.session.get(self.path)
         if self.req.status_code==200:
             return json.loads(self.req.text)
@@ -64,7 +74,7 @@ class Authenticator(object):
     def find_user_role(self, url):
         req = self.session.get(url)
         data = json.loads(req.text)
-        self.find_entity_user(data['_embedded']['personEntityRelationships'][0]['_links']['organization']['href'])
+        #self.find_entity_user(data['_embedded']['personEntityRelationships'][0]['_links']['organization']['href'])
         return data['_embedded']['personEntityRelationships'][0]['state']
 
     def find_entity_user(self, url):
@@ -132,7 +142,7 @@ class Authenticator(object):
         item = user.get(self.user.auth_id)
         if item is None:
             _class = self.get_role_user()
-            admin = _class(user_name=self.user.email, auth_id=self.user.auth_id)
+            admin = _class(user_name=self.email, auth_id=self.user.auth_id)
             admin.save()
             _id = str(str(admin.pk))
             tmp = user.get(self.user.auth_id)
@@ -149,3 +159,12 @@ class Authenticator(object):
         elif self.provider:
             _class = cls_dict['provider']
         return _class
+
+    def create_token(self):
+        payload = {
+            'user_id': self.user.id,
+            'exp': datetime.utcnow() + timedelta(seconds=900),
+            'role': self.user.role
+        }
+        jwt_token = jwt.encode(payload, 'secret', 'HS256')
+        self.user.token = jwt_token

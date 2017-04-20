@@ -15,7 +15,8 @@ import hashlib
 from anella.orch import Orchestrator
 from datetime import datetime
 from anella.api.utils import ColRes, ItemRes, Resource, item_to_json, ObjectId
-
+import uuid
+from anella.security.authorize import get_exists_user, get_authorize, post_authorize
 
 class ServicesRes(ColRes):
     collection = 'services'
@@ -25,6 +26,8 @@ class ServicesRes(ColRes):
         ',')
     filter_fields = 'name,keywords,sectors,activated'.split(',')
 
+    @get_exists_user('User.Provider')
+    @post_authorize('User.Provider', 'provider')
     def post(self):
         item = get_json()
         return create_service(item)
@@ -49,14 +52,19 @@ class ServicesRes(ColRes):
     def _get_items(self, skip=0, limit=1000, **values):
         return super(ServicesRes, self)._get_items(skip, limit, dict(activated=True))
 
+    def get(self):
+        return super(ServicesRes, self).get()
+
 
 class ServicesProviderRes(ItemRes):
     collection = 'services'
     _cls = AppService
     name = 'Services'
-    fields = '_id,name,summary,service_type,provider,context,sectors,price_initial,price_x_hour,activated'.split(
+    fields = '_id,created_at,name,summary,service_type,provider,context,sectors,price_initial,price_x_hour,activated'.split(
         ',')
 
+    @get_exists_user(None)
+    @get_authorize('User.Provider', 'services', False, 'provider', True)
     def get(self, id):
         limit = get_int(get_arg('limit'))
         skip = get_int(get_arg('skip'))
@@ -110,6 +118,14 @@ class ServiceRes(ItemRes):
             sitem['provider'] = item_to_json(provider, ['_id', 'user_name'])
         return sitem
 
+    def get(self,id):
+        return super(ServiceRes, self).get(id)
+
+    @get_exists_user(None)
+    @get_authorize('User.Provider', 'services', True, 'provider')
+    def put(self,id):
+        return super(ServiceRes, self).put(id)
+
 
 class ServiceTypesRes(Resource):
     def get(self):
@@ -117,6 +133,7 @@ class ServiceTypesRes(Resource):
 
 
 class VMImageRes(Resource):
+    @get_exists_user('User.Provider')
     def post(self):
         try:
             _file = request.files['file']
@@ -127,11 +144,13 @@ class VMImageRes(Resource):
                             vm_image_format=extension_file[1:])
             return respond_json(response, status=200)
         except Exception as e:
-            response = dict(status='nok', msg="Error %s %s" % (e, e.message))
+            response = dict(status='nok', msg="Error")
             return respond_json(response, status=400)
 
 
 class ServiceConsumerParamsRes(ColRes):
+    @get_exists_user(None)
+    @get_authorize(None, 'services', True, 'provider')
     def get(self, id):
         service = get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(id)})
         if service is None:
@@ -146,6 +165,7 @@ class ServiceConsumerParamsRes(ColRes):
 
 
 class VMImageResourceRes(Resource):
+    @get_exists_user('User.Provider')
     def post(self):
         _file = request.files['file']
         filename = secure_filename(_file.filename)
@@ -153,9 +173,11 @@ class VMImageResourceRes(Resource):
 
 
 class VMImageUnchunkedRes(Resource):
+    @get_exists_user('User.Provider')
     def post(self):
         data = get_json()
-        filename = '{0}{1}'.format(_cfg.repository__download, data['filename'])
+        filename_uuid = '{0}.img'.format(str(uuid.uuid4()))
+        filename = '{0}{1}'.format(_cfg.repository__download, filename_uuid)
         path_repository = '{0}{1}{2}'.format(_cfg.repository__download, data['uuid'], "*")
         try:
             outfile = open(filename, "w")
@@ -168,15 +190,16 @@ class VMImageUnchunkedRes(Resource):
             outfile.close()
             md5sum = self.checksum_md5(filename)
             if data['md5sum'] == md5sum:
-                response = dict(md5="ok", name_image=data['filename'])
+                response = dict(md5="ok", name_image=data['filename'],
+                                filename_uuid=filename_uuid)
                 return respond_json(response, status=200)
             else:
                 # Devolvemos 409
-                response = dict(status="nok", msg="Error to upload file. MD5 not equal: %s" % data['filename'])
+                response = dict(status="nok", msg="Error to upload file. MD5 not equal")
                 return respond_json(response, status=409)
         except Exception as e:
             self.delete_files_tmp(path_repository, filename)
-            response = dict(status="nok", msg="Error to upload file: %s" % e)
+            response = dict(status="nok", msg="Error to upload file")
             return respond_json(response, status=500)
 
     def checksum_md5(self, filename):
@@ -194,27 +217,29 @@ class VMImageUnchunkedRes(Resource):
 
 
 class VMImageUploadBDRes(Resource):
+    @get_exists_user('User.Provider')
     def post(self):
         data = get_json()
         try:
             vm_image = VMImage(data['filename'])
-            data_vm = vm_image.save_image_2()
-            os.remove(_cfg.repository__download + data['filename'])
+            data_vm = vm_image.save_image_2(data['filename_uuid'])
+            os.remove(_cfg.repository__download + data['filename_uuid'])
             response = dict(vm_image=unicode(data_vm), name_image=data['filename'])
             return respond_json(response, status=200)
         except Exception as e:
             os.remove(_cfg.repository__download + data['filename'])
-            response = dict(status="nok", msg="Error to upload file: %s" % e)
+            response = dict(status="nok", msg="Error to upload file")
             return respond_json(response, status=500)
 
-
 class Flavors(ItemRes):
+    @get_exists_user(None)
     def get(self, id):
         orch = Orchestrator(debug=False)
         return orch.get_flavors(id)
 
 
 class Pop(ItemRes):
+    @get_exists_user(None)
     def get(self):
         orch = Orchestrator(debug=False)
         return orch.get_pop()

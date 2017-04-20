@@ -1,3 +1,5 @@
+keys
 venv/*
 *.pyc
 */*.pyc
+.idea/*

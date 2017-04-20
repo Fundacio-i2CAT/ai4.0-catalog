@@ -1,0 +1,10 @@
+Benvingut a la Plataforma Industrial 4.0, el seu
+usuari:
+
+{0}
+
+ja ha estat activat, pot accedir-hi amb el seu password
+a https://pi40.i2cat.net i si te qualsevol dubte
+pot escriure un correu electrònic a {1}
+
+
