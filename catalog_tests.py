@@ -87,8 +87,8 @@ class CatalogTestCase(unittest.TestCase):
         tpc['services'].append({'service': sid})
         tpc['client'] = self._client['id']
         tpc['name'] = str(uuid.uuid4())
-        tpc['summary'] = 'lkasjd'
-        tpc['description'] = 'lakjsdlaskjd'
+        tpc['summary'] = str(uuid.uuid4())
+        tpc['description'] = str(uuid.uuid4())
         resp = requests.post('{0}/api/projects'.format(BASE_URL),
                              headers={'Content-Type': 'application/json',
                                       'Authorization': self._client['token']},
