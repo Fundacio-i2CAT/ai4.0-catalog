@@ -117,5 +117,12 @@
             "ca" : "No s'ha pogut realitzar l'acció sol.licitada, Si us plau, contacti amb l'administrador.",
             "es" : "No se ha podido realizar la acción solicitada. Por favor, contacte con el administrador."
         }
+    },
+    {
+        "code" : "STACK_CREATION_TIMEOUT",
+        "i18n" : {
+            "ca" : "No s'ha pogut instanciar el servei degut a una demora excessiva en la resposta del centre de dades.",
+            "es" : "No se ha podido instanciar el servicio debido a una demora excesiva en la respuesta del centro de datos."
+        }
     }
 ]
