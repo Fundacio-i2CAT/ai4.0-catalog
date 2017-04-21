@@ -37,20 +37,21 @@ class Authenticator(object):
             data = find_one_in_collection('users',
                                           {'keystone_user_id': json.loads(response.text)['token']['user']['id']})
             if data is not None:
-                self.create_role_user()
-                self.user.user_name = data['name']
-                self.user.id = str(data['_id'])
-                self.user.role = data['_cls']
-                self.create_token()
+                self.create_role_user(data)
                 response.status_code = 200
             else:
                 response.status_code = 404
                 self.item = create_message_error(response.status_code, "USER_NOT_FOUND")
         return create_response(response.status_code, self.item)
 
-    def create_role_user(self):
+    def create_role_user(self, data):
         self.user = UserRole()
         self.item = self.user.__dict__
+        self.user.user_name = data['name']
+        self.user.id = str(data['_id'])
+        self.user.role = data['_cls']
+        self.user.password = data['password']
+        self.create_token()
 
     def create_token(self):
         payload = {

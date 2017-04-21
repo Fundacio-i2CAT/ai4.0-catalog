@@ -113,6 +113,8 @@ def load_config(configfile, clear_db_config=False):
         cfg.keystone__data_create_user = yaml_config['anella']['keystone']['data_create_user']
         cfg.keystone__create_user = yaml_config['anella']['keystone']['create_user']
         cfg.keystone__data_patch_user = yaml_config['anella']['keystone']['data_patch_user']
+        cfg.keystone__data_patch_password_user = yaml_config['anella']['keystone']['data_patch_password_user']
+        cfg.keystone__data_change_password_user = yaml_config['anella']['keystone']['data_change_password_user']
 
     except Exception, err:
         print "Exception loading config file [{0}]: ({1})".format(

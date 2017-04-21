@@ -46,8 +46,8 @@ def get_exists_user(model):
                     if data is None:
                         return return_error_response(401, 'NO_AUTORIZED')
                     if model is not None:
-                        if get_http_status_code(get_model(model), get_model(decode_jwt['role'])) == 401:
-                            return return_error_response(401, 'NO_AUTORIZED')
+                        if get_http_status_code(get_model(model), get_model(decode_jwt['role'])) == 403:
+                            return return_error_response(403, 'NO_AUTORIZED')
                 else:
                     return return_error_response(403, 'TOKEN_EXPIRED')
                 return fn(*args, **kwargs)
@@ -77,11 +77,11 @@ def get_authorize(model, collection, is_by_id, attribute, is_same_user=False):
                 decode_jwt = decode_token(get_token())
                 if decode_jwt:
                     if is_same_user:
-                        if get_http_status_code(ObjectId(decode_jwt['user_id']), ObjectId(get_view_args())) == 401:
-                            return return_error_response(401, 'NO_AUTORIZED')
+                        if get_http_status_code(ObjectId(decode_jwt['user_id']), ObjectId(get_view_args())) == 403:
+                            return return_error_response(403, 'NO_AUTORIZED')
                     if model is not None and \
-                            get_http_status_code(get_model(model), get_model(decode_jwt['role'])) == 401:
-                        return return_error_response(401, 'NO_AUTORIZED')
+                            get_http_status_code(get_model(model), get_model(decode_jwt['role'])) == 403:
+                        return return_error_response(403, 'NO_AUTORIZED')
                     if get_model(decode_jwt['role']) == Provider:
                         if is_by_id:
                             filters = {"_id": ObjectId(get_view_args()),
@@ -116,19 +116,19 @@ def get_authorize_projects(model, is_by_id=True, attribute=None, is_same_user=Fa
                 decode_jwt = decode_token(get_token())
                 if decode_jwt:
                     if is_same_user:
-                        if get_http_status_code(ObjectId(decode_jwt['user_id']), ObjectId(get_view_args())) == 401:
-                            return return_error_response(401, 'NO_AUTORIZED')
+                        if get_http_status_code(ObjectId(decode_jwt['user_id']), ObjectId(get_view_args())) == 403:
+                            return return_error_response(403, 'NO_AUTORIZED')
                     user_model = model
                     if model is None:
                         user_model = get_model(decode_jwt['role'])
                     if user_model == Client:
                         data = get_project('projects', get_filter(is_by_id, decode_jwt, attribute))
                         if data is None:
-                            return return_error_response(401, 'NO_AUTORIZED')
+                            return return_error_response(403, 'NO_AUTORIZED')
                     elif user_model == Provider and not is_same_user:
                         data = get_project('projects', {"_id": ObjectId(get_view_args())})
                         if data is None:
-                            return return_error_response(401, 'NO_AUTORIZED')
+                            return return_error_response(403, 'NO_AUTORIZED')
                         is_sproject = False
                         for sprojects in data['services']:
                             item = get_project('sprojects', {"_id": sprojects,
@@ -153,11 +153,11 @@ def post_authorize(model, field):
                 decode_jwt = decode_token(get_token())
                 if decode_jwt:
                     body = json.loads(get_data())[field]
-                    if get_http_status_code(ObjectId(decode_jwt['user_id']), ObjectId(body)) == 401:
-                        return return_error_response(401, 'NO_AUTORIZED')
+                    if get_http_status_code(ObjectId(decode_jwt['user_id']), ObjectId(body)) == 403:
+                        return return_error_response(403, 'NO_AUTORIZED')
                     if model is not None:
-                        if get_http_status_code(get_model(model), get_model(decode_jwt['role'])) == 401:
-                            return return_error_response(401, 'NO_AUTORIZED')
+                        if get_http_status_code(get_model(model), get_model(decode_jwt['role'])) == 403:
+                            return return_error_response(403, 'NO_AUTORIZED')
             except Exception as e:
                 print e
                 return return_error_response(403, '')
@@ -188,7 +188,7 @@ def get_http_status_code(a, b):
     if a == b:
         return 200
     else:
-        return 401
+        return 403
 
 
 def get_role_user(user_id):

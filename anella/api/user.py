@@ -9,7 +9,6 @@ from anella import configuration as _cfg
 import json
 from anella.security.authorize import get_exists_user
 from anella.api.keystone import Keystone
-from requests import Session
 from bson.objectid import ObjectId
 
 
@@ -114,7 +113,7 @@ class UserRes(ItemRes):
     def _item_to_json(self, item):
         item = partner_to_json(item)
         return item_to_json(item, self.fields)
-       
+
 def partner_to_json(item):
     partner_id = item.pop('partner_id', None)
     if partner_id:

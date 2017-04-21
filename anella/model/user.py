@@ -20,6 +20,7 @@ class UserRole(object):
         #self.entity = None
         #self.email = None
         self.user_name = None
+        self.password = None
 
 class User(Document, Base):
     meta = {'allow_inheritance': True, 'collection': 'users'}
@@ -38,6 +39,7 @@ class User(Document, Base):
     legal = BooleanField()
     identification = DictField()
     deleted = BooleanField(default=False)
+    password = BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         return super(User, self).save(*args, **kwargs)

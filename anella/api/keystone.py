@@ -5,6 +5,7 @@ from anella.api.utils import post
 from requests import Session
 import json
 
+
 def get_keystone_info(file):
     return file['user'], file['password']
 
@@ -42,11 +43,26 @@ class Keystone(object):
         url = self.path + get_cfg('keystone__create_user')
         return self.session.get(url, headers=create_keystone_headers(get_keystone_token(response)))
 
-    def patch_user(self, user_id, activated):
+    def patch_user(self, user_id, info):
         response = self.get_login()
         url = self.path + get_cfg('keystone__create_user') + "/" + user_id
-        json_data = read_json_file(get_cfg('keystone__data_patch_user'))
-        json_data['user']['enabled'] = activated
-        return self.session.patch(url, data=json.dumps(json_data),
-                                      headers=create_keystone_headers(get_keystone_token(response)))
+        return self.session.patch(url, data=json.dumps(self.get_json_data(info)),
+                                  headers=create_keystone_headers(get_keystone_token(response)))
 
+    def get_json_data(self, info):
+        if isinstance(info, bool):
+            json_data = read_json_file(get_cfg('keystone__data_patch_user'))
+            json_data['user']['enabled'] = info
+        else:
+            json_data = read_json_file(get_cfg('keystone__data_patch_password_user'))
+            json_data['user']['password'] = info
+        return json_data
+
+    def change_password(self, user_id, password):
+        response = self.get_login()
+        url = self.path + get_cfg('keystone__create_user') + "/" + user_id + '/password'
+        json_data = read_json_file(get_cfg('keystone__data_change_password_user'))
+        json_data['user']['password'] = password['password']
+        json_data['user']['original_password'] = password['original_password']
+        return self.session.post(url, data=json.dumps(json_data),
+                                 headers=create_keystone_headers(get_keystone_token(response)))

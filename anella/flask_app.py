@@ -27,6 +27,10 @@ def add_resources(api):
 
     api.add_resource(SessionRes, '/api/session', methods=['POST', 'DELETE'])
     api.add_resource(SessionUserRes, '/api/session/user', methods=['GET'])
+
+    from anella.api.password import Password
+    #no access control
+    api.add_resource(Password, '/api/change/password/<id>', methods=['GET', 'PUT'])
     '''
     from anella.api.provider import ProvidersRes, ProviderRes, ProviderServicesRes, ProviderServicePublishRes
     from anella.api.client import ClientsRes, ClientRes # , ClientServicesRes
