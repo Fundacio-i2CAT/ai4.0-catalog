@@ -11,10 +11,43 @@ import uuid
 import sys
 import os
 
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 BASE_URL = 'http://dev.anella.i2cat.net:9999'
 
-CLIENT = {'user_name': 'client@i2cat.net', 'password': 'i2cat', 'role': 'User.Client'}
-PROVIDER = {'user_name': 'user@i2cat.net', 'password': 'i2cat', 'role': 'User.Provider'}
+CLIENT = {'user_name': 'client@i2cat.net',
+          'password': 'i2cat', 'role': 'User.Client'}
+PROVIDER = {'user_name': 'user@i2cat.net',
+            'password': 'i2cat', 'role': 'User.Provider'}
+
+CLIENT_REGISTER_FORM = {
+    'name': 'Test',
+    'surname': 'Test_sn',
+    'email': 'email@example.com',
+    'company': 'Test_cmp',
+    'comp_address': 'Test_cmp_addr',
+    'comp_phone': 'Test_cmp_ph',
+    'comp_position': 'Test_pos',
+    'client_role': True,
+    'provider_role': False,
+    'legal': False,
+    'password': 'secretsecret',
+    'identification_number':
+    {
+        'isnif': True,
+        'value': None
+    }
+}
+
+from random import randint
+
+def nif_generator():
+    number = random.randint(10**(8-1), (10**8)-1)
+    letters = ['T', 'R', 'W', 'A', 'G', 'M', 'Y', 'F',
+               'P', 'D', 'X', 'B', 'N', 'J', 'Z', 'S',
+               'Q', 'V', 'H', 'L', 'C', 'K', 'E']
+    return str(number)+letters[number % 23]
 
 class CatalogTestCase(unittest.TestCase):
     """Full test"""
@@ -25,10 +58,32 @@ class CatalogTestCase(unittest.TestCase):
         self._client = {}
         self._provider = {}
 
+    def register(self):
+        """Register function"""
+        print
+        CLIENT_REGISTER_FORM['email'] = str(uuid.uuid4())+'@example.com'
+        CLIENT_REGISTER_FORM['identification_number']['value'] = nif_generator()
+        resp = requests.post('{0}/api/register'.format(BASE_URL),
+                             headers={'Content-Type': 'application/json'},
+                             json=CLIENT_REGISTER_FORM)
+        assert resp.status_code == 201
+        data = json.loads(resp.text)
+        print 'Successfully registered new user id {0}'.format(data['id'])
+        with open('keys/oauth_eurecat.json') as fhandle:
+            authorization = json.load(fhandle)
+        url = 'https://84.88.76.5:8244/1.0/LmpApiI2cat/people/{0}'.format(data['id'])
+        delete_resp = requests.delete(url, verify=False,
+                                      headers=authorization['headers'])
+        assert delete_resp.status_code == 204
+        print 'Successfully removed test user'
+        return
+
     def login(self, user_name, password, role, expected=200):
+        """Login function, in case of success returns the token and user id"""
         resp = requests.post('{0}/api/session'.format(BASE_URL),
                              headers={'Content-Type': 'application/json'},
-                             json={'user_name': user_name, 'password': password})
+                             json={'user_name': user_name,
+                                   'password': password})
         assert resp.status_code == expected
         if expected == 200:
             resp_data = json.loads(resp.text)
@@ -37,12 +92,16 @@ class CatalogTestCase(unittest.TestCase):
             print 'Login as {0} with role {1} OK'.format(user_name, role)
             return {'id': resp_data['id'], 'token': resp_data['token']}
         else:
-            print 'Expected status code {0} for wrong login OK'.format(resp.status_code)
+            print 'Expected status {0} wrong login OK'.format(resp.status_code)
 
     def test_01(self):
         """Login Tests"""
-        self.login(CLIENT['user_name'], CLIENT['password'], CLIENT['role'])
-        self.login(PROVIDER['user_name'], PROVIDER['password'], PROVIDER['role'])
+        self.login(CLIENT['user_name'],
+                   CLIENT['password'],
+                   CLIENT['role'])
+        self.login(PROVIDER['user_name'],
+                   PROVIDER['password'],
+                   PROVIDER['role'])
         self.login('user@i2cat.net', 'i2catasd', 'User.Provider', 401)
 
     def test_02(self, provider_id=None):
@@ -65,7 +124,9 @@ class CatalogTestCase(unittest.TestCase):
     def test_03(self):
         """Client projects endpoint"""
         print '\nChecking client projects endpoint'
-        client = self.login(CLIENT['user_name'], CLIENT['password'], CLIENT['role'])
+        client = self.login(CLIENT['user_name'],
+                            CLIENT['password'],
+                            CLIENT['role'])
         headers = {'Authorization': client['token']}
         resp = requests.get('{0}/api/clients/{1}/projects'.format(BASE_URL,
                                                                   client['id']),
@@ -106,36 +167,35 @@ class CatalogTestCase(unittest.TestCase):
         nprojects = 100
         print 'Creating {0} projects'.format(nprojects)
         self._client = self.login('client@i2cat.net', 'i2cat', 'User.Client')
-        for i in range(0,nprojects):
+        for i in range(0, nprojects):
             self.create_project()
         print 'All projects {0} successfully created OK'.format(nprojects)
 
     def get_consumer_params(self, service_id):
         """Get consumer params"""
-        cpresp = requests.get('{0}/api/services/consumer/params/{1}'.format(BASE_URL,
-                                                                            service_id),
-                              headers={'Authorization': self._client['token']})
+        url = '{0}/api/services/consumer/params/{1}'.format(BASE_URL, service_id)
+        cpresp = requests.get(url, headers={'Authorization': self._client['token']})
         assert cpresp.status_code == 200
         cpdata = json.loads(cpresp.text)
         assert 'data' in cpdata
         return cpdata['data']
 
     def stop_project(self, project_id):
-        confirm = requests.put('{0}/api/project/{1}/state'.format(BASE_URL,
-                                                                  project_id),
-                               headers={'Content-Type': 'application/json',
-                                        'Authorization': self._client['token']},
-                               json={'status': 6})
+        """Stops a project"""
+        requests.put('{0}/api/project/{1}/state'.format(BASE_URL,
+                                                        project_id),
+                     headers={'Content-Type': 'application/json',
+                              'Authorization': self._client['token']},
+                     json={'status': 6})
         max_retries = 10
         deployed_ok = False
         while True:
-            state = requests.get('{0}/api/projects/{1}/state'.format(BASE_URL,
-                                                                    project_id),
-                                headers={'Content-Type': 'application/json',
-                                         'Authorization': self._client['token']})
+            url = '{0}/api/projects/{1}/state'.format(BASE_URL, project_id)
+            state = requests.get(url, headers={'Content-Type': 'application/json',
+                                               'Authorization': self._client['token']})
             status = json.loads(state.text)
             print status['project_id'], status['status'], '\t', status['state']
-            time.sleep(3)
+            time.sleep(5)
             max_retries = max_retries-1
             if status['state'] == 'DEPLOYED':
                 print 'DEPLOYED state reached OK'
@@ -152,8 +212,41 @@ class CatalogTestCase(unittest.TestCase):
                                              'Authorization': self._client['token']},
                                     json={'status': 6})
             print 'Trying to stop a stopped service results in {0} OK'.format(conflict.status_code)
-            assert not conflict.status_code in (200,201)
+            assert not conflict.status_code in (200, 201)
 
+    def start_project(self, project_id):
+        """Starts a project"""
+        requests.put('{0}/api/project/{1}/state'.format(BASE_URL,
+                                                        project_id),
+                     headers={'Content-Type': 'application/json',
+                              'Authorization': self._client['token']},
+                     json={'status': 5})
+        max_retries = 2
+        running_ok = False
+        while True:
+            url = '{0}/api/projects/{1}/state'.format(BASE_URL, project_id)
+            state = requests.get(url, headers={'Content-Type': 'application/json',
+                                               'Authorization': self._client['token']})
+            status = json.loads(state.text)
+            print status['project_id'], status['status'], '\t', status['state']
+            time.sleep(5)
+            max_retries = max_retries-1
+            if status['state'] == 'RUNNING':
+                print 'RUNNING state reached OK'
+                running_ok = True
+                break
+            if max_retries < 0:
+                print 'Timeout waiting project start'
+                break
+
+        if running_ok:
+            conflict = requests.put('{0}/api/project/{1}/state'.format(BASE_URL,
+                                                                       project_id),
+                                    headers={'Content-Type': 'application/json',
+                                             'Authorization': self._client['token']},
+                                    json={'status': 5})
+            print 'Trying to start a running service results in {0} OK'.format(conflict.status_code)
+            assert not conflict.status_code in (200, 201)
 
     def test_05(self):
         """Approve and instantiate project"""
@@ -185,7 +278,7 @@ class CatalogTestCase(unittest.TestCase):
                     field['value'] = str(uuid.uuid4())
                 else:
                     field['value'] = random.randint(0, 10000)
-                print field['name'],' = ', field['value']
+                print field['name'], ' = ', field['value']
         print 'Instantiating project'
         instresp = requests.put('{0}/api/projects/{1}/state'.format(BASE_URL,
                                                                     project_id),
@@ -222,6 +315,13 @@ class CatalogTestCase(unittest.TestCase):
         if instantiation_ok:
             print 'Checking stop project feature'
             self.stop_project(project_id)
+            print 'Checking start project feature'
+            self.start_project(project_id)
+
+    def test_06(self):
+        """New user register test"""
+        print 'Registering new user'
+        self.register()
 
     def tearDown(self):
         """tearDown"""
