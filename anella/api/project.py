@@ -111,7 +111,7 @@ class ProjectKey(ItemRes):
         ',')
 
     @get_exists_user(None)
-    @get_authorize_projects(None)
+    @get_authorize_projects('User.Provider')
     def get(self, id):
         project = self._find_obj(id)
         if not project:
