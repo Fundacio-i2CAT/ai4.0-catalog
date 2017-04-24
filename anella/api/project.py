@@ -7,6 +7,7 @@ from anella.model.project import Project, SProject, SAVED, DISABLED, CONFIRMED, 
     ServiceDescription, Provider
 from anella.model.instance import Instance
 from anella.model.service import VMImage
+import flask_restful
 
 from anella.orch import Orchestrator
 from anella.api.utils import regex_name, get_int, Resource, ColRes, ItemRes, \
@@ -17,7 +18,7 @@ import json
 from anella.model.project import STATUS
 from datetime import datetime
 from mongoengine import NotUniqueError
-from anella.security.authorize import get_exists_user, get_authorize_projects, post_authorize
+from anella.security.authorize import get_exists_user, get_authorize_projects, post_authorize, get_authorize
 
 def services_to_json(sprojects):
     sitems = []
@@ -101,6 +102,31 @@ class ProjectsRes(ColRes):
     def post(self):
         item = get_json()
         return create_project(item)
+
+class ProjectKey(ItemRes):
+    collection = 'projects'
+    _cls = Project
+    name = 'Project'
+    fields = '_id,name,summary,description,client,services,status,created_at,created_by,updated_at,updated_by'.split(
+        ',')
+
+    @get_exists_user(None)
+    @get_authorize_projects('User.Provider')
+    def get(self, id):
+        project = self._find_obj(id)
+        if not project:
+            return error_api(msg='Error: wrong project id in request.', status=404)
+        status = project.get_status()
+        key_data = None
+        for sproject in project.services:
+            spres = SProjectRes()
+            orch = Orchestrator(debug=False)
+            item = spres._find_item(unicode(sproject.pk))
+            instance = find_instance(unicode(item['_id']))
+            if instance:
+                key_data = orch.instance_get_key(instance['instance_id'])
+                break
+        return key_data
 
 
 class ProjectRes(ItemRes):

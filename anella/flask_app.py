@@ -77,6 +77,8 @@ def add_resources(api):
     from anella.api.project import ClientProjectsRes, ProviderSProjectsRes
     from anella.api.project import ProjectStateRes, ProjectStatesRes, ProjectUpdateStateRes
     from anella.api.project import ProjectOrchCallbackRes
+    from anella.api.project import ProjectKey
+
     # Access Provider and Client
     api.add_resource(ProjectsRes, '/api/projects', methods=['GET', 'POST'])
     api.add_resource(ProjectStatesRes, '/api/projects/states', methods=['GET'])
@@ -88,6 +90,8 @@ def add_resources(api):
     # Access Provider and Client
     api.add_resource(ProjectStateRes, '/api/projects/<id>/state', methods=['GET', 'PUT'])
     api.add_resource(ProjectUpdateStateRes, '/api/project/<id>/state', methods=['PUT'])
+    # Access Provider
+    api.add_resource(ProjectKey, '/api/project/<id>/key', methods=['GET'])
     # Not secure, because is a call to orchestrator make to service_manager and it's necessary token in orchestrator
     api.add_resource(ProjectOrchCallbackRes, '/api/projects/callback', methods=['POST'])
 
