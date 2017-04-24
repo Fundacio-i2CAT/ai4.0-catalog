@@ -64,7 +64,12 @@ class Orchestrator(object):
             print_resp(self.req, self.r_data)
 
         return dict(status_code= self.req.status_code, response=json.loads(self.req.text))
- 
+
+    def instance_get_key(self, id):
+        self.path = self.root_path+'/%s/key' % id
+        self.req = get(self.path)
+        return dict(status_code=self.req.status_code, response={'key': self.req.text})
+
     def instance_delete(self,id):
         self.path = self.root_path+'/%s' % id
         self.req = delete(self.path)
