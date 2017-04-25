@@ -125,6 +125,12 @@ class ProjectKey(ItemRes):
             instance = find_instance(unicode(item['_id']))
             if instance:
                 key_data = orch.instance_get_key(instance['instance_id'])
+                if key_data['status_code'] not in (200, 201):
+                    error_code = 'ORQUESTRATOR_STATE'
+                    if 'code' in response['response']:
+                        error_code = response['response']['code']
+                    return create_message_error(response['status_code'],
+                                                error_code, code)
                 break
         return key_data
 
