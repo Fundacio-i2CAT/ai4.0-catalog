@@ -53,7 +53,6 @@ class ServicesRes(ColRes):
         return super(ServicesRes, self)._get_items(skip, limit, dict(activated=True))
 
     def get(self):
-        print 'hola'
         return super(ServicesRes, self).get()
 
 

@@ -102,7 +102,7 @@ class ColRes(AnellaRes):
     def _get_items(self, skip=0, limit=1000, values={}, order_by="created_at"):
         cursor = get_db(_cfg.database__database_name)[self.collection].find(values, skip=skip, limit=limit) \
             .sort(order_by, -1)
-        return [self._item_to_json(item) for item in cursor]
+        return [item for item in cursor]
 
     def get(self):
         try:
@@ -110,11 +110,11 @@ class ColRes(AnellaRes):
             skip = int(values and values.pop('skip', 0) or 0)
             limit = int(values and values.pop('limit', 0) or self.LIMIT - skip)
             items = self._get_items(skip=skip, limit=limit)
-            # result = self._items_to_json(items)
+            result = self._items_to_json(items)
             response = dict(status='ok', count=len(items), skip=skip, limit=limit,
                             msg='Items list' if items
                             else 'No items available',
-                            result=items)
+                            result=result)
             return respond_json(response, status=200)
             # return response
 

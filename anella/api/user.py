@@ -33,7 +33,8 @@ class UsersCrudRes(ColRes):
     def get(self):
         limit = get_int(get_arg('limit'))
         skip = get_int(get_arg('skip'))
-        result = super(UsersCrudRes, self)._get_items(skip=skip * limit, limit=limit, values=self.filter)
+        items = super(UsersCrudRes, self)._get_items(skip=skip * limit, limit=limit, values=self.filter)
+        result = self._items_to_json(items)
         response = dict(count=count_collection(self.collection, self.filter), skip=skip, limit=limit,
                         result=result)
         return respond_json(response, status=200)
