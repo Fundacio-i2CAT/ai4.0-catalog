@@ -110,11 +110,11 @@ class ColRes(AnellaRes):
             skip = int(values and values.pop('skip', 0) or 0)
             limit = int(values and values.pop('limit', 0) or self.LIMIT - skip)
             items = self._get_items(skip=skip, limit=limit)
-            result = self._items_to_json(items)
+            # result = self._items_to_json(items)
             response = dict(status='ok', count=len(items), skip=skip, limit=limit,
                             msg='Items list' if items
                             else 'No items available',
-                            result=result)
+                            result=items)
             return respond_json(response, status=200)
             # return response
 
@@ -171,7 +171,6 @@ def item_to_json(item, fields):
     js_item = {}
     for field in fields:
         data = item.get(field)
-
         if isinstance(data, ObjectId):
             js_data = unicode(data)
 
