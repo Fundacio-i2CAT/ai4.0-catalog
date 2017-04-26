@@ -119,7 +119,14 @@
         }
     },
     {
-        "code" : "USER_DUPLICATED",
+        "code" : "STACK_CREATION_TIMEOUT",
+        "i18n" : {
+            "ca" : "No s'ha pogut instanciar el servei degut a una demora excessiva en la resposta del centre de dades.",
+            "es" : "No se ha podido instanciar el servicio debido a una demora excesiva en la respuesta del centro de datos."
+	}
+    },
+    {
+	"code" : "USER_DUPLICATED",
         "i18n" : {
             "ca" : "Aquest usuari ja està enregistrat.",
             "es" : "Este usuario ya está registrado."
@@ -146,5 +153,4 @@
             "es" : "Ha de ser proveedor o cliente"
         }
     }
-
 ]
