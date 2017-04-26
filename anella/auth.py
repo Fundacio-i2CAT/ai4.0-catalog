@@ -56,7 +56,7 @@ class Authenticator(object):
     def create_token(self):
         payload = {
             'user_id': self.user.id,
-            'exp': datetime.utcnow() + timedelta(seconds=900),
+            'exp': datetime.utcnow() + timedelta(seconds=9000),
             'role': self.user.role
         }
         jwt_token = jwt.encode(payload, 'secret', 'HS256')
