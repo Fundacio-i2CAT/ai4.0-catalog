@@ -105,6 +105,17 @@ def load_config(configfile, clear_db_config=False):
 
         cfg.errors__orchestrator_state = yaml_config['anella']['errors']['orchestrator_state']
 
+        cfg.keystone__url = yaml_config['anella']['keystone']['url']
+        cfg.keystone__file = yaml_config['anella']['keystone']['file']
+        cfg.keystone__login = yaml_config['anella']['keystone']['login']
+        cfg.keystone__data_login = yaml_config['anella']['keystone']['data_login']
+        cfg.keystone__project_name = yaml_config['anella']['keystone']['project_name']
+        cfg.keystone__data_create_user = yaml_config['anella']['keystone']['data_create_user']
+        cfg.keystone__create_user = yaml_config['anella']['keystone']['create_user']
+        cfg.keystone__data_patch_user = yaml_config['anella']['keystone']['data_patch_user']
+        cfg.keystone__data_patch_password_user = yaml_config['anella']['keystone']['data_patch_password_user']
+        cfg.keystone__data_change_password_user = yaml_config['anella']['keystone']['data_change_password_user']
+
     except Exception, err:
         print "Exception loading config file [{0}]: ({1})".format(
             configfile,

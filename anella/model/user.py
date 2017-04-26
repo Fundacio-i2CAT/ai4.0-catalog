@@ -4,6 +4,7 @@ from mongoengine import *
 from base import Base
 from anella.common import get_db
 import anella.configuration as cfg
+from bson import ObjectId
 
 IDIOMS = [
     (u'ca', u'Català'),
@@ -19,28 +20,38 @@ class UserRole(object):
         #self.entity = None
         #self.email = None
         self.user_name = None
-        self.auth_id = None
-
+        self.password = None
 
 class User(Document, Base):
     meta = {'allow_inheritance': True, 'collection': 'users'}
 
     user_name = StringField(required=True, unique=True)
-    auth_id = IntField()  # Id returned from Eurecat auth module
-    activated = BooleanField(default=True)
+    activated = BooleanField(default=False)
+    entity = DictField()
+    keystone_user_id = StringField()
+    name = StringField()
+    surname = StringField()
+    email = StringField()
+    company = StringField()
+    address = StringField()
+    phone = StringField()
+    position = StringField()
+    legal = BooleanField()
+    identification = DictField()
+    deleted = BooleanField(default=False)
+    password = BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         return super(User, self).save(*args, **kwargs)
 
-    def get(self, auth_id):
+    def get(self, id):
         return get_db(cfg.database__database_name).get_collection('users') \
-            .find_one({'auth_id': auth_id})
+            .find_one({'_id': ObjectId(id)})
 
-    def update(self, data):
-        get_db(cfg.database__database_name).get_collection('users'). \
-            update_one({'auth_id': data['auth_id']}, data['info'],
+    def update(self, id, data):
+        return get_db(cfg.database__database_name).get_collection('users'). \
+            update_one({'_id': ObjectId(id)}, {"$set": data},
                        upsert=False)
-
 
 class Provider(User):
     _cls = "User.Provider"

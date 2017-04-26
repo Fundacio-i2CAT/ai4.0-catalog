@@ -44,6 +44,9 @@ class ServiceManagerMailer(object):
                         'Nou usuari registrat',
                         self.template['notify'].format(toaddr))
 
+    def change_password(self, toaddr, password):
+        self.send_email(toaddr, self.cfg['system'], 'Nou password', 'Nou password: %s ' % password)
+
     def send_email(self, toaddr, fromaddr, subject, body):
         msg = MIMEMultipart()
         msg['Subject'] = subject
