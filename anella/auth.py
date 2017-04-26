@@ -10,6 +10,7 @@ from anella.api.utils import create_response, find_one_in_collection, \
 import jwt
 from datetime import datetime, timedelta
 from anella.api.keystone import Keystone
+from anella.model.token import Token
 
 LOGGER = logging.getLogger('stdout')
 
@@ -26,6 +27,7 @@ class Authenticator(object):
         self.user = None
         self.item = create_message_error(401, "USER_NOT_ACTIVATED")
         self.keystone = Keystone()
+        self.time_token = Token().get()
 
     def user_login(self, email, password):
         self.keystone.keystone_admin = email
@@ -56,7 +58,7 @@ class Authenticator(object):
     def create_token(self):
         payload = {
             'user_id': self.user.id,
-            'exp': datetime.utcnow() + timedelta(seconds=9000),
+            'exp': datetime.utcnow() + timedelta(seconds=self.time_token),
             'role': self.user.role
         }
         jwt_token = jwt.encode(payload, 'secret', 'HS256')
