@@ -48,6 +48,10 @@ class User(Document, Base):
         return get_db(cfg.database__database_name).get_collection('users') \
             .find_one({'_id': ObjectId(id)})
 
+    def get_by_field(self, field, value):
+        return get_db(cfg.database__database_name).get_collection('users') \
+            .find_one({field: value})
+
     def update(self, id, data):
         return get_db(cfg.database__database_name).get_collection('users'). \
             update_one({'_id': ObjectId(id)}, {"$set": data},
