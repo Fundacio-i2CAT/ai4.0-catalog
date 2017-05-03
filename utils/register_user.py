@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Plataforma Industrial 4.0 Service Manager Tests"""
+"""Plataforma Industrial 4.0 User Registration utility"""
 
 import json
 import unittest
