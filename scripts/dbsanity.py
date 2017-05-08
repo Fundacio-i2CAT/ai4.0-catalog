@@ -55,17 +55,17 @@ def check_services():
         service_selector.append(service['_id'])
         for sproject in sprojects:
             if STATES[sproject['status']] == 'DISABLED':
-                status = status+colored(STATES[sproject['status']][0:3]+' ', 'blue')
+                status = status+colored(STATES[sproject['status']][0:2]+' ', 'blue')
             elif STATES[sproject['status']] == 'CONFIRMED':
-                status = status+colored(STATES[sproject['status']][0:3]+' ', 'green')
+                status = status+colored(STATES[sproject['status']][0:2]+' ', 'green')
             elif STATES[sproject['status']] == 'DENIED':
-                status = status+colored(STATES[sproject['status']][0:3]+' ', attrs=['reverse', 'blink'])
+                status = status+colored(STATES[sproject['status']][0:2]+' ', attrs=['reverse', 'blink'])
             elif STATES[sproject['status']] == 'RUNNING':
-                status = status+colored(STATES[sproject['status']][0:3], 'red', attrs=['reverse', 'blink'])+' '
+                status = status+colored(STATES[sproject['status']][0:2], 'red', attrs=['reverse', 'blink'])+' '
             elif STATES[sproject['status']] == 'DEPLOYED':
-                status = status+colored(STATES[sproject['status']][0:3]+' ', 'white')
+                status = status+colored(STATES[sproject['status']][0:2]+' ', 'white')
             else:
-                status = status+STATES[sproject['status']][0:3]+' '
+                status = status+STATES[sproject['status']][0:2]+' '
         if not 'vm_image' in service['context']:
             continue
         image = DBR['fs.files'].find({'_id': ObjectId(service['context']['vm_image'])})
@@ -87,7 +87,10 @@ def check_services():
                        img,
                        size])
     print table
-    return int(raw_input('Select service (clean all projects/sprojects from service): ')), service_selector
+    try:
+        return int(raw_input('Select service (clean all projects/sprojects from service): ')), service_selector
+    except:
+        return 'a', 'a'
 
 def get_projects_from_sproject(sid):
     projects = DB['projects'].find()
@@ -114,15 +117,15 @@ def clean_service(sid):
                 clear_flag = False
                 data = json.loads(response.text)
             else:
-                # DB['instances'].remove({'_id': ObjectId(instance['_id'])})
+                DB['instances'].remove({'_id': ObjectId(instance['_id'])})
                 print 'Going to delete {0}'.format(instance['instance_id'])
         if clear_flag:
             rprojects = get_projects_from_sproject(sproject['_id'])
             for project in rprojects:
                 print 'GOing to delete {0}'.format(project)
-                # DB['projects'].remove({'_id': ObjectId(project)})
+                DB['projects'].remove({'_id': ObjectId(project)})
             print 'gOing to delete {0}'.format(sproject['_id'])
-            # DB['sprojects'].remove({'_id': ObjectId(sproject['_id'])})
+            DB['sprojects'].remove({'_id': ObjectId(sproject['_id'])})
 
 if __name__ == '__main__':
 
@@ -142,5 +145,8 @@ if __name__ == '__main__':
     DBR = CLIENT[DBRNAME]
     os.system('clear')
     selected, services = check_services()
-    clean_service(services[selected])
+    try:
+        clean_service(services[selected])
+    except:
+        pass
     CLIENT.close()
