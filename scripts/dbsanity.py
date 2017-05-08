@@ -114,15 +114,15 @@ def clean_service(sid):
                 clear_flag = False
                 data = json.loads(response.text)
             else:
-                DB['instances'].remove({'_id': ObjectId(instance['_id'])})
+                # DB['instances'].remove({'_id': ObjectId(instance['_id'])})
                 print 'Going to delete {0}'.format(instance['instance_id'])
         if clear_flag:
             rprojects = get_projects_from_sproject(sproject['_id'])
             for project in rprojects:
                 print 'GOing to delete {0}'.format(project)
-                DB['projects'].remove({'_id': ObjectId(project)})
+                # DB['projects'].remove({'_id': ObjectId(project)})
             print 'gOing to delete {0}'.format(sproject['_id'])
-            DB['sprojects'].remove({'_id': ObjectId(sproject['_id'])})
+            # DB['sprojects'].remove({'_id': ObjectId(sproject['_id'])})
 
 if __name__ == '__main__':
 
