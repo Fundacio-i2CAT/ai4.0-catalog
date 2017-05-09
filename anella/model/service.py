@@ -8,6 +8,7 @@ from user import User, Provider, Client
 from gridfs import GridFS
 from anella import configuration as _cfg
 from anella.common import get_db
+from anella.model.service_icon import ServiceIcon
 from bson.objectid import ObjectId
 from anella.api.utils import respond_json
 import os
@@ -53,6 +54,7 @@ class ServiceDescription(Document, Base):
     price_initial = FloatField()
     price_x_hour = FloatField()
     activated = BooleanField()
+    service_icon = ObjectIdField()
 
     def set_name(self, name):
         self.name = name
@@ -81,6 +83,12 @@ class ServiceDescription(Document, Base):
     def set_activated(self, activated):
         self.activated = activated
 
+    def set_icon(self, icon):
+        if not icon:
+            return
+        icon = icon.replace('\n', '')
+        sicon = ServiceIcon(icon_b64=icon)
+        self.service_icon = ObjectId(sicon.save()['id'])
 
 class AppService(ServiceDescription):
     type_name = 'App'  # A type name to use in UI
@@ -197,6 +205,10 @@ def set_service(data):
         service.set_price_x_hour(data.pop('price_x_hour'))
         service.set_context(data)
         service.set_activated(False)
+        if 'icon' in data:
+            service.set_icon(data.pop('icon'))
+        else:
+            service.set_icon(None)
     except Exception as e:
         print e
         '''
