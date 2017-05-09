@@ -36,7 +36,6 @@ class ServicesRes(ColRes):
         service_cls = get_service_cls(data.get('service_type'))
         if service_cls:
             self._cls = service_cls
-
         item = ColRes.item_from_json(self, data)
         item['_cls'] = service_cls._class_name
         # obj = service_cls.from_json(item)
