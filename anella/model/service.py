@@ -83,7 +83,7 @@ class ServiceDescription(Document, Base):
     def set_activated(self, activated):
         self.activated = activated
 
-    def set_icon(self, icon):
+    def set_service_icon(self, icon):
         if not icon:
             return
         icon = icon.replace('\n', '')
@@ -205,10 +205,10 @@ def set_service(data):
         service.set_price_x_hour(data.pop('price_x_hour'))
         service.set_context(data)
         service.set_activated(False)
-        if 'icon' in data:
-            service.set_icon(data.pop('icon'))
+        if 'service_icon' in data:
+            service.set_service_icon(data.pop('service_icon'))
         else:
-            service.set_icon(None)
+            service.set_service_icon(None)
     except Exception as e:
         print e
         '''

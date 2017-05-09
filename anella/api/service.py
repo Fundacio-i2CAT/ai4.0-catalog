@@ -8,6 +8,7 @@ from anella.model.service import get_service_cls, get_service_types
 from anella.model.service import AppService, VMImage
 from anella import configuration as _cfg
 from anella.model.service import create_service
+from anella.model.service_icon import ServiceIcon
 from flask import request
 from werkzeug.utils import secure_filename
 import glob
@@ -22,8 +23,7 @@ class ServicesRes(ColRes):
     collection = 'services'
     _cls = AppService
     name = 'Services'
-    fields = '_id,name,summary,service_type,provider,sectors,created_at,updated_at,price_initial,price_x_hour'.split(
-        ',')
+    fields = '_id,name,summary,service_type,provider,sectors,created_at,updated_at,price_initial,price_x_hour,service_icon'.split(',')
     filter_fields = 'name,keywords,sectors,activated'.split(',')
 
     @get_exists_user('User.Provider')
@@ -36,6 +36,7 @@ class ServicesRes(ColRes):
         service_cls = get_service_cls(data.get('service_type'))
         if service_cls:
             self._cls = service_cls
+
         item = ColRes.item_from_json(self, data)
         item['_cls'] = service_cls._class_name
         # obj = service_cls.from_json(item)
@@ -43,6 +44,12 @@ class ServicesRes(ColRes):
 
     def _item_to_json(self, item):
         sitem = ColRes._item_to_json(self, item)
+        if 'service_icon' in sitem:
+            if sitem['service_icon']:
+                print sitem['service_icon']
+                icon_content = ServiceIcon.objects(id=ObjectId(item['service_icon']))
+                if len(icon_content) > 0:
+                    sitem['service_icon'] = icon_content[0]['icon_b64']
         provider_id = sitem['provider']
         if provider_id:
             provider = get_db(_cfg.database__database_name)['users'].find_one({'_id': ObjectId(provider_id)})
