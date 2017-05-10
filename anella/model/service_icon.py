@@ -16,4 +16,8 @@ class ServiceIcon(Document):
     icon_format = StringField(required=True)
 
 def guess_format(icon_b64):
-    return imghdr.what(StringIO.StringIO(icon_b64.decode('base64')))
+    gformat = imghdr.what(StringIO.StringIO(icon_b64.decode('base64')))
+    if gformat:
+        return gformat
+    else:
+        return 'unknown'
