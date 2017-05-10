@@ -7,7 +7,6 @@ from mongoengine import Document, DateTimeField
 import datetime
 import imghdr,StringIO
 
-
 class ServiceIcon(Document):
     """Stores service icons in base64 encoding"""
 
