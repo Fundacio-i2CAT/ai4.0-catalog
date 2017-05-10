@@ -49,6 +49,7 @@ class ServicesRes(ColRes):
                 icon_content = ServiceIcon.objects(id=ObjectId(item['service_icon']))
                 if len(icon_content) > 0:
                     sitem['service_icon'] = icon_content[0]['icon_b64']
+                    sitem['service_icon_format'] = icon_content[0]['icon_format']
         provider_id = sitem['provider']
         if provider_id:
             provider = get_db(_cfg.database__database_name)['users'].find_one({'_id': ObjectId(provider_id)})

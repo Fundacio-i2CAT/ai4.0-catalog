@@ -8,7 +8,7 @@ from user import User, Provider, Client
 from gridfs import GridFS
 from anella import configuration as _cfg
 from anella.common import get_db
-from anella.model.service_icon import ServiceIcon
+from anella.model.service_icon import ServiceIcon, guess_format
 from bson.objectid import ObjectId
 from anella.api.utils import respond_json
 import os
@@ -87,7 +87,8 @@ class ServiceDescription(Document, Base):
         if not icon:
             return
         icon = icon.replace('\n', '')
-        sicon = ServiceIcon(icon_b64=icon)
+        icon_format = guess_format(icon)
+        sicon = ServiceIcon(icon_b64=icon, icon_format=icon_format)
         self.service_icon = ObjectId(sicon.save()['id'])
 
 class AppService(ServiceDescription):
