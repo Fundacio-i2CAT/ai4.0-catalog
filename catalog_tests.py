@@ -356,6 +356,17 @@ class CatalogTestCase(unittest.TestCase):
             md5sum = checksum.hexdigest()
             print
             print str(md5sum)
+        unchresp = requests.post('{0}/api/services/vmimage/unchunked'.format(BASE_URL),
+                                 headers=headers, json={'filename': SAMPLE_CLOUD_IMAGE,
+                                                        "uuid":fileid,"md5sum":str(md5sum)})
+        assert unchresp.status_code == 200
+        data = json.loads(unchresp.text)
+        assert 'filename_uuid' in data
+        uploresp = requests.post('{0}/api/services/vmimage/upload'.format(BASE_URL),
+                                 headers=headers, json={'filename': SAMPLE_CLOUD_IMAGE,
+                                                        'filename_uuid': data['filename_uuid']})
+        image_data = json.loads(uploresp.text)
+        assert uploresp.status_code == 200
 
     def tearDown(self):
         """tearDown"""
