@@ -18,7 +18,7 @@ from bson.objectid import ObjectId
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-BASE_URL = 'http://dev.anella.i2cat.net:9999'
+BASE_URL = 'http://localhost:9999'
 
 CLIENT = {'user_name': 'client@i2cat.net',
           'password': 'i2cat', 'role': 'User.Client'}
@@ -26,7 +26,7 @@ PROVIDER = {'user_name': 'user@i2cat.net',
             'password': 'i2cat', 'role': 'User.Provider'}
 
 SAMPLE_CLOUD_IMAGE = '../imgs/trusty-server-cloudimg-amd64-disk1.img'
-
+SAMPLE_ICON = '../Pictures/pass.jpg'
 SAMPLE_SERVICE_DESCRIPTOR = {'name':'',
                              'description':'',
                              'summary':'',
@@ -416,6 +416,8 @@ class CatalogTestCase(unittest.TestCase):
         ssd['pop_id'] = pop_data['pop_id']
         ssd['name_image'] = str(uuid.uuid4())
         ssd['vm_image'] = image_data['vm_image']
+        with open(SAMPLE_ICON, 'rb') as fhandle:
+            ssd['service_icon'] = fhandle.read().encode('base64')
         create_service_resp = requests.post('{0}/api/services'.format(BASE_URL),
                                             headers=headers, json=ssd)
         assert create_service_resp.status_code == 201
