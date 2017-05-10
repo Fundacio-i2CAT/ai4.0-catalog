@@ -10,16 +10,37 @@ import time
 import uuid
 import sys
 import os
+import hashlib
+from urlparse import urlparse
+from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-BASE_URL = 'http://dev.anella.i2cat.net:9999'
+BASE_URL = 'http://localhost:9999'
 
 CLIENT = {'user_name': 'client@i2cat.net',
           'password': 'i2cat', 'role': 'User.Client'}
 PROVIDER = {'user_name': 'user@i2cat.net',
             'password': 'i2cat', 'role': 'User.Provider'}
+
+SAMPLE_CLOUD_IMAGE = '../imgs/trusty-server-cloudimg-amd64-disk1.img'
+SAMPLE_ICON = '../Pictures/pass.jpg'
+SAMPLE_SERVICE_DESCRIPTOR = {'name':'',
+                             'description':'',
+                             'summary':'',
+                             'service_type':'iss',
+                             'provider':'',
+                             'price_initial':1,
+                             'price_x_hour':1,
+                             'consumer_params':[],
+                             'flavor':'VM.S1',
+                             'pop_id':21,
+                             'name_image':'trusty-server-cloudimg-amd64-disk1.img',
+                             'vm_image':'5912bbccbcc49d35e215cb0c',
+                             'vm_image_format':'QCOW2',
+                             'runtime_params':[{'name':'floating_ip', 'type':'String', 'required':True, 'desc':'floating_ip'}]}
 
 CLIENT_REGISTER_FORM = {
     'name': 'Test',
@@ -39,8 +60,6 @@ CLIENT_REGISTER_FORM = {
         'value': None
     }
 }
-
-from random import randint
 
 def nif_generator():
     number = random.randint(10**(8-1), (10**8)-1)
@@ -167,7 +186,9 @@ class CatalogTestCase(unittest.TestCase):
         print 'Creating {0} projects'.format(nprojects)
         self._client = self.login('client@i2cat.net', 'i2cat', 'User.Client')
         for i in range(0, nprojects):
+            print i,
             self.create_project()
+        print
         print 'All projects {0} successfully created OK'.format(nprojects)
 
     def get_consumer_params(self, service_id):
@@ -321,6 +342,107 @@ class CatalogTestCase(unittest.TestCase):
         """New user register test"""
         print 'Registering new user'
         self.register()
+
+    def pop_data(self):
+        """PoP related tests"""
+        print
+        print 'Testing PoP queries'
+        provider = self.login(PROVIDER['user_name'],
+                              PROVIDER['password'],
+                              PROVIDER['role'])
+        headers = {'Authorization': provider['token']}
+        popresp = requests.get('{0}/api/services/pop'.format(BASE_URL),
+                               headers=headers)
+        assert popresp.status_code == 200
+        pop_data = json.loads(popresp.text)
+        if len(pop_data) > 0:
+            flavresp = requests.get('{0}/api/services/flavors/{1}'.format(BASE_URL, pop_data[0]['pop_id']),
+                                    headers=headers)
+            assert flavresp.status_code == 200
+            flav_data = json.loads(flavresp.text)
+            flavor = random.choice(flav_data['flavors'])
+            return {'pop_id': pop_data[0]['pop_id'],
+                    'flavor': flavor['name']}
+
+    def read_in_chunks(self, file_object, chunk_size=10000*1024):
+        while True:
+            data = file_object.read(chunk_size)
+            if not data:
+                break
+            yield data
+
+    def test_08(self):
+        """Create service test"""
+        print
+        print 'Testing service creation'
+        provider = self.login(PROVIDER['user_name'],
+                              PROVIDER['password'],
+                              PROVIDER['role'])
+        headers = {'Authorization': provider['token']}
+        fileid = str(uuid.uuid4())
+        with open(SAMPLE_CLOUD_IMAGE, 'rb') as fhandle:
+            nchunk = 0
+            checksum = hashlib.md5()
+            for piece in self.read_in_chunks(fhandle):
+                label = str(nchunk).zfill(6)
+                print label,
+                files = {'file': ('{0}_{1}'.format(fileid, label), piece, 'application/octet-stream')}
+                checksum.update(piece)
+                resp = requests.post('{0}/api/services/vmimage/chunked'.format(BASE_URL),
+                                     headers=headers, files=files)
+                assert resp.status_code == 200
+                nchunk = nchunk+1
+            md5sum = checksum.hexdigest()
+            print
+            print str(md5sum)
+        unchresp = requests.post('{0}/api/services/vmimage/unchunked'.format(BASE_URL),
+                                 headers=headers, json={'filename': SAMPLE_CLOUD_IMAGE,
+                                                        "uuid": fileid, "md5sum": str(md5sum)})
+        assert unchresp.status_code == 200
+        data = json.loads(unchresp.text)
+        assert 'filename_uuid' in data
+        uploresp = requests.post('{0}/api/services/vmimage/upload'.format(BASE_URL),
+                                 headers=headers, json={'filename': SAMPLE_CLOUD_IMAGE,
+                                                        'filename_uuid': data['filename_uuid']})
+        image_data = json.loads(uploresp.text)
+        assert uploresp.status_code == 200
+        pop_data = self.pop_data()
+        ssd = SAMPLE_SERVICE_DESCRIPTOR
+        ssd['name'] = str(uuid.uuid4())
+        ssd['description'] = str(uuid.uuid4())
+        ssd['summary'] = str(uuid.uuid4())
+        ssd['provider'] = provider['id']
+        ssd['flavor'] = pop_data['flavor']
+        ssd['pop_id'] = pop_data['pop_id']
+        ssd['name_image'] = str(uuid.uuid4())
+        ssd['vm_image'] = image_data['vm_image']
+        with open(SAMPLE_ICON, 'rb') as fhandle:
+            ssd['service_icon'] = fhandle.read().encode('base64')
+        create_service_resp = requests.post('{0}/api/services'.format(BASE_URL),
+                                            headers=headers, json=ssd)
+        assert create_service_resp.status_code == 201
+        service_data = json.loads(create_service_resp.text)
+        publish_resp = requests.put('{0}/api/services/{1}'.format(BASE_URL, service_data['id']),
+                                    headers=headers, json={'activated': True})
+        assert publish_resp.status_code == 200
+        unpublish_resp = requests.put('{0}/api/services/{1}'.format(BASE_URL, service_data['id']),
+                                      headers=headers, json={'activated': False})
+        assert unpublish_resp.status_code == 200
+        self.delete_service(service_data['id'])
+
+    def delete_service(self, service_id):
+        print
+        print 'Deleting service {0}'.format(service_id)
+        uparse = urlparse(BASE_URL)
+        mclient = MongoClient('mongodb://{0}:27017'.format(uparse.hostname))
+        anella = mclient['anella']
+        service = anella['services'].find_one({'_id': ObjectId(service_id)})
+        anella_repo = mclient['anella_repository']
+        image_file = anella_repo['fs.files'].find_one({'_id': ObjectId(service['context']['vm_image'])})
+        anella_repo['fs.chunks'].remove({'files_id': ObjectId(image_file['_id'])})
+        anella_repo['fs.files'].remove({'_id': ObjectId(image_file['_id'])})
+        anella['services'].remove({'_id': ObjectId(service_id)})
+        mclient.close()
 
     def tearDown(self):
         """tearDown"""
