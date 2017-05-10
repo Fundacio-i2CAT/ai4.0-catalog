@@ -10,16 +10,19 @@ import time
 import uuid
 import sys
 import os
+import hashlib
 
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-BASE_URL = 'http://dev.anella.i2cat.net:9999'
+BASE_URL = 'http://localhost:9999'
 
 CLIENT = {'user_name': 'client@i2cat.net',
           'password': 'i2cat', 'role': 'User.Client'}
 PROVIDER = {'user_name': 'user@i2cat.net',
             'password': 'i2cat', 'role': 'User.Provider'}
+
+SAMPLE_CLOUD_IMAGE = '../imgs/trusty-server-cloudimg-amd64-disk1.img'
 
 CLIENT_REGISTER_FORM = {
     'name': 'Test',
@@ -321,6 +324,38 @@ class CatalogTestCase(unittest.TestCase):
         """New user register test"""
         print 'Registering new user'
         self.register()
+
+    def read_in_chunks(self, file_object, chunk_size=10000*1024):
+        while True:
+            data = file_object.read(chunk_size)
+            if not data:
+                break
+            yield data
+
+    def test_07(self):
+        """Create service test"""
+        print
+        print 'Testing service creation'
+        provider = self.login(PROVIDER['user_name'],
+                              PROVIDER['password'],
+                              PROVIDER['role'])
+        headers = {'Authorization': provider['token']}
+        fileid = str(uuid.uuid4())
+        with open(SAMPLE_CLOUD_IMAGE, 'rb') as fhandle:
+            n = 0
+            checksum = hashlib.md5()
+            for piece in self.read_in_chunks(fhandle):
+                label = str(n).zfill(6)
+                print label,
+                files = {'file': ('{0}_{1}'.format(fileid, label), piece, 'application/octet-stream')}
+                checksum.update(piece)
+                resp = requests.post('{0}/api/services/vmimage/chunked'.format(BASE_URL),
+                                     headers=headers, files=files)
+                assert resp.status_code == 200
+                n = n+1
+            md5sum = checksum.hexdigest()
+            print
+            print str(md5sum)
 
     def tearDown(self):
         """tearDown"""
