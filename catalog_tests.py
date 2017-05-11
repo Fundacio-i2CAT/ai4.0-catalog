@@ -24,9 +24,11 @@ CLIENT = {'user_name': 'client@i2cat.net',
           'password': 'i2cat', 'role': 'User.Client'}
 PROVIDER = {'user_name': 'user@i2cat.net',
             'password': 'i2cat', 'role': 'User.Provider'}
+ADMIN = {'user_name': 'admin',
+         'password': 'i2cat', 'role': 'User.Administrator'}
 
 SAMPLE_CLOUD_IMAGE = '../imgs/trusty-server-cloudimg-amd64-disk1.img'
-SAMPLE_ICON = '../Pictures/pass.jpg'
+SAMPLE_ICON = '../Pictures/pass.png'
 SAMPLE_SERVICE_DESCRIPTOR = {'name':'',
                              'description':'',
                              'summary':'',
@@ -340,6 +342,7 @@ class CatalogTestCase(unittest.TestCase):
 
     def test_06(self):
         """New user register test"""
+        print
         print 'Registering new user'
         self.register()
 
@@ -443,6 +446,27 @@ class CatalogTestCase(unittest.TestCase):
         anella_repo['fs.files'].remove({'_id': ObjectId(image_file['_id'])})
         anella['services'].remove({'_id': ObjectId(service_id)})
         mclient.close()
+
+    def test_09(self):
+        """Admin user management tests"""
+        print
+        admin = self.login(ADMIN['user_name'], ADMIN['password'], ADMIN['role'])
+        print admin['id']
+        print admin['token']
+        headers = {'Authorization': admin['token']}
+        users_resp = requests.get('{0}/api/crud/users'.format(BASE_URL),
+                                  headers=headers)
+        assert users_resp.status_code == 200
+        users_data = json.loads(users_resp.text)
+        user = random.choice(users_data['result'])
+        while user['activated']:
+            user = random.choice(users_data['result'])
+        user_activation = requests.put('{0}/api/crud/users/{1}'.format(BASE_URL, user['_id']),
+                                       headers=headers, json={'activated': True})
+        assert user_activation.status_code == 204
+        user_desactivation = requests.put('{0}/api/crud/users/{1}'.format(BASE_URL, user['_id']),
+                                          headers=headers, json={'activated': False})
+        assert user_desactivation.status_code == 204
 
     def tearDown(self):
         """tearDown"""

@@ -45,7 +45,6 @@ class ServicesRes(ColRes):
         sitem = ColRes._item_to_json(self, item)
         if 'service_icon' in sitem:
             if sitem['service_icon']:
-                print sitem['service_icon']
                 icon_content = ServiceIcon.objects(id=ObjectId(item['service_icon']))
                 if len(icon_content) > 0:
                     sitem['service_icon'] = icon_content[0]['icon_b64']
