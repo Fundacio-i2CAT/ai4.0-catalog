@@ -18,13 +18,13 @@ from bson.objectid import ObjectId
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-BASE_URL = 'http://localhost:9999'
+BASE_URL = 'http://dev.anella.i2cat.net:9999'
 
 CLIENT = {'user_name': 'client@i2cat.net',
           'password': 'i2cat', 'role': 'User.Client'}
 PROVIDER = {'user_name': 'user@i2cat.net',
             'password': 'i2cat', 'role': 'User.Provider'}
-ADMIN = {'user_name': 'admin',
+ADMIN = {'user_name': 'admin@i2cat.net',
          'password': 'i2cat', 'role': 'User.Administrator'}
 
 SAMPLE_CLOUD_IMAGE = '../imgs/trusty-server-cloudimg-amd64-disk1.img'
