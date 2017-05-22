@@ -87,7 +87,10 @@ class ServiceDescription(Document, Base):
         if not icon:
             return
         icon = icon.replace('\n', '')
-        icon_format = guess_format(icon)
+        try:
+            icon_format = guess_format(icon)
+        except:
+            icon_format = 'unknown'
         sicon = ServiceIcon(icon_b64=icon, icon_format=icon_format)
         self.service_icon = ObjectId(sicon.save()['id'])
 
