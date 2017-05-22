@@ -114,7 +114,7 @@ class ServiceRes(ItemRes):
     _cls = AppService
     name = 'Service'
     fields = '_id,name,summary,description,service_type,provider,sectors,keywords,link,' \
-             'created_at,created_by,updated_at,updated_by,price_initial,price_x_hour'.split(',')
+             'created_at,created_by,updated_at,updated_by,price_initial,price_x_hour,service_icon'.split(',')
 
     def _item_to_json(self, item):
         sitem = ItemRes._item_to_json(self, item)
@@ -122,6 +122,11 @@ class ServiceRes(ItemRes):
         if provider_id:
             provider = get_db(_cfg.database__database_name)['users'].find_one({'_id': ObjectId(provider_id)})
             sitem['provider'] = item_to_json(provider, ['_id', 'user_name'])
+        if sitem['service_icon']:
+            icon_content = ServiceIcon.objects(id=ObjectId(sitem['service_icon']))
+            if len(icon_content) > 0:
+                sitem['service_icon'] = icon_content[0]['icon_b64']
+                sitem['service_icon_format'] = icon_content[0]['icon_format']
         return sitem
 
     def get(self,id):
