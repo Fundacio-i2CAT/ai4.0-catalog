@@ -1,0 +1,53 @@
+{
+    "_id" : ObjectId("59116e74bcc49d7746ccaa84"),
+    "_cls" : "User.Client",
+    "created_at" : ISODate("2017-05-09T07:23:32.816Z"),
+    "created_by" : "",
+    "user_name" : "client@i2cat.net",
+    "activated" : true,
+    "entity" : {
+        "entity_id" : "58fdcf12c375105167abc3e5",
+        "keystone_project_id" : "3796c4897da44dd2a23152d7001a4dfd"
+    },
+    "keystone_user_id" : "e3cc682719754d7fa3dc0c265043abbb",
+    "name" : "client@i2cat.net",
+    "surname" : "client@i2cat.net",
+    "email" : "client@i2cat.net",
+    "company" : "i2CAT",
+    "address" : "Nexus II",
+    "phone" : "55555555555",
+    "position" : "Developer",
+    "legal" : false,
+    "identification" : {
+        "value" : "64928936M",
+        "key" : "NIF"
+    },
+    "deleted" : false,
+    "password" : false
+}
+// {
+//     "_cls" : "User.Client",
+//     "created_at" : ISODate("2017-04-13T13:51:40.379Z"),
+//     "created_by" : "",
+//     "user_name" : "client@i2cat.net",
+//     "activated" : true,
+//     "entity" : {
+// 	"entity_id" : "",
+// 	"keystone_project_id" : ""
+//     },
+//     "keystone_user_id" : "",
+//     "name" : "client@i2cat.net",
+//     "surname" : "client@i2cat.net",
+//     "email" : "client@i2cat.net",
+//     "company" : "i2CAT",
+//     "address" : "Nexus II",
+//     "phone" : "i2CAT",
+//     "position" : "Client",
+//     "legal" : false,
+//     "identification" : {
+// 	"key" : "NIF",
+// 	"value" : ""
+//     },
+//     "deleted" : false,
+//     "password" : false
+// }

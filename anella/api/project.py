@@ -7,6 +7,7 @@ from anella.model.project import Project, SProject, SAVED, DISABLED, CONFIRMED, 
     ServiceDescription, Provider
 from anella.model.instance import Instance
 from anella.model.service import VMImage
+import flask_restful
 
 from anella.orch import Orchestrator
 from anella.api.utils import regex_name, get_int, Resource, ColRes, ItemRes, \
@@ -17,7 +18,7 @@ import json
 from anella.model.project import STATUS
 from datetime import datetime
 from mongoengine import NotUniqueError
-from anella.security.authorize import get_exists_user, get_authorize_projects, post_authorize
+from anella.security.authorize import get_exists_user, get_authorize_projects, post_authorize, get_authorize
 
 def services_to_json(sprojects):
     sitems = []
@@ -101,6 +102,31 @@ class ProjectsRes(ColRes):
     def post(self):
         item = get_json()
         return create_project(item)
+
+class ProjectKey(ItemRes):
+    collection = 'projects'
+    _cls = Project
+    name = 'Project'
+    fields = '_id,name,summary,description,client,services,status,created_at,created_by,updated_at,updated_by'.split(
+        ',')
+
+    @get_exists_user(None)
+    @get_authorize_projects('User.Provider')
+    def get(self, id):
+        project = self._find_obj(id)
+        if not project:
+            return error_api(msg='Error: wrong project id in request.', status=404)
+        status = project.get_status()
+        key_data = None
+        for sproject in project.services:
+            spres = SProjectRes()
+            orch = Orchestrator(debug=False)
+            item = spres._find_item(unicode(sproject.pk))
+            instance = find_instance(unicode(item['_id']))
+            if instance:
+                key_data = orch.instance_get_key(instance['instance_id'])
+                break
+        return key_data
 
 
 class ProjectRes(ItemRes):
@@ -400,7 +426,8 @@ class ProjectUpdateStateRes(ProjectRes):
                                                     error_code, code)
             elif code in (1, 3, 8):
                 update_status_project(sproject.id, code)
-
+            else:
+                return create_message_error(404, 'NOT_UPDATE_STATE')
 
 class ClientProjectsRes(ProjectsRes):
 
@@ -553,7 +580,6 @@ class SProjectStatusRes(SProjectRes):
         limit = get_int(get_arg('limit'))
         skip = get_int(get_arg('skip'))
         _filter = self.get_status(id)
-        print _filter
         result = super(SProjectStatusRes, self)._get_items(skip * limit, limit, _filter)
         for sproject in result:
             sitems = []
@@ -625,12 +651,20 @@ class ProjectOrchCallbackRes(ProjectsRes):
                 instance = get_db(_cfg.database__database_name)['instances'].find_one({'instance_id': instance_info['service_instance_id']})
                 sproject = get_db(_cfg.database__database_name)['sprojects'].find_one({'_id': ObjectId(instance['sproject'])})
                 service = get_db(_cfg.database__database_name)['services'].find_one({'_id': ObjectId(sproject['service'])})
+                nstatus = [x[0] for x in STATUS if instance_info['state'].upper() == x[1]]
+                if len(nstatus) > 0:
+                    rpps = None
+                    if 'runtime_params' in instance_info:
+                        rpps = {'runtime_params' : instance_info['runtime_params']}
+                    get_db(_cfg.database__database_name)['sprojects'].update({'_id': ObjectId(instance['sproject'])},
+                                                                             {'$set': {'status': nstatus[0], 'runtime_params': rpps}},
+                                                                             upsert=False)
                 image_path = '{0}.img'.format(str(service['context']['vm_image']))
                 file_to_remove = '{0}{1}'.format(_cfg.repository__path,
                                                   image_path)
                 os.remove(file_to_remove)
             except:
-                respond_json({'message': 'Error removing {0}'.format(file_to_remove)}, status=500)
+                respond_json({'message': 'Error removing'}, status=500)
         return respond_json(instance_info, status=200)
 
 

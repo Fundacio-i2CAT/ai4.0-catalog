@@ -1,28 +1,20 @@
 # -*- coding: utf-8 -*-
 
-import sys
-import os
-import time
-import json
 import optparse
-import logging
 from pprint import pformat
 
-from flask import Flask, Response, request
+from flask import Flask
 from flask.ext.pymongo import PyMongo
-# from flask.ext.mongoengine import MongoEngine
-from flask_restful import reqparse, abort, Api, Resource
-
+from flask_restful import Api
 from mongoengine import connect
-
 from utils import load_config, std_logging
+
 LOGGER = std_logging()
 
 from session import MongoSessionInterface
 
 from common import *
 import output
-
 
 def add_resources(api):
     from anella.api.user import UsersRes, UserRes, UsersCrudRes, UserCrudRes
@@ -35,6 +27,11 @@ def add_resources(api):
 
     api.add_resource(SessionRes, '/api/session', methods=['POST', 'DELETE'])
     api.add_resource(SessionUserRes, '/api/session/user', methods=['GET'])
+
+    from anella.api.password import Password, PasswordRes
+    #no access control in POST
+    api.add_resource(PasswordRes, '/api/change/password', methods=['POST'])
+    api.add_resource(Password, '/api/change/password/<id>', methods=['GET', 'PUT'])
     '''
     from anella.api.provider import ProvidersRes, ProviderRes, ProviderServicesRes, ProviderServicePublishRes
     from anella.api.client import ClientsRes, ClientRes # , ClientServicesRes
@@ -77,6 +74,8 @@ def add_resources(api):
     from anella.api.project import ClientProjectsRes, ProviderSProjectsRes
     from anella.api.project import ProjectStateRes, ProjectStatesRes, ProjectUpdateStateRes
     from anella.api.project import ProjectOrchCallbackRes
+    from anella.api.project import ProjectKey
+
     # Access Provider and Client
     api.add_resource(ProjectsRes, '/api/projects', methods=['GET', 'POST'])
     api.add_resource(ProjectStatesRes, '/api/projects/states', methods=['GET'])
@@ -88,6 +87,8 @@ def add_resources(api):
     # Access Provider and Client
     api.add_resource(ProjectStateRes, '/api/projects/<id>/state', methods=['GET', 'PUT'])
     api.add_resource(ProjectUpdateStateRes, '/api/project/<id>/state', methods=['PUT'])
+    # Access Provider
+    api.add_resource(ProjectKey, '/api/project/<id>/key', methods=['GET'])
     # Not secure, because is a call to orchestrator make to service_manager and it's necessary token in orchestrator
     api.add_resource(ProjectOrchCallbackRes, '/api/projects/callback', methods=['POST'])
 
@@ -107,12 +108,10 @@ def add_resources(api):
     # Access Provider and Client
     api.add_resource(BillingRes, '/api/billing/<id>', methods=['GET']) #id_project
 
-
 def add_rules(app):
     """
     """
     app.add_url_rule('/', 'root', lambda: app.send_static_file('index.html'))
-
 
 def create_app(cfg_file='prod-config.yaml', testing=False, debug=False):
     usage = "usage: %prog"

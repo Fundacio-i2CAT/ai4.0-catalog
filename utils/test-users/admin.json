@@ -1,0 +1,53 @@
+{
+    "_id" : ObjectId("58779ff9735d0c42706bf1fe"),
+    "_cls" : "User.Administrator",
+    "created_at" : ISODate("2017-04-13T13:51:40.379Z"),
+    "created_by" : "",
+    "user_name" : "admin@i2cat.net",
+    "activated" : true,
+    "entity" : {
+        "entity_id" : "58fdcf12c375105167abc3e5",
+        "keystone_project_id" : "3796c4897da44dd2a23152d7001a4dfd"
+    },
+    "keystone_user_id" : "9852cc77c3ec4d97a589b7d84dd9aad1",
+    "name" : "ddddddd",
+    "surname" : "ssssss",
+    "email" : "admin@i2cat.net",
+    "company" : "1981",
+    "address" : "carrer gran capitÃ ",
+    "phone" : "1981",
+    "position" : "Gerent",
+    "legal" : false,
+    "identification" : {
+        "key" : "NIF",
+        "value" : "12345678R"
+    },
+    "deleted" : false,
+    "password" : false
+}
+// {
+//     "_cls" : "User.Administrator",
+//     "created_at" : ISODate("2017-04-13T13:51:40.379Z"),
+//     "created_by" : "",
+//     "user_name" : "admin@i2cat.net",
+//     "activated" : true,
+//     "entity" : {
+// 	"entity_id" : "",
+// 	"keystone_project_id" : ""
+//     },
+//     "keystone_user_id" : "",
+//     "name" : "admin@i2cat.net",
+//     "surname" : "admin@i2cat.net",
+//     "email" : "admin@i2cat.net",
+//     "company" : "i2CAT",
+//     "address" : "Nexus II",
+//     "phone" : "i2CAT",
+//     "position" : "Admin",
+//     "legal" : false,
+//     "identification" : {
+// 	"key" : "NIF",
+// 	"value" : ""
+//     },
+//     "deleted" : false,
+//     "password" : false
+// }

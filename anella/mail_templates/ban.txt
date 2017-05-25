@@ -1,0 +1,6 @@
+El seu usuari a la Plataforma Industrial 4.0:
+
+{0}
+
+ha estat desactivat per l'administració, posis en contacte
+amb nosaltres a: {1}

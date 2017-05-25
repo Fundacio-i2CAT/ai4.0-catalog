@@ -110,5 +110,47 @@
             "ca" : "Ha expirat el token. Torni a iniciar sessió",
             "es" : "Ha caducado el token. Vuelva a loguearse"
         }
+    },
+    {
+        "code" : "NOT_UPDATE_STATE",
+        "i18n" : {
+            "ca" : "No s'ha pogut realitzar l'acció sol.licitada, Si us plau, contacti amb l'administrador.",
+            "es" : "No se ha podido realizar la acción solicitada. Por favor, contacte con el administrador."
+        }
+    },
+    {
+        "code" : "STACK_CREATION_TIMEOUT",
+        "i18n" : {
+            "ca" : "No s'ha pogut instanciar el servei degut a una demora excessiva en la resposta del centre de dades.",
+            "es" : "No se ha podido instanciar el servicio debido a una demora excesiva en la respuesta del centro de datos."
+	}
+    },
+    {
+	"code" : "USER_DUPLICATED",
+        "i18n" : {
+            "ca" : "Aquest usuari ja està enregistrat.",
+            "es" : "Este usuario ya está registrado."
+        }
+    },
+    {
+        "code" : "USER_NOT_FOUND",
+        "i18n" : {
+            "ca" : "Usuari no trobat.",
+            "es" : "Usuario no encontrado."
+        }
+    },
+    {
+        "code": "USER_NOT_ACTIVATED",
+        "i18n": {
+            "ca": "Aquest usuari no s'ha activitat o hi han problemes a les credencials per poder accedir a la plataforma.",
+            "es": "Este usuario no se ha activado o hay problemas en las credenciales para poder acceder a la plataforma."
+        }
+    },
+    {
+        "code" : "PROVIDER_CLIENT",
+        "i18n" : {
+            "ca" : "S'ha de ser proveïdor o client",
+            "es" : "Ha de ser proveedor o cliente"
+        }
     }
 ]
